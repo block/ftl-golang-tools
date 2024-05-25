@@ -28,6 +28,7 @@ const (
 	AddImport               Command = "gopls.add_import"
 	AddTelemetryCounters    Command = "gopls.add_telemetry_counters"
 	ApplyFix                Command = "gopls.apply_fix"
+	Assembly                Command = "gopls.assembly"
 	ChangeSignature         Command = "gopls.change_signature"
 	CheckUpgrades           Command = "gopls.check_upgrades"
 	DiagnoseFiles           Command = "gopls.diagnose_files"
@@ -48,6 +49,7 @@ const (
 	RunGoWorkCommand        Command = "gopls.run_go_work_command"
 	RunGovulncheck          Command = "gopls.run_govulncheck"
 	RunTests                Command = "gopls.run_tests"
+	ScanImports             Command = "gopls.scan_imports"
 	StartDebugging          Command = "gopls.start_debugging"
 	StartProfile            Command = "gopls.start_profile"
 	StopProfile             Command = "gopls.stop_profile"
@@ -66,6 +68,7 @@ var Commands = []Command{
 	AddImport,
 	AddTelemetryCounters,
 	ApplyFix,
+	Assembly,
 	ChangeSignature,
 	CheckUpgrades,
 	DiagnoseFiles,
@@ -86,6 +89,7 @@ var Commands = []Command{
 	RunGoWorkCommand,
 	RunGovulncheck,
 	RunTests,
+	ScanImports,
 	StartDebugging,
 	StartProfile,
 	StopProfile,
@@ -125,6 +129,14 @@ func Dispatch(ctx context.Context, params *protocol.ExecuteCommandParams, s Inte
 			return nil, err
 		}
 		return s.ApplyFix(ctx, a0)
+	case Assembly:
+		var a0 string
+		var a1 string
+		var a2 string
+		if err := UnmarshalArgs(params.Arguments, &a0, &a1, &a2); err != nil {
+			return nil, err
+		}
+		return nil, s.Assembly(ctx, a0, a1, a2)
 	case ChangeSignature:
 		var a0 ChangeSignatureArgs
 		if err := UnmarshalArgs(params.Arguments, &a0); err != nil {
@@ -162,8 +174,8 @@ func Dispatch(ctx context.Context, params *protocol.ExecuteCommandParams, s Inte
 		}
 		return s.FetchVulncheckResult(ctx, a0)
 	case FreeSymbols:
-		var a0 protocol.DocumentURI
-		var a1 protocol.Range
+		var a0 string
+		var a1 protocol.Location
 		if err := UnmarshalArgs(params.Arguments, &a0, &a1); err != nil {
 			return nil, err
 		}
@@ -238,6 +250,8 @@ func Dispatch(ctx context.Context, params *protocol.ExecuteCommandParams, s Inte
 			return nil, err
 		}
 		return nil, s.RunTests(ctx, a0)
+	case ScanImports:
+		return nil, s.ScanImports(ctx)
 	case StartDebugging:
 		var a0 DebuggingArgs
 		if err := UnmarshalArgs(params.Arguments, &a0); err != nil {
@@ -350,6 +364,18 @@ func NewApplyFixCommand(title string, a0 ApplyFixArgs) (protocol.Command, error)
 	}, nil
 }
 
+func NewAssemblyCommand(title string, a0 string, a1 string, a2 string) (protocol.Command, error) {
+	args, err := MarshalArgs(a0, a1, a2)
+	if err != nil {
+		return protocol.Command{}, err
+	}
+	return protocol.Command{
+		Title:     title,
+		Command:   Assembly.String(),
+		Arguments: args,
+	}, nil
+}
+
 func NewChangeSignatureCommand(title string, a0 ChangeSignatureArgs) (protocol.Command, error) {
 	args, err := MarshalArgs(a0)
 	if err != nil {
@@ -422,7 +448,7 @@ func NewFetchVulncheckResultCommand(title string, a0 URIArg) (protocol.Command, 
 	}, nil
 }
 
-func NewFreeSymbolsCommand(title string, a0 protocol.DocumentURI, a1 protocol.Range) (protocol.Command, error) {
+func NewFreeSymbolsCommand(title string, a0 string, a1 protocol.Location) (protocol.Command, error) {
 	args, err := MarshalArgs(a0, a1)
 	if err != nil {
 		return protocol.Command{}, err
@@ -495,26 +521,16 @@ func NewListKnownPackagesCommand(title string, a0 URIArg) (protocol.Command, err
 }
 
 func NewMaybePromptForTelemetryCommand(title string) (protocol.Command, error) {
-	args, err := MarshalArgs()
-	if err != nil {
-		return protocol.Command{}, err
-	}
 	return protocol.Command{
-		Title:     title,
-		Command:   MaybePromptForTelemetry.String(),
-		Arguments: args,
+		Title:   title,
+		Command: MaybePromptForTelemetry.String(),
 	}, nil
 }
 
 func NewMemStatsCommand(title string) (protocol.Command, error) {
-	args, err := MarshalArgs()
-	if err != nil {
-		return protocol.Command{}, err
-	}
 	return protocol.Command{
-		Title:     title,
-		Command:   MemStats.String(),
-		Arguments: args,
+		Title:   title,
+		Command: MemStats.String(),
 	}, nil
 }
 
@@ -587,6 +603,13 @@ func NewRunTestsCommand(title string, a0 RunTestsArgs) (protocol.Command, error)
 		Title:     title,
 		Command:   RunTests.String(),
 		Arguments: args,
+	}, nil
+}
+
+func NewScanImportsCommand(title string) (protocol.Command, error) {
+	return protocol.Command{
+		Title:   title,
+		Command: ScanImports.String(),
 	}, nil
 }
 
@@ -699,25 +722,15 @@ func NewVendorCommand(title string, a0 URIArg) (protocol.Command, error) {
 }
 
 func NewViewsCommand(title string) (protocol.Command, error) {
-	args, err := MarshalArgs()
-	if err != nil {
-		return protocol.Command{}, err
-	}
 	return protocol.Command{
-		Title:     title,
-		Command:   Views.String(),
-		Arguments: args,
+		Title:   title,
+		Command: Views.String(),
 	}, nil
 }
 
 func NewWorkspaceStatsCommand(title string) (protocol.Command, error) {
-	args, err := MarshalArgs()
-	if err != nil {
-		return protocol.Command{}, err
-	}
 	return protocol.Command{
-		Title:     title,
-		Command:   WorkspaceStats.String(),
-		Arguments: args,
+		Title:   title,
+		Command: WorkspaceStats.String(),
 	}, nil
 }

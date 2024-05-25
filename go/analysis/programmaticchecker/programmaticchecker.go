@@ -11,8 +11,6 @@ import (
 type Config struct {
 	// LoadConfig is the packages.Config to use when loading packages.
 	LoadConfig packages.Config
-	// RunDespiteLoadErrors specifies whether to run the analysis even if there are package load errors.
-	RunDespiteLoadErrors bool
 	// ReverseImportExecutionOrder is true if packages that import a given package should execute _after_ the package itself.
 	ReverseImportExecutionOrder bool
 	// Patterns specify directory patterns for the package loader.
@@ -26,7 +24,6 @@ func Run(cfg Config, analyzers ...*analysis.Analyzer) (analyzerResults map[*anal
 
 	return checker.RunWithResult(cfg.Patterns, analyzers,
 		checker.WithLoadConfig(cfg.LoadConfig),
-		checker.WithRunDespiteLoadErrors(cfg.RunDespiteLoadErrors),
 		checker.WithReverseImportExecutionOrder(cfg.ReverseImportExecutionOrder),
 	)
 }

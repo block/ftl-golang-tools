@@ -104,7 +104,7 @@ type commandConfig struct {
 // be populated, depending on which configuration is set. See comments in-line
 // for details.
 type commandDeps struct {
-	snapshot *cache.Snapshot    // present if cfg.forURI was set
+	snapshot *cache.Snapshot    // present if cfg.forURI or forView was set
 	fh       file.Handle        // present if cfg.forURI was set
 	work     *progress.WorkDone // present if cfg.progress was set
 }
@@ -571,7 +571,7 @@ func (c *commandHandler) Doc(ctx context.Context, loc protocol.Location) error {
 		}
 
 		// Direct the client to open the /pkg page.
-		url := web.pkgURL(deps.snapshot.View(), pkgpath, fragment)
+		url := web.PkgURL(deps.snapshot.View().ID(), pkgpath, fragment)
 		openClientBrowser(ctx, c.s.client, url)
 
 		return nil
@@ -1465,19 +1465,29 @@ func (c *commandHandler) Views(ctx context.Context) ([]command.View, error) {
 	return summaries, nil
 }
 
-func (c *commandHandler) FreeSymbols(ctx context.Context, uri protocol.DocumentURI, rng protocol.Range) error {
-	return c.run(ctx, commandConfig{
-		forURI: uri,
-	}, func(ctx context.Context, deps commandDeps) error {
-		web, err := c.s.getWeb()
-		if err != nil {
-			return err
-		}
-		url := web.freesymbolsURL(deps.snapshot.View(), protocol.Location{
-			URI:   deps.fh.URI(),
-			Range: rng,
-		})
-		openClientBrowser(ctx, c.s.client, url)
-		return nil
-	})
+func (c *commandHandler) FreeSymbols(ctx context.Context, viewID string, loc protocol.Location) error {
+	web, err := c.s.getWeb()
+	if err != nil {
+		return err
+	}
+	url := web.freesymbolsURL(viewID, loc)
+	openClientBrowser(ctx, c.s.client, url)
+	return nil
+}
+
+func (c *commandHandler) Assembly(ctx context.Context, viewID, packageID, symbol string) error {
+	web, err := c.s.getWeb()
+	if err != nil {
+		return err
+	}
+	url := web.assemblyURL(viewID, packageID, symbol)
+	openClientBrowser(ctx, c.s.client, url)
+	return nil
+}
+
+func (c *commandHandler) ScanImports(ctx context.Context) error {
+	for _, v := range c.s.session.Views() {
+		v.ScanImports()
+	}
+	return nil
 }

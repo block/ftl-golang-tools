@@ -11,7 +11,6 @@ package checker
 import (
 	"bytes"
 	"encoding/gob"
-	"errors"
 	"flag"
 	"fmt"
 	"go/format"
@@ -77,7 +76,6 @@ func RegisterFlags() {
 
 type checkerOptions struct {
 	loadConfig                  *packages.Config
-	runDespiteLoadErrors        bool
 	reverseImportExecutionOrder bool
 }
 
@@ -86,12 +84,6 @@ type Option func(option *checkerOptions)
 func WithLoadConfig(config packages.Config) Option {
 	return func(co *checkerOptions) {
 		co.loadConfig = &config
-	}
-}
-
-func WithRunDespiteLoadErrors(shouldRun bool) Option {
-	return func(co *checkerOptions) {
-		co.runDespiteLoadErrors = shouldRun
 	}
 }
 
@@ -110,15 +102,28 @@ func WithReverseImportExecutionOrder(reverse bool) Option {
 // It provides most of the logic for the main functions of both the
 // singlechecker and the multi-analysis commands.
 // It returns the appropriate exit code.
-func Run(args []string, analyzers []*analysis.Analyzer, opts ...Option) (exitcode int) {
-	roots, err := runInternal(args, analyzers, opts...)
+func Run(args []string, analyzers []*analysis.Analyzer) (exitcode int) {
+	roots, pkgs, err := runInternal(args, analyzers)
 	if err != nil {
 		log.Print(err)
 		return 1
 	}
 
-	// Print the results.
-	return printDiagnostics(roots)
+	pkgsExitCode := 0
+	// Print package errors regardless of RunDespiteErrors.
+	// Do not exit if there are errors, yet.
+	if n := packages.PrintErrors(pkgs); n > 0 {
+		pkgsExitCode = 1
+	}
+
+	// Print the results. If !RunDespiteErrors and there
+	// are errors in the packages, this will have 0 exit
+	// code. Otherwise, we prefer to return exit code
+	// indicating diagnostics.
+	if diagExitCode := printDiagnostics(roots); diagExitCode != 0 {
+		return diagExitCode // there were diagnostics
+	}
+	return pkgsExitCode // package errors but no diagnostics
 }
 
 // Run loads the packages specified by args using go/packages,
@@ -128,7 +133,7 @@ func Run(args []string, analyzers []*analysis.Analyzer, opts ...Option) (exitcod
 //
 // Returns results and diagnostics produced by the analyzers.
 func RunWithResult(args []string, analyzers []*analysis.Analyzer, opts ...Option) (analyzerResults map[*analysis.Analyzer][]interface{}, diagnostics []analysis.SimpleDiagnostic, err error) {
-	roots, err := runInternal(args, analyzers, opts...)
+	roots, _, err := runInternal(args, analyzers, opts...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -144,7 +149,7 @@ func RunWithResult(args []string, analyzers []*analysis.Analyzer, opts ...Option
 	return results, diags, nil
 }
 
-func runInternal(args []string, analyzers []*analysis.Analyzer, opts ...Option) ([]*action, error) {
+func runInternal(args []string, analyzers []*analysis.Analyzer, opts ...Option) ([]*action, []*packages.Package, error) {
 	cfg := &checkerOptions{}
 	for _, opt := range opts {
 		opt(cfg)
@@ -203,37 +208,29 @@ func runInternal(args []string, analyzers []*analysis.Analyzer, opts ...Option) 
 	// facts, we need source only for the initial packages.
 	allSyntax := needFacts(analyzers)
 	initial, err := load(args, allSyntax, cfg)
-	if err != nil && !cfg.runDespiteLoadErrors {
-		if _, ok := err.(typeParseError); !ok {
-			// Fail when some of the errors are not
-			// related to parsing nor typing.
-			return nil, err
-		}
-		// TODO: filter analyzers based on RunDespiteError?
+	if err != nil {
+		return nil, nil, err
 	}
 
-	// Run the analysis.
+	// Run the analyzers. On each package with (transitive)
+	// errors, we run only the subset of analyzers that are
+	// marked (and whose transitive requirements are also
+	// marked) with RunDespiteErrors.
 	roots := analyze(initial, analyzers, cfg)
 
 	// Apply fixes.
 	if Fix {
 		if err := applyFixes(roots); err != nil {
 			// Fail when applying fixes failed.
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
-	return roots, nil
+	return roots, initial, nil
 }
 
-// typeParseError represents a package load error
-// that is related to typing and parsing.
-type typeParseError struct {
-	error
-}
-
-// load loads the initial packages. If all loading issues are related to
-// typing and parsing, the returned error is of type typeParseError.
+// load loads the initial packages. Returns only top-level loading
+// errors. Does not consider errors in packages.
 func load(patterns []string, allSyntax bool, opts *checkerOptions) ([]*packages.Package, error) {
 	var conf packages.Config
 	if opts.loadConfig != nil {
@@ -250,42 +247,10 @@ func load(patterns []string, allSyntax bool, opts *checkerOptions) ([]*packages.
 		}
 	}
 	initial, err := packages.Load(&conf, patterns...)
-	if err == nil {
-		if len(initial) == 0 {
-			err = fmt.Errorf("%s matched no packages", strings.Join(patterns, " "))
-		} else {
-			err = loadingError(initial)
-		}
+	if err == nil && len(initial) == 0 {
+		err = fmt.Errorf("%s matched no packages", strings.Join(patterns, " "))
 	}
 	return initial, err
-}
-
-// loadingError checks for issues during the loading of initial
-// packages. Returns nil if there are no issues. Returns error
-// of type typeParseError if all errors, including those in
-// dependencies, are related to typing or parsing. Otherwise,
-// a plain error is returned with an appropriate message.
-func loadingError(initial []*packages.Package) error {
-	var err error
-	if n := packages.PrintErrors(initial); n > 1 {
-		err = fmt.Errorf("%d errors during loading", n)
-	} else if n == 1 {
-		err = errors.New("error during loading")
-	} else {
-		// no errors
-		return nil
-	}
-	all := true
-	packages.Visit(initial, nil, func(pkg *packages.Package) {
-		for _, err := range pkg.Errors {
-			typeOrParse := err.Kind == packages.TypeError || err.Kind == packages.ParseError
-			all = all && typeOrParse
-		}
-	})
-	if all {
-		return typeParseError{err}
-	}
-	return err
 }
 
 // TestAnalyzer applies an analyzer to a set of packages (and their
