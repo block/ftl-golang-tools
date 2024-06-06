@@ -10,10 +10,10 @@ import (
 	"go/token"
 	"go/types"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
-	"golang.org/x/tools/go/ast/inspector"
+	"github.com/TBD54566975/x/tools/go/analysis"
+	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/x/tools/go/analysis/passes/internal/analysisutil"
+	"github.com/TBD54566975/x/tools/go/ast/inspector"
 )
 
 // NOTE: Experimental. Not part of the vet suite.
@@ -24,7 +24,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "shadow",
 	Doc:      analysisutil.MustExtractDoc(doc, "shadow"),
-	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/shadow",
+	URL:      "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/shadow",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

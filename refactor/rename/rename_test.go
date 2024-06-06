@@ -17,9 +17,9 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/buildutil"
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/TBD54566975/x/tools/go/buildutil"
+	"github.com/TBD54566975/x/tools/internal/aliases"
+	"github.com/TBD54566975/x/tools/internal/testenv"
 )
 
 // TODO(adonovan): test reported source positions, somehow.

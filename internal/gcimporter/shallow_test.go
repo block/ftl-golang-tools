@@ -14,10 +14,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/TBD54566975/x/tools/go/packages"
+	"github.com/TBD54566975/x/tools/internal/gcimporter"
+	"github.com/TBD54566975/x/tools/internal/testenv"
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/internal/gcimporter"
-	"golang.org/x/tools/internal/testenv"
 )
 
 // TestShallowStd type-checks the standard library using shallow export data.

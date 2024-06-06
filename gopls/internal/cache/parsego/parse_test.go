@@ -10,9 +10,9 @@ import (
 	"go/token"
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/tokeninternal"
+	"github.com/TBD54566975/x/tools/gopls/internal/cache/parsego"
+	"github.com/TBD54566975/x/tools/gopls/internal/util/safetoken"
+	"github.com/TBD54566975/x/tools/internal/tokeninternal"
 )
 
 // TODO(golang/go#64335): we should have many more tests for fixed syntax.

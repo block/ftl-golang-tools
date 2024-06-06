@@ -11,9 +11,9 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/golang/completion/snippet"
-	"golang.org/x/tools/gopls/internal/protocol"
+	"github.com/TBD54566975/x/tools/gopls/internal/cache/parsego"
+	"github.com/TBD54566975/x/tools/gopls/internal/golang/completion/snippet"
+	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
 )
 
 // some function definitions in test files can be completed

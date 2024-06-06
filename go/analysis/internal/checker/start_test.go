@@ -10,12 +10,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/go/analysis/internal/checker"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/TBD54566975/x/tools/go/analysis"
+	"github.com/TBD54566975/x/tools/go/analysis/analysistest"
+	"github.com/TBD54566975/x/tools/go/analysis/internal/checker"
+	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/x/tools/go/ast/inspector"
+	"github.com/TBD54566975/x/tools/internal/testenv"
 )
 
 // TestStartFixes make sure modifying the first character

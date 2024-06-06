@@ -14,12 +14,12 @@ import (
 	"go/types"
 	"strings"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/util/typesutil"
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/analysisinternal"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/TBD54566975/x/tools/go/analysis"
+	"github.com/TBD54566975/x/tools/go/ast/astutil"
+	"github.com/TBD54566975/x/tools/gopls/internal/util/typesutil"
+	"github.com/TBD54566975/x/tools/internal/aliases"
+	"github.com/TBD54566975/x/tools/internal/analysisinternal"
+	"github.com/TBD54566975/x/tools/internal/typesinternal"
 )
 
 //go:embed doc.go
@@ -30,7 +30,7 @@ var Analyzer = &analysis.Analyzer{
 	Doc:              analysisinternal.MustExtractDoc(doc, "stubmethods"),
 	Run:              run,
 	RunDespiteErrors: true,
-	URL:              "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/stubmethods",
+	URL:              "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/stubmethods",
 }
 
 // TODO(rfindley): remove this thin wrapper around the stubmethods refactoring,

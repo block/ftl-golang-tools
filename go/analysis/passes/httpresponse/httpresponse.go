@@ -10,12 +10,12 @@ import (
 	"go/ast"
 	"go/types"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/TBD54566975/x/tools/go/analysis"
+	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/x/tools/go/analysis/passes/internal/analysisutil"
+	"github.com/TBD54566975/x/tools/go/ast/inspector"
+	"github.com/TBD54566975/x/tools/internal/aliases"
+	"github.com/TBD54566975/x/tools/internal/typesinternal"
 )
 
 const Doc = `check for mistakes using HTTP responses
@@ -37,7 +37,7 @@ diagnostic for such mistakes.`
 var Analyzer = &analysis.Analyzer{
 	Name:     "httpresponse",
 	Doc:      Doc,
-	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/httpresponse",
+	URL:      "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/httpresponse",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

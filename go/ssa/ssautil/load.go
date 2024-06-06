@@ -11,10 +11,10 @@ import (
 	"go/token"
 	"go/types"
 
-	"golang.org/x/tools/go/loader"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/internal/versions"
+	"github.com/TBD54566975/x/tools/go/loader"
+	"github.com/TBD54566975/x/tools/go/packages"
+	"github.com/TBD54566975/x/tools/go/ssa"
+	"github.com/TBD54566975/x/tools/internal/versions"
 )
 
 // Packages creates an SSA program for a set of packages.
@@ -120,7 +120,7 @@ func doPackages(initial []*packages.Package, mode ssa.BuilderMode, deps bool) (*
 //
 // The mode parameter controls diagnostics and checking during SSA construction.
 //
-// Deprecated: Use [golang.org/x/tools/go/packages] and the [Packages]
+// Deprecated: Use [github.com/TBD54566975/x/tools/go/packages] and the [Packages]
 // function instead; see ssa.Example_loadPackages.
 func CreateProgram(lprog *loader.Program, mode ssa.BuilderMode) *ssa.Program {
 	prog := ssa.NewProgram(lprog.Fset, mode)

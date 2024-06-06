@@ -21,9 +21,9 @@ import (
 	"sync"
 	"unicode"
 
-	"golang.org/x/tools/go/internal/packagesdriver"
-	"golang.org/x/tools/internal/gocommand"
-	"golang.org/x/tools/internal/packagesinternal"
+	"github.com/TBD54566975/x/tools/go/internal/packagesdriver"
+	"github.com/TBD54566975/x/tools/internal/gocommand"
+	"github.com/TBD54566975/x/tools/internal/packagesinternal"
 )
 
 // debug controls verbose logging.

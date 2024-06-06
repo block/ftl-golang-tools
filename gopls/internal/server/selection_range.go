@@ -8,11 +8,11 @@ import (
 	"context"
 	"fmt"
 
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/event"
+	"github.com/TBD54566975/x/tools/go/ast/astutil"
+	"github.com/TBD54566975/x/tools/gopls/internal/cache/parsego"
+	"github.com/TBD54566975/x/tools/gopls/internal/file"
+	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
+	"github.com/TBD54566975/x/tools/internal/event"
 )
 
 // selectionRange defines the textDocument/selectionRange feature,

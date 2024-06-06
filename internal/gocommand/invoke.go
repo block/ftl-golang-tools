@@ -24,9 +24,9 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/event/keys"
-	"golang.org/x/tools/internal/event/label"
+	"github.com/TBD54566975/x/tools/internal/event"
+	"github.com/TBD54566975/x/tools/internal/event/keys"
+	"github.com/TBD54566975/x/tools/internal/event/label"
 )
 
 // An Runner will run go command invocations and serialize

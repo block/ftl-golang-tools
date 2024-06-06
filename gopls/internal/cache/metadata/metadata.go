@@ -19,9 +19,9 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/packagesinternal"
+	"github.com/TBD54566975/x/tools/go/packages"
+	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
+	"github.com/TBD54566975/x/tools/internal/packagesinternal"
 )
 
 // Declare explicit types for package paths, names, and IDs to ensure that we

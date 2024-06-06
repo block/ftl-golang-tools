@@ -7,12 +7,12 @@ package work
 import (
 	"context"
 
+	"github.com/TBD54566975/x/tools/gopls/internal/cache"
+	"github.com/TBD54566975/x/tools/gopls/internal/file"
+	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
+	"github.com/TBD54566975/x/tools/internal/diff"
+	"github.com/TBD54566975/x/tools/internal/event"
 	"golang.org/x/mod/modfile"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/diff"
-	"golang.org/x/tools/internal/event"
 )
 
 func Format(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle) ([]protocol.TextEdit, error) {

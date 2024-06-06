@@ -15,11 +15,11 @@ import (
 	"go/types"
 	"reflect"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/go/ast/inspector"
+	"github.com/TBD54566975/x/tools/go/analysis"
+	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/x/tools/go/analysis/passes/internal/analysisutil"
+	"github.com/TBD54566975/x/tools/go/ast/astutil"
+	"github.com/TBD54566975/x/tools/go/ast/inspector"
 )
 
 //go:embed doc.go
@@ -28,7 +28,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "assign",
 	Doc:      analysisutil.MustExtractDoc(doc, "assign"),
-	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/assign",
+	URL:      "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/assign",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

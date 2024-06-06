@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 //
-// Taken from golang.org/x/tools/refactor/rename.
+// Taken from github.com/TBD54566975/x/tools/refactor/rename.
 
 package golang
 
@@ -42,13 +42,13 @@ import (
 	"strings"
 	"unicode"
 
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/typeparams"
-	"golang.org/x/tools/internal/typesinternal"
-	"golang.org/x/tools/refactor/satisfy"
+	"github.com/TBD54566975/x/tools/go/ast/astutil"
+	"github.com/TBD54566975/x/tools/gopls/internal/cache"
+	"github.com/TBD54566975/x/tools/gopls/internal/util/safetoken"
+	"github.com/TBD54566975/x/tools/internal/aliases"
+	"github.com/TBD54566975/x/tools/internal/typeparams"
+	"github.com/TBD54566975/x/tools/internal/typesinternal"
+	"github.com/TBD54566975/x/tools/refactor/satisfy"
 )
 
 // errorf reports an error (e.g. conflict) and prevents file modification.

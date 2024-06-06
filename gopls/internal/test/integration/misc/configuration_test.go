@@ -7,9 +7,9 @@ package misc
 import (
 	"testing"
 
-	. "golang.org/x/tools/gopls/internal/test/integration"
+	. "github.com/TBD54566975/x/tools/gopls/internal/test/integration"
 
-	"golang.org/x/tools/internal/testenv"
+	"github.com/TBD54566975/x/tools/internal/testenv"
 )
 
 // Test that enabling and disabling produces the expected results of showing

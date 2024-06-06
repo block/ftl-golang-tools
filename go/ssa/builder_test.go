@@ -20,15 +20,15 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/go/buildutil"
-	"golang.org/x/tools/go/loader"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/go/ssa/ssautil"
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/testenv"
-	"golang.org/x/tools/internal/testfiles"
+	"github.com/TBD54566975/x/tools/go/analysis/analysistest"
+	"github.com/TBD54566975/x/tools/go/buildutil"
+	"github.com/TBD54566975/x/tools/go/loader"
+	"github.com/TBD54566975/x/tools/go/packages"
+	"github.com/TBD54566975/x/tools/go/ssa"
+	"github.com/TBD54566975/x/tools/go/ssa/ssautil"
+	"github.com/TBD54566975/x/tools/internal/aliases"
+	"github.com/TBD54566975/x/tools/internal/testenv"
+	"github.com/TBD54566975/x/tools/internal/testfiles"
 )
 
 func isEmpty(f *ssa.Function) bool { return f.Blocks == nil }

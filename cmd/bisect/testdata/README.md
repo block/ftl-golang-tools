@@ -1,6 +1,6 @@
 This directory contains test inputs for the bisect command.
 
-Each text file is a txtar archive (see <https://pkg.go.dev/golang.org/x/tools/txtar>
+Each text file is a txtar archive (see <https://pkg.go.dev/github.com/TBD54566975/x/tools/txtar>
 or `go doc txtar`).
 
 The comment at the top of the archive is a JSON object describing a

@@ -27,9 +27,9 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/goroot"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/TBD54566975/x/tools/internal/aliases"
+	"github.com/TBD54566975/x/tools/internal/goroot"
+	"github.com/TBD54566975/x/tools/internal/testenv"
 )
 
 func TestMain(m *testing.M) {

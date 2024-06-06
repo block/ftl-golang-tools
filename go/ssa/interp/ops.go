@@ -16,9 +16,9 @@ import (
 	"sync"
 	"unsafe"
 
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/typeparams"
+	"github.com/TBD54566975/x/tools/go/ssa"
+	"github.com/TBD54566975/x/tools/internal/aliases"
+	"github.com/TBD54566975/x/tools/internal/typeparams"
 )
 
 // If the target program panics, the interpreter panics with this type.

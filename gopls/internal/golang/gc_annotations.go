@@ -13,12 +13,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/gocommand"
+	"github.com/TBD54566975/x/tools/gopls/internal/cache"
+	"github.com/TBD54566975/x/tools/gopls/internal/cache/metadata"
+	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
+	"github.com/TBD54566975/x/tools/gopls/internal/settings"
+	"github.com/TBD54566975/x/tools/internal/event"
+	"github.com/TBD54566975/x/tools/internal/gocommand"
 )
 
 // GCOptimizationDetails invokes the Go compiler on the specified

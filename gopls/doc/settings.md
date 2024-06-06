@@ -180,7 +180,7 @@ Default: `false`.
 ## UI
 
 <a id='codelenses'></a>
-### ⬤ `codelenses` *map[golang.org/x/tools/gopls/internal/protocol.CodeLensSource]bool*
+### ⬤ `codelenses` *map[github.com/TBD54566975/x/tools/gopls/internal/protocol.CodeLensSource]bool*
 
 codelenses overrides the enabled/disabled state of each of gopls'
 sources of [Code Lenses](codelenses.md).

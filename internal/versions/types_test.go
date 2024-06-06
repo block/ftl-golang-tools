@@ -13,8 +13,8 @@ import (
 	"go/types"
 	"testing"
 
-	"golang.org/x/tools/internal/testenv"
-	"golang.org/x/tools/internal/versions"
+	"github.com/TBD54566975/x/tools/internal/testenv"
+	"github.com/TBD54566975/x/tools/internal/versions"
 )
 
 func Test(t *testing.T) {

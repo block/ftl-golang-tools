@@ -7,7 +7,7 @@ package completion
 import (
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/golang"
+	"github.com/TBD54566975/x/tools/gopls/internal/golang"
 )
 
 func TestIsValidDirName(t *testing.T) {

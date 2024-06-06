@@ -8,10 +8,10 @@ import (
 	"context"
 	"fmt"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/protocol"
+	"github.com/TBD54566975/x/tools/gopls/internal/cache"
+	"github.com/TBD54566975/x/tools/gopls/internal/cache/metadata"
+	"github.com/TBD54566975/x/tools/gopls/internal/cache/parsego"
+	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
 )
 
 // NarrowestMetadataForFile returns metadata for the narrowest package

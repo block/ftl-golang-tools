@@ -16,11 +16,11 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/facts"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/TBD54566975/x/tools/go/analysis/analysistest"
+	"github.com/TBD54566975/x/tools/go/packages"
+	"github.com/TBD54566975/x/tools/internal/aliases"
+	"github.com/TBD54566975/x/tools/internal/facts"
+	"github.com/TBD54566975/x/tools/internal/testenv"
 )
 
 type myFact struct {

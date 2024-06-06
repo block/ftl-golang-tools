@@ -12,11 +12,11 @@ import (
 	"regexp"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
+	"github.com/TBD54566975/x/tools/gopls/internal/cache"
+	"github.com/TBD54566975/x/tools/gopls/internal/cache/parsego"
+	"github.com/TBD54566975/x/tools/gopls/internal/file"
+	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
+	"github.com/TBD54566975/x/tools/gopls/internal/protocol/command"
 )
 
 // CodeLensSources returns the supported sources of code lenses for Go files.

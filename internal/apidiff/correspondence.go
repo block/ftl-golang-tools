@@ -8,7 +8,7 @@ import (
 	"go/types"
 	"sort"
 
-	"golang.org/x/tools/internal/aliases"
+	"github.com/TBD54566975/x/tools/internal/aliases"
 )
 
 // Two types are correspond if they are identical except for defined types,

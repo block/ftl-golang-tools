@@ -9,16 +9,16 @@
 //
 // See https://github.com/golang/tools/blob/master/gopls/README.md
 // for the most up-to-date documentation.
-package main // import "golang.org/x/tools/gopls"
+package main // import "github.com/TBD54566975/x/tools/gopls"
 
 import (
 	"context"
 	"os"
 
+	"github.com/TBD54566975/x/tools/gopls/internal/cmd"
+	versionpkg "github.com/TBD54566975/x/tools/gopls/internal/version"
+	"github.com/TBD54566975/x/tools/internal/tool"
 	"golang.org/x/telemetry"
-	"golang.org/x/tools/gopls/internal/cmd"
-	versionpkg "golang.org/x/tools/gopls/internal/version"
-	"golang.org/x/tools/internal/tool"
 )
 
 var version = "" // if set by the linker, overrides the gopls version

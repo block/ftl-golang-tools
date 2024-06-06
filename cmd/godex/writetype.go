@@ -15,7 +15,7 @@ package main
 import (
 	"go/types"
 
-	"golang.org/x/tools/internal/aliases"
+	"github.com/TBD54566975/x/tools/internal/aliases"
 )
 
 func (p *printer) writeType(this *types.Package, typ types.Type) {
