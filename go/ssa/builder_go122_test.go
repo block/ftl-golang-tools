@@ -15,10 +15,10 @@ import (
 	"go/types"
 	"testing"
 
-	"golang.org/x/tools/go/expect"
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/go/ssa/ssautil"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/TBD54566975/x/tools/go/expect"
+	"github.com/TBD54566975/x/tools/go/ssa"
+	"github.com/TBD54566975/x/tools/go/ssa/ssautil"
+	"github.com/TBD54566975/x/tools/internal/testenv"
 )
 
 // TestMultipleGoversions tests that globals initialized to equivalent

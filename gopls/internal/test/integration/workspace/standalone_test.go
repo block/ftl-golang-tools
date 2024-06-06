@@ -8,9 +8,9 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
+	. "github.com/TBD54566975/x/tools/gopls/internal/test/integration"
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/gopls/internal/protocol"
-	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 func TestStandaloneFiles(t *testing.T) {

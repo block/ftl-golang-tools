@@ -9,7 +9,7 @@ package typeutil
 import (
 	"go/types"
 
-	"golang.org/x/tools/internal/aliases"
+	"github.com/TBD54566975/x/tools/internal/aliases"
 )
 
 // IntuitiveMethodSet returns the intuitive method set of a type T,

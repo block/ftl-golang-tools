@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/util/bug"
+	"github.com/TBD54566975/x/tools/gopls/internal/util/bug"
 )
 
 type port struct{ GOOS, GOARCH string }

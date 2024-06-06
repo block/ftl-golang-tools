@@ -19,14 +19,14 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/filecache"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/server"
-	"golang.org/x/tools/gopls/internal/settings"
-	bugpkg "golang.org/x/tools/gopls/internal/util/bug"
-	versionpkg "golang.org/x/tools/gopls/internal/version"
-	"golang.org/x/tools/internal/event"
+	"github.com/TBD54566975/x/tools/gopls/internal/filecache"
+	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
+	"github.com/TBD54566975/x/tools/gopls/internal/protocol/command"
+	"github.com/TBD54566975/x/tools/gopls/internal/server"
+	"github.com/TBD54566975/x/tools/gopls/internal/settings"
+	bugpkg "github.com/TBD54566975/x/tools/gopls/internal/util/bug"
+	versionpkg "github.com/TBD54566975/x/tools/gopls/internal/version"
+	"github.com/TBD54566975/x/tools/internal/event"
 )
 
 type stats struct {

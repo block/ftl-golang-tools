@@ -14,8 +14,8 @@ import (
 	"go/types"
 	"testing"
 
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/go/ssa/ssautil"
+	"github.com/TBD54566975/x/tools/go/ssa"
+	"github.com/TBD54566975/x/tools/go/ssa/ssautil"
 )
 
 func TestBuildPackageGo120(t *testing.T) {

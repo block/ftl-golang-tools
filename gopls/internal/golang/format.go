@@ -17,16 +17,16 @@ import (
 	"strings"
 	"text/scanner"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/diff"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/imports"
-	"golang.org/x/tools/internal/tokeninternal"
+	"github.com/TBD54566975/x/tools/gopls/internal/cache"
+	"github.com/TBD54566975/x/tools/gopls/internal/cache/parsego"
+	"github.com/TBD54566975/x/tools/gopls/internal/file"
+	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
+	"github.com/TBD54566975/x/tools/gopls/internal/settings"
+	"github.com/TBD54566975/x/tools/gopls/internal/util/safetoken"
+	"github.com/TBD54566975/x/tools/internal/diff"
+	"github.com/TBD54566975/x/tools/internal/event"
+	"github.com/TBD54566975/x/tools/internal/imports"
+	"github.com/TBD54566975/x/tools/internal/tokeninternal"
 )
 
 // Format formats a file with a given range.

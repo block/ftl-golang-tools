@@ -7,8 +7,8 @@ package stubmethods_test
 import (
 	"testing"
 
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/gopls/internal/analysis/stubmethods"
+	"github.com/TBD54566975/x/tools/go/analysis/analysistest"
+	"github.com/TBD54566975/x/tools/gopls/internal/analysis/stubmethods"
 )
 
 func Test(t *testing.T) {

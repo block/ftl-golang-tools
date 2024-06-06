@@ -15,7 +15,7 @@ import (
 	"os"
 	"sync"
 
-	"golang.org/x/tools/internal/versions"
+	"github.com/TBD54566975/x/tools/internal/versions"
 )
 
 // NewProgram returns a new SSA Program.

@@ -17,7 +17,7 @@ import (
 	"go/token"
 	"go/types"
 
-	"golang.org/x/tools/internal/aliases"
+	"github.com/TBD54566975/x/tools/internal/aliases"
 )
 
 // UnpackIndexExpr extracts data from AST nodes that represent index

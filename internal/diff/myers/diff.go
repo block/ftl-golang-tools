@@ -8,7 +8,7 @@ package myers
 import (
 	"strings"
 
-	"golang.org/x/tools/internal/diff"
+	"github.com/TBD54566975/x/tools/internal/diff"
 )
 
 // Sources:

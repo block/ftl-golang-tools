@@ -12,11 +12,11 @@ import (
 	"go/token"
 	"go/types"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/internal/typeparams"
+	"github.com/TBD54566975/x/tools/go/analysis"
+	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/x/tools/go/analysis/passes/internal/analysisutil"
+	"github.com/TBD54566975/x/tools/go/ast/inspector"
+	"github.com/TBD54566975/x/tools/internal/typeparams"
 )
 
 //go:embed doc.go
@@ -25,7 +25,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "nilfunc",
 	Doc:      analysisutil.MustExtractDoc(doc, "nilfunc"),
-	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/nilfunc",
+	URL:      "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/nilfunc",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

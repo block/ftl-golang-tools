@@ -26,13 +26,13 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/TBD54566975/x/tools/go/callgraph"
+	"github.com/TBD54566975/x/tools/go/callgraph/rta"
+	"github.com/TBD54566975/x/tools/go/packages"
+	"github.com/TBD54566975/x/tools/go/ssa"
+	"github.com/TBD54566975/x/tools/go/ssa/ssautil"
+	"github.com/TBD54566975/x/tools/internal/typesinternal"
 	"golang.org/x/telemetry"
-	"golang.org/x/tools/go/callgraph"
-	"golang.org/x/tools/go/callgraph/rta"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/go/ssa/ssautil"
-	"golang.org/x/tools/internal/typesinternal"
 )
 
 //go:embed doc.go

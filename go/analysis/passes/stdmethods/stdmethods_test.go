@@ -7,8 +7,8 @@ package stdmethods_test
 import (
 	"testing"
 
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/go/analysis/passes/stdmethods"
+	"github.com/TBD54566975/x/tools/go/analysis/analysistest"
+	"github.com/TBD54566975/x/tools/go/analysis/passes/stdmethods"
 )
 
 func Test(t *testing.T) {

@@ -11,16 +11,16 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/TBD54566975/x/tools/gopls/internal/cache"
+	"github.com/TBD54566975/x/tools/gopls/internal/file"
+	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
+	"github.com/TBD54566975/x/tools/gopls/internal/settings"
+	"github.com/TBD54566975/x/tools/gopls/internal/vulncheck"
+	"github.com/TBD54566975/x/tools/gopls/internal/vulncheck/govulncheck"
+	"github.com/TBD54566975/x/tools/gopls/internal/vulncheck/osv"
+	"github.com/TBD54566975/x/tools/internal/event"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/semver"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/gopls/internal/vulncheck"
-	"golang.org/x/tools/gopls/internal/vulncheck/govulncheck"
-	"golang.org/x/tools/gopls/internal/vulncheck/osv"
-	"golang.org/x/tools/internal/event"
 )
 
 func Hover(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, position protocol.Position) (*protocol.Hover, error) {
@@ -355,9 +355,9 @@ func formatExplanation(text string, req *modfile.Require, options *settings.Opti
 	b.WriteString("This module is necessary because " + reference + " is imported in")
 
 	// If the explanation is 3 lines, then it is of the form:
-	// # golang.org/x/tools
+	// # github.com/TBD54566975/x/tools
 	// modtest
-	// golang.org/x/tools/go/packages
+	// github.com/TBD54566975/x/tools/go/packages
 	if length == 3 {
 		msg := fmt.Sprintf(" `%s`.", splt[1])
 		b.WriteString(msg)

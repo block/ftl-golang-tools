@@ -7,9 +7,9 @@ package misc
 import (
 	"testing"
 
+	"github.com/TBD54566975/x/tools/gopls/internal/settings"
+	. "github.com/TBD54566975/x/tools/gopls/internal/test/integration"
 	"github.com/google/go-cmp/cmp"
-	. "golang.org/x/tools/gopls/internal/test/integration"
-	"golang.org/x/tools/gopls/internal/settings"
 )
 
 func TestWorkspaceSymbolMissingMetadata(t *testing.T) {
