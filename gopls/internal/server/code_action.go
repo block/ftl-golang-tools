@@ -11,14 +11,14 @@ import (
 	"sort"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/mod"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/internal/event"
+	"github.com/worstell/x/tools/gopls/internal/cache"
+	"github.com/worstell/x/tools/gopls/internal/file"
+	"github.com/worstell/x/tools/gopls/internal/golang"
+	"github.com/worstell/x/tools/gopls/internal/mod"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/protocol/command"
+	"github.com/worstell/x/tools/gopls/internal/settings"
+	"github.com/worstell/x/tools/internal/event"
 )
 
 func (s *server) CodeAction(ctx context.Context, params *protocol.CodeActionParams) ([]protocol.CodeAction, error) {

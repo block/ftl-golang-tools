@@ -11,17 +11,17 @@ import (
 	"go/token"
 	"go/types"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/gopls/internal/analysis/embeddirective"
-	"golang.org/x/tools/gopls/internal/analysis/fillstruct"
-	"golang.org/x/tools/gopls/internal/analysis/undeclaredname"
-	"golang.org/x/tools/gopls/internal/analysis/unusedparams"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/internal/imports"
+	"github.com/worstell/x/tools/go/analysis"
+	"github.com/worstell/x/tools/gopls/internal/analysis/embeddirective"
+	"github.com/worstell/x/tools/gopls/internal/analysis/fillstruct"
+	"github.com/worstell/x/tools/gopls/internal/analysis/undeclaredname"
+	"github.com/worstell/x/tools/gopls/internal/analysis/unusedparams"
+	"github.com/worstell/x/tools/gopls/internal/cache"
+	"github.com/worstell/x/tools/gopls/internal/cache/parsego"
+	"github.com/worstell/x/tools/gopls/internal/file"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/util/bug"
+	"github.com/worstell/x/tools/internal/imports"
 )
 
 // A fixer is a function that suggests a fix for a diagnostic produced

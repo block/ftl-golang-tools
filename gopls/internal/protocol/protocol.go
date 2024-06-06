@@ -11,12 +11,12 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/worstell/x/tools/gopls/internal/util/bug"
+	"github.com/worstell/x/tools/internal/event"
+	"github.com/worstell/x/tools/internal/jsonrpc2"
+	jsonrpc2_v2 "github.com/worstell/x/tools/internal/jsonrpc2_v2"
+	"github.com/worstell/x/tools/internal/xcontext"
 	"golang.org/x/telemetry/crashmonitor"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/jsonrpc2"
-	jsonrpc2_v2 "golang.org/x/tools/internal/jsonrpc2_v2"
-	"golang.org/x/tools/internal/xcontext"
 )
 
 var (

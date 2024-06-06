@@ -22,14 +22,14 @@ import (
 	"strings"
 	"unicode"
 
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/protocol"
-	goplsastutil "golang.org/x/tools/gopls/internal/util/astutil"
-	"golang.org/x/tools/internal/imports"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/worstell/x/tools/go/ast/astutil"
+	"github.com/worstell/x/tools/gopls/internal/cache"
+	"github.com/worstell/x/tools/gopls/internal/cache/metadata"
+	"github.com/worstell/x/tools/gopls/internal/cache/parsego"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	goplsastutil "github.com/worstell/x/tools/gopls/internal/util/astutil"
+	"github.com/worstell/x/tools/internal/imports"
+	"github.com/worstell/x/tools/internal/typesinternal"
 )
 
 const testTmplString = `

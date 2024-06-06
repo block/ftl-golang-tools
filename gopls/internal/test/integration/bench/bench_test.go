@@ -20,17 +20,17 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/cmd"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/test/integration"
-	"golang.org/x/tools/gopls/internal/test/integration/fake"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/fakenet"
-	"golang.org/x/tools/internal/jsonrpc2"
-	"golang.org/x/tools/internal/jsonrpc2/servertest"
-	"golang.org/x/tools/internal/pprof"
-	"golang.org/x/tools/internal/tool"
+	"github.com/worstell/x/tools/gopls/internal/cmd"
+	"github.com/worstell/x/tools/gopls/internal/protocol/command"
+	"github.com/worstell/x/tools/gopls/internal/test/integration"
+	"github.com/worstell/x/tools/gopls/internal/test/integration/fake"
+	"github.com/worstell/x/tools/gopls/internal/util/bug"
+	"github.com/worstell/x/tools/internal/event"
+	"github.com/worstell/x/tools/internal/fakenet"
+	"github.com/worstell/x/tools/internal/jsonrpc2"
+	"github.com/worstell/x/tools/internal/jsonrpc2/servertest"
+	"github.com/worstell/x/tools/internal/pprof"
+	"github.com/worstell/x/tools/internal/tool"
 )
 
 var (

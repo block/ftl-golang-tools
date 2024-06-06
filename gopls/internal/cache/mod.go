@@ -12,15 +12,15 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/worstell/x/tools/gopls/internal/file"
+	"github.com/worstell/x/tools/gopls/internal/label"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/protocol/command"
+	"github.com/worstell/x/tools/internal/event"
+	"github.com/worstell/x/tools/internal/gocommand"
+	"github.com/worstell/x/tools/internal/memoize"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/module"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/gocommand"
-	"golang.org/x/tools/internal/memoize"
 )
 
 // A ParsedModule contains the results of parsing a go.mod file.

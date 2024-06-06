@@ -16,8 +16,8 @@ import (
 	"go/types"
 	"strings"
 
-	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/internal/typeparams"
+	"github.com/worstell/x/tools/go/types/typeutil"
+	"github.com/worstell/x/tools/internal/typeparams"
 )
 
 // A Callee holds information about an inlinable function. Gob-serializable.
@@ -82,7 +82,7 @@ type object struct {
 // Inline, each with a different Caller.
 //
 // This design allows separate analysis of callers and callees in the
-// golang.org/x/tools/go/analysis framework: the inlining information
+// github.com/worstell/x/tools/go/analysis framework: the inlining information
 // about a callee can be recorded as a "fact".
 //
 // The content should be the actual input to the compiler, not the

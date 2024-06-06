@@ -17,8 +17,8 @@ import (
 	"testing"
 	"time"
 
-	. "golang.org/x/tools/gopls/internal/test/integration"
-	"golang.org/x/tools/gopls/internal/test/integration/fake"
+	. "github.com/worstell/x/tools/gopls/internal/test/integration"
+	"github.com/worstell/x/tools/gopls/internal/test/integration/fake"
 )
 
 // repos holds shared repositories for use in benchmarks.

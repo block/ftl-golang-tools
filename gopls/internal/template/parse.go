@@ -21,9 +21,9 @@ import (
 	"text/template/parse"
 	"unicode/utf8"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/event"
+	"github.com/worstell/x/tools/gopls/internal/file"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/internal/event"
 )
 
 var (

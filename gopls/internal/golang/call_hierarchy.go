@@ -13,14 +13,14 @@ import (
 	"go/types"
 	"path/filepath"
 
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/event"
+	"github.com/worstell/x/tools/go/ast/astutil"
+	"github.com/worstell/x/tools/gopls/internal/cache"
+	"github.com/worstell/x/tools/gopls/internal/cache/parsego"
+	"github.com/worstell/x/tools/gopls/internal/file"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/util/bug"
+	"github.com/worstell/x/tools/gopls/internal/util/safetoken"
+	"github.com/worstell/x/tools/internal/event"
 )
 
 // PrepareCallHierarchy returns an array of CallHierarchyItem for a file and the position within the file.

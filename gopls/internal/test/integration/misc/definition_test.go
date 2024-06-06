@@ -14,9 +14,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/test/compare"
-	. "golang.org/x/tools/gopls/internal/test/integration"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/test/compare"
+	. "github.com/worstell/x/tools/gopls/internal/test/integration"
 )
 
 const internalDefinition = `

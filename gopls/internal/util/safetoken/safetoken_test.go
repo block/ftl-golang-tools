@@ -12,9 +12,9 @@ import (
 	"os"
 	"testing"
 
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/worstell/x/tools/go/packages"
+	"github.com/worstell/x/tools/gopls/internal/util/safetoken"
+	"github.com/worstell/x/tools/internal/testenv"
 )
 
 func TestWorkaroundIssue57490(t *testing.T) {
@@ -84,7 +84,7 @@ func TestGoplsSourceDoesNotCallTokenFileMethods(t *testing.T) {
 		"GOFLAGS=-mod=mod",
 	)
 
-	pkgs, err := packages.Load(cfg, "go/token", "golang.org/x/tools/gopls/...")
+	pkgs, err := packages.Load(cfg, "go/token", "github.com/worstell/x/tools/gopls/...")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,8 +117,8 @@ func TestGoplsSourceDoesNotCallTokenFileMethods(t *testing.T) {
 	for _, pkg := range pkgs {
 		switch pkg.PkgPath {
 		case "go/token",
-			"golang.org/x/tools/gopls/internal/util/safetoken", // this package
-			"golang.org/x/tools/gopls/internal/cache/parsego":  // copies go/parser/resolver.go
+			"github.com/worstell/x/tools/gopls/internal/util/safetoken", // this package
+			"github.com/worstell/x/tools/gopls/internal/cache/parsego":  // copies go/parser/resolver.go
 			continue // allow calls within these packages
 		}
 

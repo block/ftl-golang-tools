@@ -23,16 +23,16 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/worstell/x/tools/go/types/objectpath"
+	"github.com/worstell/x/tools/gopls/internal/cache"
+	"github.com/worstell/x/tools/gopls/internal/cache/metadata"
+	"github.com/worstell/x/tools/gopls/internal/cache/methodsets"
+	"github.com/worstell/x/tools/gopls/internal/cache/parsego"
+	"github.com/worstell/x/tools/gopls/internal/file"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/util/safetoken"
+	"github.com/worstell/x/tools/internal/event"
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/tools/go/types/objectpath"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/cache/methodsets"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/event"
 )
 
 // References returns a list of all references (sorted with

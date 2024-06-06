@@ -11,10 +11,10 @@ import (
 	"go/types"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/golang/completion/snippet"
-	"golang.org/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/cache"
+	"github.com/worstell/x/tools/gopls/internal/golang"
+	"github.com/worstell/x/tools/gopls/internal/golang/completion/snippet"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
 )
 
 // addStatementCandidates adds full statement completion candidates

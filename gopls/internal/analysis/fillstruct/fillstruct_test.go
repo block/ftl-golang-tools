@@ -8,9 +8,9 @@ import (
 	"go/token"
 	"testing"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/gopls/internal/analysis/fillstruct"
+	"github.com/worstell/x/tools/go/analysis"
+	"github.com/worstell/x/tools/go/analysis/analysistest"
+	"github.com/worstell/x/tools/gopls/internal/analysis/fillstruct"
 )
 
 // analyzer allows us to test the fillstruct code action using the analysistest
@@ -26,7 +26,7 @@ var analyzer = &analysis.Analyzer{
 		}
 		return nil, nil
 	},
-	URL:              "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/fillstruct",
+	URL:              "https://pkg.go.dev/github.com/worstell/x/tools/gopls/internal/analysis/fillstruct",
 	RunDespiteErrors: true,
 }
 

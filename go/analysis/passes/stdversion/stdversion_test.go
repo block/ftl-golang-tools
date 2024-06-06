@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/go/analysis/passes/stdversion"
-	"golang.org/x/tools/internal/testenv"
-	"golang.org/x/tools/internal/testfiles"
+	"github.com/worstell/x/tools/go/analysis/analysistest"
+	"github.com/worstell/x/tools/go/analysis/passes/stdversion"
+	"github.com/worstell/x/tools/internal/testenv"
+	"github.com/worstell/x/tools/internal/testfiles"
 )
 
 func Test(t *testing.T) {

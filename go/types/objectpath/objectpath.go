@@ -29,8 +29,8 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/worstell/x/tools/internal/aliases"
+	"github.com/worstell/x/tools/internal/typesinternal"
 )
 
 // TODO(adonovan): think about generic aliases.
@@ -234,7 +234,7 @@ func (enc *Encoder) For(obj types.Object) (Path, error) {
 			return "", fmt.Errorf("no path for %v", obj)
 		}
 	case *types.Const, // Only package-level constants have a path.
-		*types.Label,   // Labels are function-local.
+		*types.Label,  // Labels are function-local.
 		*types.PkgName: // PkgNames are file-local.
 		return "", fmt.Errorf("no path for %v", obj)
 

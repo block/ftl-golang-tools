@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/vulncheck/osv"
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/vulncheck/osv"
 )
 
 var update = flag.Bool("update", false, "update golden files in testdata/")

@@ -27,9 +27,9 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/tools/internal/gcimporter"
-	"golang.org/x/tools/internal/goroot"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/worstell/x/tools/internal/gcimporter"
+	"github.com/worstell/x/tools/internal/goroot"
+	"github.com/worstell/x/tools/internal/testenv"
 )
 
 func TestMain(m *testing.M) {

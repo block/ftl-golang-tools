@@ -203,7 +203,7 @@ Client support:
   Many users of [go-mode](https://github.com/dominikh/go-mode.el) use these lines to
   organize imports and reformat each modified file before saving it, but this
   approach is based on the legacy
-  [`goimports`](https://pkg.go.dev/golang.org/x/tools/cmd/goimports) tool, not gopls:
+  [`goimports`](https://pkg.go.dev/github.com/worstell/x/tools/cmd/goimports) tool, not gopls:
   ```lisp
   (setq gofmt-command "goimports")
   (add-hook 'before-save-hook 'gofmt-before-save)
@@ -518,7 +518,7 @@ Here are some of the technical challenges involved in sound inlining:
   cautious about eliminating references to local variables.
 
 This is just a taste of the problem domain. If you're curious, the
-documentation for [golang.org/x/tools/internal/refactor/inline](https://pkg.go.dev/golang.org/x/tools/internal/refactor/inline) has
+documentation for [github.com/worstell/x/tools/internal/refactor/inline](https://pkg.go.dev/github.com/worstell/x/tools/internal/refactor/inline) has
 more detail. All of this is to say, it's a complex problem, and we aim
 for correctness first of all. We've already implemented a number of
 important "tidiness optimizations" and we expect more to follow.

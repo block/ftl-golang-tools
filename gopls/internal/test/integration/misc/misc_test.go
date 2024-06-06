@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	. "github.com/worstell/x/tools/gopls/internal/test/integration"
+	"github.com/worstell/x/tools/gopls/internal/util/bug"
 	"golang.org/x/telemetry/counter/countertest"
-	"golang.org/x/tools/gopls/internal/protocol"
-	. "golang.org/x/tools/gopls/internal/test/integration"
-	"golang.org/x/tools/gopls/internal/util/bug"
 )
 
 func TestMain(m *testing.M) {

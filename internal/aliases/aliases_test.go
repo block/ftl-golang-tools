@@ -11,8 +11,8 @@ import (
 	"go/types"
 	"testing"
 
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/worstell/x/tools/internal/aliases"
+	"github.com/worstell/x/tools/internal/testenv"
 )
 
 // TestNewAlias tests that alias.NewAlias creates an alias of a type

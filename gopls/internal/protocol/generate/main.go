@@ -98,7 +98,7 @@ func writeclient() {
 		`import (
 	"context"
 
-	"golang.org/x/tools/internal/jsonrpc2"
+	"github.com/worstell/x/tools/internal/jsonrpc2"
 )
 `)
 	out.WriteString("type Client interface {\n")
@@ -127,7 +127,7 @@ func writeserver() {
 		`import (
 	"context"
 
-	"golang.org/x/tools/internal/jsonrpc2"
+	"github.com/worstell/x/tools/internal/jsonrpc2"
 )
 `)
 	out.WriteString("type Server interface {\n")
@@ -261,7 +261,7 @@ package protocol
 		lspGitRef,                 // 2
 		githash,                   // 3
 		vscodeRepo,                // 4
-		model.Version.Version)     // 5
+		model.Version.Version) // 5
 }
 
 func parse(fname string) *Model {

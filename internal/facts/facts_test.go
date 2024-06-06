@@ -16,10 +16,10 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/internal/facts"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/worstell/x/tools/go/analysis/analysistest"
+	"github.com/worstell/x/tools/go/packages"
+	"github.com/worstell/x/tools/internal/facts"
+	"github.com/worstell/x/tools/internal/testenv"
 )
 
 type myFact struct {

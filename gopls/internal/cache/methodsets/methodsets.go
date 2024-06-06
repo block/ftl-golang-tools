@@ -51,9 +51,9 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/tools/go/types/objectpath"
-	"golang.org/x/tools/gopls/internal/util/frob"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
+	"github.com/worstell/x/tools/go/types/objectpath"
+	"github.com/worstell/x/tools/gopls/internal/util/frob"
+	"github.com/worstell/x/tools/gopls/internal/util/safetoken"
 )
 
 // An Index records the non-empty method sets of all package-level

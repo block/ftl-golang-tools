@@ -15,9 +15,9 @@ import (
 	"os"
 	"sync"
 
-	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/internal/typeparams"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/worstell/x/tools/go/types/typeutil"
+	"github.com/worstell/x/tools/internal/typeparams"
+	"github.com/worstell/x/tools/internal/typesinternal"
 )
 
 type unit struct{}

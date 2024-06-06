@@ -377,7 +377,7 @@ Rename   | Rename an identifier
 Requires | AST and type information for the **reverse** transitive closure
 LSP      | [`textDocument/rename`]
 |        | [`textDocument/prepareRename`]
-Previous | golang.org/x/tools/cmd/gorename
+Previous | github.com/worstell/x/tools/cmd/gorename
 |        | This uses the same information that find references does, with all the same problems and limitations. It is slightly worse because the changes it suggests make it intolerant of incorrect results. It is also dangerous using it to change the public API of a package.
 
 ---
@@ -401,10 +401,10 @@ Previous        | N/A
 [godoc]: https://golang.org/cmd/godoc
 [gofmt]: https://golang.org/cmd/gofmt
 [gogetdoc]: https://github.com/zmb3/gogetdoc
-[goimports]: https://pkg.go.dev/golang.org/x/tools/cmd/goimports
+[goimports]: https://pkg.go.dev/github.com/worstell/x/tools/cmd/goimports
 [goreturns]: https://github.com/sqs/goreturns
 [gotags]: https://github.com/jstemmer/gotags
-[guru]: https://pkg.go.dev/golang.org/x/tools/cmd/guru
+[guru]: https://pkg.go.dev/github.com/worstell/x/tools/cmd/guru
 [impl]: https://github.com/josharian/impl
 [staticcheck]: https://staticcheck.io/docs/
 [go/types]: https://golang.org/pkg/go/types/

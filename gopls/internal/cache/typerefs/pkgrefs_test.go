@@ -18,15 +18,15 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/tools/go/gcexportdata"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/cache/typerefs"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/astutil"
-	"golang.org/x/tools/internal/packagesinternal"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/worstell/x/tools/go/gcexportdata"
+	"github.com/worstell/x/tools/go/packages"
+	"github.com/worstell/x/tools/gopls/internal/cache/metadata"
+	"github.com/worstell/x/tools/gopls/internal/cache/parsego"
+	"github.com/worstell/x/tools/gopls/internal/cache/typerefs"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/util/astutil"
+	"github.com/worstell/x/tools/internal/packagesinternal"
+	"github.com/worstell/x/tools/internal/testenv"
 )
 
 var (

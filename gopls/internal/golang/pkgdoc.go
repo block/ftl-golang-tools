@@ -44,15 +44,15 @@ import (
 	"slices"
 	"strings"
 
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/protocol"
-	goplsastutil "golang.org/x/tools/gopls/internal/util/astutil"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/stdlib"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/worstell/x/tools/go/ast/astutil"
+	"github.com/worstell/x/tools/gopls/internal/cache"
+	"github.com/worstell/x/tools/gopls/internal/cache/parsego"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	goplsastutil "github.com/worstell/x/tools/gopls/internal/util/astutil"
+	"github.com/worstell/x/tools/gopls/internal/util/bug"
+	"github.com/worstell/x/tools/gopls/internal/util/safetoken"
+	"github.com/worstell/x/tools/internal/stdlib"
+	"github.com/worstell/x/tools/internal/typesinternal"
 )
 
 // DocFragment finds the package and (optionally) symbol identified by

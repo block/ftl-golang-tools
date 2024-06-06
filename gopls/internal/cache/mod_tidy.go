@@ -15,16 +15,16 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/worstell/x/tools/gopls/internal/cache/parsego"
+	"github.com/worstell/x/tools/gopls/internal/file"
+	"github.com/worstell/x/tools/gopls/internal/label"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/protocol/command"
+	"github.com/worstell/x/tools/internal/diff"
+	"github.com/worstell/x/tools/internal/event"
+	"github.com/worstell/x/tools/internal/gocommand"
+	"github.com/worstell/x/tools/internal/memoize"
 	"golang.org/x/mod/modfile"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/internal/diff"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/gocommand"
-	"golang.org/x/tools/internal/memoize"
 )
 
 // This error is sought by mod diagnostics.
@@ -267,10 +267,10 @@ func missingModuleDiagnostics(ctx context.Context, snapshot *Snapshot, pm *Parse
 			// Example:
 			//
 			// import (
-			//   "golang.org/x/tools/internal/expect"
-			//   "golang.org/x/tools/go/packages"
+			//   "github.com/worstell/x/tools/internal/expect"
+			//   "github.com/worstell/x/tools/go/packages"
 			// )
-			// They both are related to the same module: "golang.org/x/tools".
+			// They both are related to the same module: "github.com/worstell/x/tools".
 			var match string
 			for _, req := range ideal.Require {
 				if strings.HasPrefix(imp, req.Mod.Path) && len(req.Mod.Path) > len(match) {

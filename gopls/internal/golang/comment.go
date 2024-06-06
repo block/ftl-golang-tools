@@ -14,12 +14,12 @@ import (
 	"go/types"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/gopls/internal/util/astutil"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
+	"github.com/worstell/x/tools/gopls/internal/cache"
+	"github.com/worstell/x/tools/gopls/internal/cache/parsego"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/settings"
+	"github.com/worstell/x/tools/gopls/internal/util/astutil"
+	"github.com/worstell/x/tools/gopls/internal/util/safetoken"
 )
 
 var errNoCommentReference = errors.New("no comment reference found")

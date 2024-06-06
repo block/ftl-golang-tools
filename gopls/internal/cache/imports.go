@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/event/keys"
-	"golang.org/x/tools/internal/imports"
+	"github.com/worstell/x/tools/gopls/internal/file"
+	"github.com/worstell/x/tools/gopls/internal/label"
+	"github.com/worstell/x/tools/internal/event"
+	"github.com/worstell/x/tools/internal/event/keys"
+	"github.com/worstell/x/tools/internal/imports"
 )
 
 // refreshTimer implements delayed asynchronous refreshing of state.

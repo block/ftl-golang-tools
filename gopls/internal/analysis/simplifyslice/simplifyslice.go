@@ -12,10 +12,10 @@ import (
 	"go/printer"
 	"go/token"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/internal/analysisinternal"
+	"github.com/worstell/x/tools/go/analysis"
+	"github.com/worstell/x/tools/go/analysis/passes/inspect"
+	"github.com/worstell/x/tools/go/ast/inspector"
+	"github.com/worstell/x/tools/internal/analysisinternal"
 )
 
 //go:embed doc.go
@@ -26,7 +26,7 @@ var Analyzer = &analysis.Analyzer{
 	Doc:      analysisinternal.MustExtractDoc(doc, "simplifyslice"),
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
-	URL:      "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/simplifyslice",
+	URL:      "https://pkg.go.dev/github.com/worstell/x/tools/gopls/internal/analysis/simplifyslice",
 }
 
 // Note: We could also simplify slice expressions of the form s[0:b] to s[:b]

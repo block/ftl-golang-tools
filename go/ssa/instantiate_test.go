@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/go/ssa/ssautil"
+	"github.com/worstell/x/tools/go/ssa"
+	"github.com/worstell/x/tools/go/ssa/ssautil"
 )
 
 // TestNeedsInstance ensures that new method instances can be created via MethodValue.

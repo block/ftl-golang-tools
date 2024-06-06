@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/internal/pkgbits"
+	"github.com/worstell/x/tools/internal/pkgbits"
 )
 
 func TestRoundTrip(t *testing.T) {

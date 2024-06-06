@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"os"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/tool"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/internal/tool"
 )
 
 // links implements the links verb for gopls.

@@ -17,7 +17,7 @@ import (
 	pathpkg "path"
 	"strconv"
 
-	"golang.org/x/tools/go/analysis"
+	"github.com/worstell/x/tools/go/analysis"
 )
 
 func TypeErrorEndPos(fset *token.FileSet, src []byte, start token.Pos) token.Pos {

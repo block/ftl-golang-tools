@@ -16,13 +16,13 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cmd"
-	"golang.org/x/tools/internal/drivertest"
-	"golang.org/x/tools/internal/gocommand"
-	"golang.org/x/tools/internal/memoize"
-	"golang.org/x/tools/internal/testenv"
-	"golang.org/x/tools/internal/tool"
+	"github.com/worstell/x/tools/gopls/internal/cache"
+	"github.com/worstell/x/tools/gopls/internal/cmd"
+	"github.com/worstell/x/tools/internal/drivertest"
+	"github.com/worstell/x/tools/internal/gocommand"
+	"github.com/worstell/x/tools/internal/memoize"
+	"github.com/worstell/x/tools/internal/testenv"
+	"github.com/worstell/x/tools/internal/tool"
 )
 
 var (

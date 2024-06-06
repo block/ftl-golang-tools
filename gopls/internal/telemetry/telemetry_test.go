@@ -16,13 +16,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/protocol/command"
+	"github.com/worstell/x/tools/gopls/internal/telemetry"
+	. "github.com/worstell/x/tools/gopls/internal/test/integration"
+	"github.com/worstell/x/tools/gopls/internal/util/bug"
 	"golang.org/x/telemetry/counter"
 	"golang.org/x/telemetry/counter/countertest" // requires go1.21+
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/telemetry"
-	. "golang.org/x/tools/gopls/internal/test/integration"
-	"golang.org/x/tools/gopls/internal/util/bug"
 )
 
 func TestMain(m *testing.M) {
@@ -82,10 +82,10 @@ func TestTelemetry(t *testing.T) {
 		// This will increment a counter named something like:
 		//
 		// `gopls/bug
-		// golang.org/x/tools/gopls/internal/util/bug.report:+35
-		// golang.org/x/tools/gopls/internal/util/bug.Report:=68
-		// golang.org/x/tools/gopls/internal/telemetry_test.TestTelemetry.func2:+4
-		// golang.org/x/tools/gopls/internal/test/integration.(*Runner).Run.func1:+87
+		// github.com/worstell/x/tools/gopls/internal/util/bug.report:+35
+		// github.com/worstell/x/tools/gopls/internal/util/bug.Report:=68
+		// github.com/worstell/x/tools/gopls/internal/telemetry_test.TestTelemetry.func2:+4
+		// github.com/worstell/x/tools/gopls/internal/test/integration.(*Runner).Run.func1:+87
 		// testing.tRunner:+150
 		// runtime.goexit:+0`
 		//

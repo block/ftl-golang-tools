@@ -8,7 +8,7 @@ import (
 	"go/build"
 	"testing"
 
-	"golang.org/x/tools/internal/testenv"
+	"github.com/worstell/x/tools/internal/testenv"
 )
 
 func TestParseVersionRow(t *testing.T) {

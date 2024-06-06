@@ -13,12 +13,12 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/go/analysis/passes/findcall"
-	"golang.org/x/tools/internal/testenv"
-	"golang.org/x/tools/internal/testfiles"
-	"golang.org/x/tools/txtar"
+	"github.com/worstell/x/tools/go/analysis"
+	"github.com/worstell/x/tools/go/analysis/analysistest"
+	"github.com/worstell/x/tools/go/analysis/passes/findcall"
+	"github.com/worstell/x/tools/internal/testenv"
+	"github.com/worstell/x/tools/internal/testfiles"
+	"github.com/worstell/x/tools/txtar"
 )
 
 func init() {

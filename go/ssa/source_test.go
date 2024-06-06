@@ -17,9 +17,9 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/internal/expect"
+	"github.com/worstell/x/tools/go/ast/astutil"
+	"github.com/worstell/x/tools/go/ssa"
+	"github.com/worstell/x/tools/internal/expect"
 )
 
 func TestObjValueLookup(t *testing.T) {

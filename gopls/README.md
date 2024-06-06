@@ -1,6 +1,6 @@
 # `gopls`, the Go language server
 
-[![PkgGoDev](https://pkg.go.dev/badge/golang.org/x/tools/gopls)](https://pkg.go.dev/golang.org/x/tools/gopls)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/worstell/x/tools/gopls)](https://pkg.go.dev/github.com/worstell/x/tools/gopls)
 
 `gopls` (pronounced "Go please") is the official Go [language server] developed
 by the Go team.
@@ -43,7 +43,7 @@ If you do want to get the latest stable version of `gopls`, run the following
 command:
 
 ```sh
-go install golang.org/x/tools/gopls@latest
+go install github.com/worstell/x/tools/gopls@latest
 ```
 
 Learn more in the

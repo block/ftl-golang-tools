@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/internal/analysisflags"
+	"github.com/worstell/x/tools/go/analysis"
+	"github.com/worstell/x/tools/go/analysis/internal/analysisflags"
 )
 
 func TestResolveURLs(t *testing.T) {

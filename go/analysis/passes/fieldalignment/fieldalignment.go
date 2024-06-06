@@ -15,9 +15,9 @@ import (
 	"go/types"
 	"sort"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
+	"github.com/worstell/x/tools/go/analysis"
+	"github.com/worstell/x/tools/go/analysis/passes/inspect"
+	"github.com/worstell/x/tools/go/ast/inspector"
 )
 
 const Doc = `find structs that would use less memory if their fields were sorted
@@ -52,7 +52,7 @@ produced by fieldanalyzer very rarely indicate a significant problem,
 so the analyzer is not included in typical suites such as vet or
 gopls. Use this standalone command to run it on your code:
 
-   $ go install golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest
+   $ go install github.com/worstell/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest
    $ fieldalignment [packages]
 
 `
@@ -60,7 +60,7 @@ gopls. Use this standalone command to run it on your code:
 var Analyzer = &analysis.Analyzer{
 	Name:     "fieldalignment",
 	Doc:      Doc,
-	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/fieldalignment",
+	URL:      "https://pkg.go.dev/github.com/worstell/x/tools/go/analysis/passes/fieldalignment",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

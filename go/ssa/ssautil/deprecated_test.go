@@ -12,10 +12,10 @@ import (
 	"os"
 	"testing"
 
-	"golang.org/x/tools/go/loader"
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/go/ssa/ssautil"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/worstell/x/tools/go/loader"
+	"github.com/worstell/x/tools/go/ssa"
+	"github.com/worstell/x/tools/go/ssa/ssautil"
+	"github.com/worstell/x/tools/internal/testenv"
 )
 
 // TestCreateProgram tests CreateProgram which has an x/tools/go/loader.Program.

@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"unsafe"
 
-	"golang.org/x/tools/internal/aliases"
+	"github.com/worstell/x/tools/internal/aliases"
 )
 
 func SetUsesCgo(conf *types.Config) bool {

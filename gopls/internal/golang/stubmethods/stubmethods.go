@@ -13,10 +13,11 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
-	"golang.org/x/tools/internal/typesinternal"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/util/typesutil"
+	"github.com/worstell/x/tools/internal/typesinternal"
+
+	"github.com/worstell/x/tools/gopls/internal/util/typesutil"
 )
 
 // TODO(adonovan): eliminate the confusing Fset parameter; only the

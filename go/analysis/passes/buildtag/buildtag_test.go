@@ -6,11 +6,11 @@ package buildtag_test
 
 import (
 	"testing"
-
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/go/analysis/passes/buildtag"
-	"golang.org/x/tools/internal/versions"
+	
+	"github.com/worstell/x/tools/go/analysis"
+	"github.com/worstell/x/tools/go/analysis/analysistest"
+	"github.com/worstell/x/tools/go/analysis/passes/buildtag"
+	"github.com/worstell/x/tools/internal/versions"
 )
 
 func Test(t *testing.T) {

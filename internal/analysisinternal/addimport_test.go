@@ -16,8 +16,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/internal/analysisinternal"
+	"github.com/worstell/x/tools/go/analysis"
+	"github.com/worstell/x/tools/internal/analysisinternal"
 )
 
 func TestAddImport(t *testing.T) {

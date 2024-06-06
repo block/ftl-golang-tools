@@ -11,10 +11,10 @@ import (
 	"regexp"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/frob"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
+	"github.com/worstell/x/tools/gopls/internal/cache/parsego"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/util/frob"
+	"github.com/worstell/x/tools/gopls/internal/util/safetoken"
 )
 
 // An Index records the test set of a package.

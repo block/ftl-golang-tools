@@ -7,8 +7,8 @@ package vta
 import (
 	"go/types"
 
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/internal/typeparams"
+	"github.com/worstell/x/tools/go/ssa"
+	"github.com/worstell/x/tools/internal/typeparams"
 )
 
 func canAlias(n1, n2 node) bool {

@@ -14,8 +14,8 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/internal/testenv"
-	"golang.org/x/tools/internal/versions"
+	"github.com/worstell/x/tools/internal/testenv"
+	"github.com/worstell/x/tools/internal/versions"
 )
 
 var contents = map[string]string{
@@ -50,35 +50,35 @@ func Test(t *testing.T) {
 	}{
 		{
 			"", "", []fileTest{
-				{"noversion.go", ""},
-				{"gobuild119.go", "go1.21"},
-				{"gobuild120.go", "go1.21"},
-				{"gobuild121.go", "go1.21"},
-				{"gobuild122.go", "go1.22"}},
+			{"noversion.go", ""},
+			{"gobuild119.go", "go1.21"},
+			{"gobuild120.go", "go1.21"},
+			{"gobuild121.go", "go1.21"},
+			{"gobuild122.go", "go1.22"}},
 		},
 		{
 			"go1.20", "go1.20", []fileTest{
-				{"noversion.go", "go1.20"},
-				{"gobuild119.go", "go1.21"},
-				{"gobuild120.go", "go1.21"},
-				{"gobuild121.go", "go1.21"},
-				{"gobuild122.go", "go1.22"}},
+			{"noversion.go", "go1.20"},
+			{"gobuild119.go", "go1.21"},
+			{"gobuild120.go", "go1.21"},
+			{"gobuild121.go", "go1.21"},
+			{"gobuild122.go", "go1.22"}},
 		},
 		{
 			"go1.21", "go1.21", []fileTest{
-				{"noversion.go", "go1.21"},
-				{"gobuild119.go", "go1.21"},
-				{"gobuild120.go", "go1.21"},
-				{"gobuild121.go", "go1.21"},
-				{"gobuild122.go", "go1.22"}},
+			{"noversion.go", "go1.21"},
+			{"gobuild119.go", "go1.21"},
+			{"gobuild120.go", "go1.21"},
+			{"gobuild121.go", "go1.21"},
+			{"gobuild122.go", "go1.22"}},
 		},
 		{
 			"go1.22", "go1.22", []fileTest{
-				{"noversion.go", "go1.22"},
-				{"gobuild119.go", "go1.21"},
-				{"gobuild120.go", "go1.21"},
-				{"gobuild121.go", "go1.21"},
-				{"gobuild122.go", "go1.22"}},
+			{"noversion.go", "go1.22"},
+			{"gobuild119.go", "go1.21"},
+			{"gobuild120.go", "go1.21"},
+			{"gobuild121.go", "go1.21"},
+			{"gobuild122.go", "go1.22"}},
 		},
 	} {
 		name := fmt.Sprintf("types.Config{GoVersion:%q}", item.goversion)
@@ -105,35 +105,35 @@ func TestToolchain122(t *testing.T) {
 	}{
 		{
 			"", "", []fileTest{
-				{"noversion.go", ""},
-				{"gobuild119.go", ""},  // differs
-				{"gobuild120.go", ""},  // differs
-				{"gobuild121.go", ""},  // differs
-				{"gobuild122.go", ""}}, // differs
+			{"noversion.go", ""},
+			{"gobuild119.go", ""}, // differs
+			{"gobuild120.go", ""}, // differs
+			{"gobuild121.go", ""}, // differs
+			{"gobuild122.go", ""}}, // differs
 		},
 		{
 			"go1.20", "go1.20", []fileTest{
-				{"noversion.go", "go1.20"},
-				{"gobuild119.go", "go1.20"}, // differs
-				{"gobuild120.go", "go1.20"}, // differs
-				{"gobuild121.go", "go1.21"},
-				{"gobuild122.go", "go1.22"}},
+			{"noversion.go", "go1.20"},
+			{"gobuild119.go", "go1.20"}, // differs
+			{"gobuild120.go", "go1.20"}, // differs
+			{"gobuild121.go", "go1.21"},
+			{"gobuild122.go", "go1.22"}},
 		},
 		{
 			"go1.21", "go1.21", []fileTest{
-				{"noversion.go", "go1.21"},
-				{"gobuild119.go", "go1.19"}, // differs
-				{"gobuild120.go", "go1.20"}, // differs
-				{"gobuild121.go", "go1.21"},
-				{"gobuild122.go", "go1.22"}},
+			{"noversion.go", "go1.21"},
+			{"gobuild119.go", "go1.19"}, // differs
+			{"gobuild120.go", "go1.20"}, // differs
+			{"gobuild121.go", "go1.21"},
+			{"gobuild122.go", "go1.22"}},
 		},
 		{
 			"go1.22", "go1.22", []fileTest{
-				{"noversion.go", "go1.22"},
-				{"gobuild119.go", "go1.19"}, // differs
-				{"gobuild120.go", "go1.20"}, // differs
-				{"gobuild121.go", "go1.21"},
-				{"gobuild122.go", "go1.22"}},
+			{"noversion.go", "go1.22"},
+			{"gobuild119.go", "go1.19"}, // differs
+			{"gobuild120.go", "go1.20"}, // differs
+			{"gobuild121.go", "go1.21"},
+			{"gobuild122.go", "go1.22"}},
 		},
 	} {
 		name := fmt.Sprintf("types.Config{GoVersion:%q}", item.goversion)

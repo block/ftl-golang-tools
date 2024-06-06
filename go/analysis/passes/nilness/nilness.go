@@ -10,11 +10,11 @@ import (
 	"go/token"
 	"go/types"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/buildssa"
-	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/internal/typeparams"
+	"github.com/worstell/x/tools/go/analysis"
+	"github.com/worstell/x/tools/go/analysis/passes/buildssa"
+	"github.com/worstell/x/tools/go/analysis/passes/internal/analysisutil"
+	"github.com/worstell/x/tools/go/ssa"
+	"github.com/worstell/x/tools/internal/typeparams"
 )
 
 //go:embed doc.go
@@ -23,7 +23,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "nilness",
 	Doc:      analysisutil.MustExtractDoc(doc, "nilness"),
-	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/nilness",
+	URL:      "https://pkg.go.dev/github.com/worstell/x/tools/go/analysis/passes/nilness",
 	Run:      run,
 	Requires: []*analysis.Analyzer{buildssa.Analyzer},
 }

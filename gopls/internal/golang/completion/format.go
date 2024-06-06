@@ -13,14 +13,14 @@ import (
 	"go/types"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/golang/completion/snippet"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/gopls/internal/util/typesutil"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/imports"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/worstell/x/tools/gopls/internal/golang"
+	"github.com/worstell/x/tools/gopls/internal/golang/completion/snippet"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/util/safetoken"
+	"github.com/worstell/x/tools/gopls/internal/util/typesutil"
+	"github.com/worstell/x/tools/internal/event"
+	"github.com/worstell/x/tools/internal/imports"
+	"github.com/worstell/x/tools/internal/typesinternal"
 )
 
 var (

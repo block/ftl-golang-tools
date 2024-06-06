@@ -15,8 +15,8 @@ import (
 	"regexp"
 	"strings"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/ast/astutil"
+	"github.com/worstell/x/tools/go/analysis"
+	"github.com/worstell/x/tools/go/ast/astutil"
 )
 
 const Doc = `check for unused variables and suggest fixes`
@@ -27,7 +27,7 @@ var Analyzer = &analysis.Analyzer{
 	Requires:         []*analysis.Analyzer{},
 	Run:              run,
 	RunDespiteErrors: true, // an unusedvariable diagnostic is a compile error
-	URL:              "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/unusedvariable",
+	URL:              "https://pkg.go.dev/github.com/worstell/x/tools/gopls/internal/analysis/unusedvariable",
 }
 
 // The suffix for this error message changed in Go 1.20 and Go 1.23.

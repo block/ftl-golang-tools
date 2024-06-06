@@ -21,9 +21,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/worstell/x/tools/gopls/internal/filecache"
+	"github.com/worstell/x/tools/internal/testenv"
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/tools/gopls/internal/filecache"
-	"golang.org/x/tools/internal/testenv"
 )
 
 func TestBasics(t *testing.T) {

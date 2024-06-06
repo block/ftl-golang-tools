@@ -13,12 +13,12 @@ import (
 	"slices"
 	"sync"
 
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/cache/methodsets"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/cache/testfuncs"
-	"golang.org/x/tools/gopls/internal/cache/xrefs"
-	"golang.org/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/cache/metadata"
+	"github.com/worstell/x/tools/gopls/internal/cache/methodsets"
+	"github.com/worstell/x/tools/gopls/internal/cache/parsego"
+	"github.com/worstell/x/tools/gopls/internal/cache/testfuncs"
+	"github.com/worstell/x/tools/gopls/internal/cache/xrefs"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
 )
 
 // Convenient aliases for very heavily used types.

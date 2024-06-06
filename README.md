@@ -1,14 +1,14 @@
 # Go Tools
 
-[![PkgGoDev](https://pkg.go.dev/badge/golang.org/x/tools)](https://pkg.go.dev/golang.org/x/tools)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/worstell/x/tools)](https://pkg.go.dev/github.com/worstell/x/tools)
 
-This repository provides the `golang.org/x/tools` module, comprising
+This repository provides the `github.com/worstell/x/tools` module, comprising
 various tools and packages mostly for static analysis of Go programs,
 some of which are listed below.
 Use the "Go reference" link above for more information about any package.
 
 It also contains the
-[`golang.org/x/tools/gopls`](https://pkg.go.dev/golang.org/x/tools/gopls)
+[`github.com/worstell/x/tools/gopls`](https://pkg.go.dev/github.com/worstell/x/tools/gopls)
 module, whose root package is a language-server protocol (LSP) server for Go.
 An LSP server analyses the source code of a project and
 responds to requests from a wide range of editors such as VSCode and
@@ -28,7 +28,7 @@ Selected commands:
 
 These commands may be fetched with a command such as
 ```
-go install golang.org/x/tools/cmd/goimports@latest
+go install github.com/worstell/x/tools/cmd/goimports@latest
 ```
 
 Selected packages:
@@ -61,15 +61,15 @@ Numerous other packages provide more esoteric functionality.
 
 <!-- Some that didn't make the cut:
 
-golang.org/x/tools/benchmark/parse
-golang.org/x/tools/go/ast/astutil
-golang.org/x/tools/go/types/typeutil
-golang.org/x/tools/playground
-golang.org/x/tools/present
-golang.org/x/tools/refactor/importgraph
-golang.org/x/tools/refactor/rename
-golang.org/x/tools/refactor/satisfy
-golang.org/x/tools/txtar
+github.com/worstell/x/tools/benchmark/parse
+github.com/worstell/x/tools/go/ast/astutil
+github.com/worstell/x/tools/go/types/typeutil
+github.com/worstell/x/tools/playground
+github.com/worstell/x/tools/present
+github.com/worstell/x/tools/refactor/importgraph
+github.com/worstell/x/tools/refactor/rename
+github.com/worstell/x/tools/refactor/satisfy
+github.com/worstell/x/tools/txtar
 
 -->
 

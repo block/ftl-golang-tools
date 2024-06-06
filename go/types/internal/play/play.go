@@ -27,10 +27,10 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/internal/typeparams"
+	"github.com/worstell/x/tools/go/ast/astutil"
+	"github.com/worstell/x/tools/go/packages"
+	"github.com/worstell/x/tools/go/types/typeutil"
+	"github.com/worstell/x/tools/internal/typeparams"
 )
 
 // TODO(adonovan):

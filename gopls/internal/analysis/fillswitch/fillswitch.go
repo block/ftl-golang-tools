@@ -11,8 +11,8 @@ import (
 	"go/token"
 	"go/types"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/worstell/x/tools/go/analysis"
+	"github.com/worstell/x/tools/internal/typesinternal"
 )
 
 // Diagnose computes diagnostics for switch statements with missing cases

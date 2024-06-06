@@ -13,9 +13,9 @@ import (
 	"strings"
 	"unicode"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
-	"golang.org/x/tools/internal/versions"
+	"github.com/worstell/x/tools/go/analysis"
+	"github.com/worstell/x/tools/go/analysis/passes/internal/analysisutil"
+	"github.com/worstell/x/tools/internal/versions"
 )
 
 const Doc = "check //go:build and // +build directives"
@@ -23,7 +23,7 @@ const Doc = "check //go:build and // +build directives"
 var Analyzer = &analysis.Analyzer{
 	Name: "buildtag",
 	Doc:  Doc,
-	URL:  "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/buildtag",
+	URL:  "https://pkg.go.dev/github.com/worstell/x/tools/go/analysis/passes/buildtag",
 	Run:  runBuildTag,
 }
 

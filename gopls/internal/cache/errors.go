@@ -19,15 +19,15 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/worstell/x/tools/go/packages"
+	"github.com/worstell/x/tools/gopls/internal/cache/metadata"
+	"github.com/worstell/x/tools/gopls/internal/cache/parsego"
+	"github.com/worstell/x/tools/gopls/internal/file"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/protocol/command"
+	"github.com/worstell/x/tools/gopls/internal/settings"
+	"github.com/worstell/x/tools/gopls/internal/util/bug"
+	"github.com/worstell/x/tools/internal/typesinternal"
 )
 
 // goPackagesErrorDiagnostics translates the given go/packages Error into a
@@ -370,7 +370,7 @@ func onlyDeletions(fixes []SuggestedFix) bool {
 }
 
 func typesCodeHref(linkTarget string, code typesinternal.ErrorCode) string {
-	return BuildLink(linkTarget, "golang.org/x/tools/internal/typesinternal", code.String())
+	return BuildLink(linkTarget, "github.com/worstell/x/tools/internal/typesinternal", code.String())
 }
 
 // BuildLink constructs a URL with the given target, path, and anchor.

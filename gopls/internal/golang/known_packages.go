@@ -13,11 +13,11 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/imports"
+	"github.com/worstell/x/tools/gopls/internal/cache"
+	"github.com/worstell/x/tools/gopls/internal/cache/metadata"
+	"github.com/worstell/x/tools/gopls/internal/file"
+	"github.com/worstell/x/tools/internal/event"
+	"github.com/worstell/x/tools/internal/imports"
 )
 
 // KnownPackagePaths returns a new list of package paths of all known

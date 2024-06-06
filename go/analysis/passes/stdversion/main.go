@@ -8,8 +8,8 @@
 package main
 
 import (
-	"golang.org/x/tools/go/analysis/passes/stdversion"
-	"golang.org/x/tools/go/analysis/singlechecker"
+	"github.com/worstell/x/tools/go/analysis/passes/stdversion"
+	"github.com/worstell/x/tools/go/analysis/singlechecker"
 )
 
 func main() { singlechecker.Main(stdversion.Analyzer) }

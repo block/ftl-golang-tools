@@ -11,10 +11,10 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/worstell/x/tools/go/ast/astutil"
+	"github.com/worstell/x/tools/go/packages"
+	"github.com/worstell/x/tools/gopls/internal/util/safetoken"
+	"github.com/worstell/x/tools/internal/testenv"
 )
 
 // TestGoplsSourceDoesNotUseObjectResolution verifies that gopls does not
@@ -42,8 +42,8 @@ func TestGoplsSourceDoesNotUseObjectResolution(t *testing.T) {
 
 	pkgs, err := packages.Load(cfg,
 		"go/ast",
-		"golang.org/x/tools/go/ast/astutil",
-		"golang.org/x/tools/gopls/...")
+		"github.com/worstell/x/tools/go/ast/astutil",
+		"github.com/worstell/x/tools/gopls/...")
 
 	if err != nil {
 		t.Fatal(err)
@@ -53,7 +53,7 @@ func TestGoplsSourceDoesNotUseObjectResolution(t *testing.T) {
 		switch pkg.PkgPath {
 		case "go/ast":
 			astPkg = pkg
-		case "golang.org/x/tools/go/ast/astutil":
+		case "github.com/worstell/x/tools/go/ast/astutil":
 			astutilPkg = pkg
 		}
 	}
@@ -61,7 +61,7 @@ func TestGoplsSourceDoesNotUseObjectResolution(t *testing.T) {
 		t.Fatal("missing package go/ast")
 	}
 	if astutilPkg == nil {
-		t.Fatal("missing package golang.org/x/tools/go/ast/astutil")
+		t.Fatal("missing package github.com/worstell/x/tools/go/ast/astutil")
 	}
 
 	File := astPkg.Types.Scope().Lookup("File").Type()
@@ -93,15 +93,15 @@ func TestGoplsSourceDoesNotUseObjectResolution(t *testing.T) {
 	// TODO(rfindley): some sort of callgraph analysis would make these
 	// exceptions much easier to maintain.
 	exceptions := []string{
-		"golang.org/x/tools/go/analysis/passes/",                             // analyzers may rely on object resolution
-		"golang.org/x/tools/gopls/internal/analysis/simplifyslice",           // restrict ourselves to one blessed analyzer
-		"golang.org/x/tools/gopls/internal/cache/parsego",                    // used by parsego.File.Resolve, of course
-		"golang.org/x/tools/gopls/internal/golang.builtinDecl",               // the builtin file is resolved
-		"golang.org/x/tools/gopls/internal/golang.NewBuiltinSignature",       // ditto
-		"golang.org/x/tools/gopls/internal/golang/completion.builtinArgKind", // ditto
-		"golang.org/x/tools/internal/imports",                                // goimports does its own parsing
-		"golang.org/x/tools/go/ast/astutil.UsesImport",                       // disallowed
-		"golang.org/x/tools/go/ast/astutil.isTopName",                        // only reached from astutil.UsesImport
+		"github.com/worstell/x/tools/go/analysis/passes/",                             // analyzers may rely on object resolution
+		"github.com/worstell/x/tools/gopls/internal/analysis/simplifyslice",           // restrict ourselves to one blessed analyzer
+		"github.com/worstell/x/tools/gopls/internal/cache/parsego",                    // used by parsego.File.Resolve, of course
+		"github.com/worstell/x/tools/gopls/internal/golang.builtinDecl",               // the builtin file is resolved
+		"github.com/worstell/x/tools/gopls/internal/golang.NewBuiltinSignature",       // ditto
+		"github.com/worstell/x/tools/gopls/internal/golang/completion.builtinArgKind", // ditto
+		"github.com/worstell/x/tools/internal/imports",                                // goimports does its own parsing
+		"github.com/worstell/x/tools/go/ast/astutil.UsesImport",                       // disallowed
+		"github.com/worstell/x/tools/go/ast/astutil.isTopName",                        // only reached from astutil.UsesImport
 		"go/ast",
 		"go/parser",
 		"go/doc", // manually verified that our usage is safe

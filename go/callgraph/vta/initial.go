@@ -5,9 +5,9 @@
 package vta
 
 import (
-	"golang.org/x/tools/go/callgraph"
-	"golang.org/x/tools/go/callgraph/internal/chautil"
-	"golang.org/x/tools/go/ssa"
+	"github.com/worstell/x/tools/go/callgraph"
+	"github.com/worstell/x/tools/go/callgraph/internal/chautil"
+	"github.com/worstell/x/tools/go/ssa"
 )
 
 // calleesFunc abstracts call graph in one direction,

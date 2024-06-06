@@ -1,4 +1,4 @@
-module golang.org/x/tools/gopls
+module github.com/worstell/x/tools/gopls
 
 // go 1.23.1 fixes some bugs in go/types Alias support.
 // (golang/go#68894 and golang/go#68905).
@@ -12,7 +12,7 @@ require (
 	golang.org/x/sys v0.27.0
 	golang.org/x/telemetry v0.0.0-20241106142447-58a1122356f5
 	golang.org/x/text v0.20.0
-	golang.org/x/tools v0.21.1-0.20240531212143-b6235391adb3
+	github.com/worstell/x/tools v0.21.1-0.20240531212143-b6235391adb3
 	golang.org/x/vuln v1.0.4
 	gopkg.in/yaml.v3 v3.0.1
 	honnef.co/go/tools v0.5.1
@@ -27,4 +27,4 @@ require (
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
 
-replace golang.org/x/tools => ../
+replace github.com/worstell/x/tools => ../

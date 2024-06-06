@@ -11,11 +11,11 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/worstell/x/tools/gopls/internal/cache/metadata"
+	"github.com/worstell/x/tools/gopls/internal/cache/parsego"
+	"github.com/worstell/x/tools/gopls/internal/cache/typerefs"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/cache/typerefs"
-	"golang.org/x/tools/gopls/internal/protocol"
 )
 
 // TestRefs checks that the analysis reports, for each exported member

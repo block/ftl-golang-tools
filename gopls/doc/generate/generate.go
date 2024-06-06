@@ -36,14 +36,14 @@ import (
 	"time"
 	"unicode"
 
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/doc"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/mod"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
+	"github.com/worstell/x/tools/go/ast/astutil"
+	"github.com/worstell/x/tools/go/packages"
+	"github.com/worstell/x/tools/gopls/internal/cache"
+	"github.com/worstell/x/tools/gopls/internal/doc"
+	"github.com/worstell/x/tools/gopls/internal/golang"
+	"github.com/worstell/x/tools/gopls/internal/mod"
+	"github.com/worstell/x/tools/gopls/internal/settings"
+	"github.com/worstell/x/tools/gopls/internal/util/safetoken"
 )
 
 func main() {
@@ -62,7 +62,7 @@ func doMain(write bool) (bool, error) {
 		return false, err
 	}
 
-	goplsDir, err := pkgDir("golang.org/x/tools/gopls")
+	goplsDir, err := pkgDir("github.com/worstell/x/tools/gopls")
 	if err != nil {
 		return false, err
 	}
@@ -127,7 +127,7 @@ func loadAPI() (*doc.API, error) {
 		&packages.Config{
 			Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedSyntax | packages.NeedDeps,
 		},
-		"golang.org/x/tools/gopls/internal/settings",
+		"github.com/worstell/x/tools/gopls/internal/settings",
 	)
 	if err != nil {
 		return nil, err

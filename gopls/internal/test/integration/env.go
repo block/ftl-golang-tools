@@ -11,9 +11,9 @@ import (
 	"sync"
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/test/integration/fake"
-	"golang.org/x/tools/internal/jsonrpc2/servertest"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/test/integration/fake"
+	"github.com/worstell/x/tools/internal/jsonrpc2/servertest"
 )
 
 // Env holds the building blocks of an editor testing environment, providing

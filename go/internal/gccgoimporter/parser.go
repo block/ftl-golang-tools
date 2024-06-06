@@ -21,7 +21,7 @@ import (
 	"text/scanner"
 	"unicode/utf8"
 
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/worstell/x/tools/internal/typesinternal"
 )
 
 type parser struct {

@@ -12,10 +12,10 @@ import (
 	"go/types"
 	"strings"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/internal/typeparams"
+	"github.com/worstell/x/tools/go/analysis"
+	"github.com/worstell/x/tools/go/analysis/passes/inspect"
+	"github.com/worstell/x/tools/go/ast/inspector"
+	"github.com/worstell/x/tools/internal/typeparams"
 )
 
 const Doc = `check for unkeyed composite literals
@@ -37,7 +37,7 @@ should be replaced by:
 var Analyzer = &analysis.Analyzer{
 	Name:             "composites",
 	Doc:              Doc,
-	URL:              "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/composite",
+	URL:              "https://pkg.go.dev/github.com/worstell/x/tools/go/analysis/passes/composite",
 	Requires:         []*analysis.Analyzer{inspect.Analyzer},
 	RunDespiteErrors: true,
 	Run:              run,

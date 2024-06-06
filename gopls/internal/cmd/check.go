@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"slices"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/settings"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/settings"
 )
 
 // check implements the check verb for gopls.

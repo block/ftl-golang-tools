@@ -4,7 +4,7 @@
 
 // callgraph: a tool for reporting the call graph of a Go program.
 // See Usage for details, or run with -help.
-package main // import "golang.org/x/tools/cmd/callgraph"
+package main // import "github.com/worstell/x/tools/cmd/callgraph"
 
 // TODO(adonovan):
 //
@@ -29,14 +29,14 @@ import (
 	"runtime"
 	"text/template"
 
-	"golang.org/x/tools/go/callgraph"
-	"golang.org/x/tools/go/callgraph/cha"
-	"golang.org/x/tools/go/callgraph/rta"
-	"golang.org/x/tools/go/callgraph/static"
-	"golang.org/x/tools/go/callgraph/vta"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/go/ssa/ssautil"
+	"github.com/worstell/x/tools/go/callgraph"
+	"github.com/worstell/x/tools/go/callgraph/cha"
+	"github.com/worstell/x/tools/go/callgraph/rta"
+	"github.com/worstell/x/tools/go/callgraph/static"
+	"github.com/worstell/x/tools/go/callgraph/vta"
+	"github.com/worstell/x/tools/go/packages"
+	"github.com/worstell/x/tools/go/ssa"
+	"github.com/worstell/x/tools/go/ssa/ssautil"
 )
 
 // flags
@@ -80,7 +80,7 @@ Flags:
            One of:
 
             digraph     output suitable for input to
-                        golang.org/x/tools/cmd/digraph.
+                        github.com/worstell/x/tools/cmd/digraph.
             graphviz    output in AT&T GraphViz (.dot) format.
 
            All other values are interpreted using text/template syntax.
@@ -118,7 +118,7 @@ Flags:
              reduced to {{(posn .Caller).Filename}}.
 
            Consult the documentation for go/token, text/template, and
-           golang.org/x/tools/go/ssa for more detail.
+           github.com/worstell/x/tools/go/ssa for more detail.
 
 Examples:
 
@@ -140,8 +140,8 @@ Examples:
 
   Show all functions directly called by the callgraph tool's main function:
 
-    callgraph -format=digraph golang.org/x/tools/cmd/callgraph |
-      digraph succs golang.org/x/tools/cmd/callgraph.main
+    callgraph -format=digraph github.com/worstell/x/tools/cmd/callgraph |
+      digraph succs github.com/worstell/x/tools/cmd/callgraph.main
 `
 
 func init() {

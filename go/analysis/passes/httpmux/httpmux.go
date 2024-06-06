@@ -11,13 +11,13 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/worstell/x/tools/go/analysis"
+	"github.com/worstell/x/tools/go/analysis/passes/inspect"
+	"github.com/worstell/x/tools/go/analysis/passes/internal/analysisutil"
+	"github.com/worstell/x/tools/go/ast/inspector"
+	"github.com/worstell/x/tools/go/types/typeutil"
+	"github.com/worstell/x/tools/internal/typesinternal"
 	"golang.org/x/mod/semver"
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/internal/typesinternal"
 )
 
 const Doc = `report using Go 1.22 enhanced ServeMux patterns in older Go versions
@@ -31,7 +31,7 @@ Such patterns can be registered in older versions of Go, but will not behave as 
 var Analyzer = &analysis.Analyzer{
 	Name:     "httpmux",
 	Doc:      Doc,
-	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/httpmux",
+	URL:      "https://pkg.go.dev/github.com/worstell/x/tools/go/analysis/passes/httpmux",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

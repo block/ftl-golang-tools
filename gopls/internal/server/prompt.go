@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/internal/event"
 	"golang.org/x/telemetry"
 	"golang.org/x/telemetry/counter"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/event"
 )
 
 // promptTimeout is the amount of time we wait for an ongoing prompt before

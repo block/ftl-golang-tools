@@ -20,9 +20,9 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"golang.org/x/tools/internal/gocommand"
-	"golang.org/x/tools/internal/packagestest"
-	"golang.org/x/tools/internal/stdlib"
+	"github.com/worstell/x/tools/internal/gocommand"
+	"github.com/worstell/x/tools/internal/packagestest"
+	"github.com/worstell/x/tools/internal/stdlib"
 )
 
 var testDebug = flag.Bool("debug", false, "enable debug output")

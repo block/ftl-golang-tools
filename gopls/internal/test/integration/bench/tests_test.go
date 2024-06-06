@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/test/integration"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/protocol/command"
+	"github.com/worstell/x/tools/gopls/internal/test/integration"
 )
 
 func BenchmarkPackagesCommand(b *testing.B) {

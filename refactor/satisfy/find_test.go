@@ -15,7 +15,7 @@ import (
 	"sort"
 	"testing"
 
-	"golang.org/x/tools/refactor/satisfy"
+	"github.com/worstell/x/tools/refactor/satisfy"
 )
 
 // This test exercises various operations on core types of type parameters.

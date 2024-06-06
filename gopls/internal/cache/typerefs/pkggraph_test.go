@@ -16,11 +16,11 @@ import (
 	"runtime"
 	"sync"
 
+	"github.com/worstell/x/tools/gopls/internal/cache/metadata"
+	"github.com/worstell/x/tools/gopls/internal/cache/parsego"
+	"github.com/worstell/x/tools/gopls/internal/cache/typerefs"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/cache/typerefs"
-	"golang.org/x/tools/gopls/internal/protocol"
 )
 
 const (

@@ -14,12 +14,12 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/protocol/command"
+	"github.com/worstell/x/tools/gopls/internal/server"
+	. "github.com/worstell/x/tools/gopls/internal/test/integration"
 	"golang.org/x/telemetry/counter"
 	"golang.org/x/telemetry/counter/countertest"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/server"
-	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 // Test prompt file in old and new formats are handled as expected.

@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"sync/atomic"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/test/integration/fake/glob"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
+	"github.com/worstell/x/tools/gopls/internal/test/integration/fake/glob"
 )
 
 // ClientHooks are a set of optional hooks called during handling of

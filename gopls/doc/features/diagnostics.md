@@ -31,10 +31,10 @@ build`. Gopls doesn't actually run the compiler; that would be too
   a link to the documentation about this class of type error.
 
 - **Analysis findings** come from the [**Go analysis
-  framework**](https://golang.org/x/tools/go/analysis), the system
+  framework**](https://github.com/worstell/x/tools/go/analysis), the system
   used by `go vet` to apply a variety of additional static checks to
   your Go code. The best-known example is the [`printf`
-  analyzer](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/printf),
+  analyzer](https://pkg.go.dev/github.com/worstell/x/tools/go/analysis/passes/printf),
   which reports calls to [`fmt.Printf`](https://pkg.go.dev/fmt#Printf)
   where the format "verb" doesn't match the argument, such as
   `fmt.Printf("%d", "three")`.
@@ -209,7 +209,7 @@ dorky details and deletia:
   simple problems.
 
   For example, when a return statement has too few operands, the
-  [fillreturns](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/fillreturns) analyzer can heuristically fill in the missing ones
+  [fillreturns](https://pkg.go.dev/github.com/worstell/x/tools/gopls/internal/analysis/fillreturns) analyzer can heuristically fill in the missing ones
   with suitable values.
 
   The actual diagnostics are produced by the type checker,

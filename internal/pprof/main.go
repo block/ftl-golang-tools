@@ -16,7 +16,7 @@ import (
 	"log"
 	"os"
 
-	"golang.org/x/tools/internal/pprof"
+	"github.com/worstell/x/tools/internal/pprof"
 )
 
 func main() {

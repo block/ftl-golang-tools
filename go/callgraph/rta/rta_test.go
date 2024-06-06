@@ -17,12 +17,12 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/callgraph"
-	"golang.org/x/tools/go/callgraph/rta"
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/go/ssa/ssautil"
-	"golang.org/x/tools/internal/testfiles"
-	"golang.org/x/tools/txtar"
+	"github.com/worstell/x/tools/go/callgraph"
+	"github.com/worstell/x/tools/go/callgraph/rta"
+	"github.com/worstell/x/tools/go/ssa"
+	"github.com/worstell/x/tools/go/ssa/ssautil"
+	"github.com/worstell/x/tools/internal/testfiles"
+	"github.com/worstell/x/tools/txtar"
 )
 
 // TestRTA runs RTA on each testdata/*.txtar file containing a single
