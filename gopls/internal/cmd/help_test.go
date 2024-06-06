@@ -20,10 +20,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/worstell/x/tools/gopls/internal/cmd"
 	"github.com/worstell/x/tools/internal/testenv"
 	"github.com/worstell/x/tools/internal/tool"
-	"github.com/google/go-cmp/cmp"
 )
 
 var updateHelpFiles = flag.Bool("update-help-files", false, "Write out the help files instead of checking them")

@@ -39,6 +39,8 @@ import (
 	"github.com/worstell/x/tools/internal/tokeninternal"
 	"github.com/worstell/x/tools/internal/typesinternal"
 	"github.com/worstell/x/tools/internal/versions"
+	"golang.org/x/mod/module"
+	"golang.org/x/sync/errgroup"
 )
 
 // Various optimizations that should not affect correctness.

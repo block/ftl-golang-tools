@@ -45,6 +45,7 @@ import (
 	"github.com/worstell/x/tools/internal/typeparams"
 	"github.com/worstell/x/tools/internal/typesinternal"
 	"github.com/worstell/x/tools/internal/versions"
+	"golang.org/x/sync/errgroup"
 )
 
 // A CompletionItem represents a possible completion suggested by the algorithm.

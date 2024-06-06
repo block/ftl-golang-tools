@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/worstell/x/tools/go/packages/packagestest"
+	"github.com/worstell/x/tools/internal/packagestest"
 	"github.com/worstell/x/tools/internal/testenv"
 )
 

@@ -6,7 +6,7 @@ package buildtag_test
 
 import (
 	"testing"
-	
+
 	"github.com/worstell/x/tools/go/analysis"
 	"github.com/worstell/x/tools/go/analysis/analysistest"
 	"github.com/worstell/x/tools/go/analysis/passes/buildtag"

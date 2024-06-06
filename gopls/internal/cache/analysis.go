@@ -47,6 +47,7 @@ import (
 	"github.com/worstell/x/tools/internal/analysisinternal"
 	"github.com/worstell/x/tools/internal/event"
 	"github.com/worstell/x/tools/internal/facts"
+	"golang.org/x/sync/errgroup"
 )
 
 /*

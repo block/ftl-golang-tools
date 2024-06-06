@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/worstell/x/tools/gopls/internal/protocol"
 	. "github.com/worstell/x/tools/gopls/internal/test/integration"
 	"github.com/worstell/x/tools/gopls/internal/test/integration/fake"
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestBadURICrash_VSCodeIssue1498(t *testing.T) {

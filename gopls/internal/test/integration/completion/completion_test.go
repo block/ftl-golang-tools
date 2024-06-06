@@ -12,13 +12,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/worstell/x/tools/gopls/internal/protocol"
 	"github.com/worstell/x/tools/gopls/internal/server"
 	. "github.com/worstell/x/tools/gopls/internal/test/integration"
 	"github.com/worstell/x/tools/gopls/internal/test/integration/fake"
 	"github.com/worstell/x/tools/gopls/internal/util/bug"
 	"github.com/worstell/x/tools/internal/testenv"
-	"github.com/google/go-cmp/cmp"
 	"golang.org/x/telemetry/counter"
 	"golang.org/x/telemetry/counter/countertest"
 )

@@ -19,12 +19,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jba/templatecheck"
 	"github.com/worstell/x/tools/go/packages"
 	"github.com/worstell/x/tools/gopls/internal/cache"
 	"github.com/worstell/x/tools/gopls/internal/debug"
 	"github.com/worstell/x/tools/gopls/internal/file"
 	"github.com/worstell/x/tools/internal/testenv"
-	"github.com/jba/templatecheck"
 )
 
 var templates = map[string]struct {

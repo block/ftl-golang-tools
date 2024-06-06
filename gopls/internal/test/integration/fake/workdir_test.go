@@ -10,8 +10,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/worstell/x/tools/gopls/internal/protocol"
 	"github.com/google/go-cmp/cmp"
+	"github.com/worstell/x/tools/gopls/internal/protocol"
 )
 
 const sharedData = `

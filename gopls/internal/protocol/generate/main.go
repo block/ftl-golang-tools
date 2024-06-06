@@ -261,7 +261,7 @@ package protocol
 		lspGitRef,                 // 2
 		githash,                   // 3
 		vscodeRepo,                // 4
-		model.Version.Version) // 5
+		model.Version.Version)     // 5
 }
 
 func parse(fname string) *Model {

@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/worstell/x/tools/gopls/internal/cache"
-	"github.com/worstell/x/tools/gopls/internal/protocol/command"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/worstell/x/tools/gopls/internal/cache"
+	"github.com/worstell/x/tools/gopls/internal/protocol/command"
 
 	. "github.com/worstell/x/tools/gopls/internal/test/integration"
 )

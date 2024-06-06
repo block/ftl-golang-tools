@@ -8,12 +8,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/worstell/x/tools/go/packages"
 	"github.com/worstell/x/tools/gopls/internal/file"
 	"github.com/worstell/x/tools/gopls/internal/protocol"
 	"github.com/worstell/x/tools/gopls/internal/util/bug"
 	"github.com/worstell/x/tools/internal/testenv"
-	"github.com/google/go-cmp/cmp"
 	"golang.org/x/sync/errgroup"
 )
 

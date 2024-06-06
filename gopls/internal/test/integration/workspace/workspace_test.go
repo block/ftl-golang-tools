@@ -12,6 +12,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/worstell/x/tools/gopls/internal/cache"
 	"github.com/worstell/x/tools/gopls/internal/protocol"
 	"github.com/worstell/x/tools/gopls/internal/protocol/command"
@@ -20,8 +22,6 @@ import (
 	"github.com/worstell/x/tools/gopls/internal/util/goversion"
 	"github.com/worstell/x/tools/internal/gocommand"
 	"github.com/worstell/x/tools/internal/testenv"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 
 	. "github.com/worstell/x/tools/gopls/internal/test/integration"
 )

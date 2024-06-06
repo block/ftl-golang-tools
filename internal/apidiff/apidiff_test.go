@@ -14,9 +14,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/worstell/x/tools/go/packages"
 	"github.com/worstell/x/tools/internal/testenv"
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestChanges(t *testing.T) {

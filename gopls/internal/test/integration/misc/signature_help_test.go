@@ -7,9 +7,9 @@ package misc
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/worstell/x/tools/gopls/internal/protocol"
 	. "github.com/worstell/x/tools/gopls/internal/test/integration"
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestSignatureHelpInNonWorkspacePackage(t *testing.T) {

@@ -11,11 +11,11 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/worstell/x/tools/gopls/internal/protocol"
 	"github.com/worstell/x/tools/gopls/internal/settings"
 	"github.com/worstell/x/tools/gopls/internal/test/integration/fake"
 	"github.com/worstell/x/tools/internal/testenv"
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestZeroConfigAlgorithm(t *testing.T) {
