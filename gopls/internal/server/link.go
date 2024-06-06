@@ -25,7 +25,6 @@ import (
 	"github.com/worstell/x/tools/gopls/internal/util/safetoken"
 	"github.com/worstell/x/tools/internal/event"
 	"golang.org/x/mod/modfile"
-	"mvdan.cc/xurls/v2"
 )
 
 func (s *server) DocumentLink(ctx context.Context, params *protocol.DocumentLinkParams) (links []protocol.DocumentLink, err error) {

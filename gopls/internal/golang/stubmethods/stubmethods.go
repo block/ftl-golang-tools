@@ -10,11 +10,12 @@ package stubmethods
 import (
 	"bytes"
 	"fmt"
-	"github.com/worstell/x/tools/internal/typesinternal"
 	"go/ast"
 	"go/token"
 	"go/types"
 	"strings"
+
+	"github.com/worstell/x/tools/internal/typesinternal"
 
 	"github.com/worstell/x/tools/gopls/internal/util/typesutil"
 )
