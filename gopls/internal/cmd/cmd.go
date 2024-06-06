@@ -12,6 +12,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -388,6 +389,27 @@ func (c *connection) initialize(ctx context.Context, options func(*settings.Opti
 type connection struct {
 	protocol.Server
 	client *cmdClient
+}
+
+// registerProgressHandler registers a handler for progress notifications.
+// The caller must call unregister when the handler is no longer needed.
+func (cli *cmdClient) registerProgressHandler(handler func(*protocol.ProgressParams)) (token protocol.ProgressToken, unregister func()) {
+	token = fmt.Sprintf("tok%d", rand.Uint64())
+
+	// register
+	cli.progressHandlersMu.Lock()
+	if cli.progressHandlers == nil {
+		cli.progressHandlers = make(map[protocol.ProgressToken]func(*protocol.ProgressParams))
+	}
+	cli.progressHandlers[token] = handler
+	cli.progressHandlersMu.Unlock()
+
+	unregister = func() {
+		cli.progressHandlersMu.Lock()
+		delete(cli.progressHandlers, token)
+		cli.progressHandlersMu.Unlock()
+	}
+	return token, unregister
 }
 
 // cmdClient defines the protocol.Client interface behavior of the gopls CLI tool.

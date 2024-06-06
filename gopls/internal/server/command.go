@@ -301,7 +301,7 @@ func (c *commandHandler) AddTest(ctx context.Context, loc protocol.Location) (*p
 // commandConfig configures common command set-up and execution.
 type commandConfig struct {
 	requireSave bool                 // whether all files must be saved for the command to work
-	progress    string               // title to use for progress reporting. If empty, no progress will be reported.
+	progress    string               // title to use for progress reporting. If empty, no progress will be reported. Mandatory for async commands.
 	forView     string               // view to resolve to a snapshot; incompatible with forURI
 	forURI      protocol.DocumentURI // URI to resolve to a snapshot. If unset, snapshot will be nil.
 }

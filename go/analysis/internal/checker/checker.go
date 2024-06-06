@@ -123,7 +123,7 @@ func Run(args []string, analyzers []*analysis.Analyzer, opts ...Option) (exitcod
 // then applies the specified analyzers to them.
 // Analysis flags must already have been set.
 // Analyzers must be valid according to [analysis.Validate].
-// 
+//
 // Returns results and diagnostics produced by the analyzers.
 func RunWithResult(args []string, analyzers []*analysis.Analyzer, opts ...Option) (analyzerResults map[*analysis.Analyzer][]interface{}, diagnostics []analysis.SimpleDiagnostic, err error) {
 	roots, err := runInternal(args, analyzers, opts...)
