@@ -20,10 +20,10 @@ import (
 	"os"
 	"sort"
 
-	"github.com/TBD54566975/x/tools/go/gcexportdata"
-	"github.com/TBD54566975/x/tools/go/packages"
-	"github.com/TBD54566975/x/tools/go/types/typeutil"
-	"github.com/TBD54566975/x/tools/internal/gcimporter"
+	"github.com/TBD54566975/golang-tools/go/gcexportdata"
+	"github.com/TBD54566975/golang-tools/go/packages"
+	"github.com/TBD54566975/golang-tools/go/types/typeutil"
+	"github.com/TBD54566975/golang-tools/internal/gcimporter"
 )
 
 func main() {

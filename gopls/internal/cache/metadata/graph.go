@@ -7,9 +7,9 @@ package metadata
 import (
 	"sort"
 
-	"github.com/TBD54566975/x/tools/go/packages"
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/bug"
+	"github.com/TBD54566975/golang-tools/go/packages"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/bug"
 )
 
 // A Graph is an immutable and transitively closed graph of [Package] data.

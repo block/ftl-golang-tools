@@ -28,12 +28,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/internal/analysisflags"
-	"github.com/TBD54566975/x/tools/go/packages"
-	"github.com/TBD54566975/x/tools/internal/analysisinternal"
-	"github.com/TBD54566975/x/tools/internal/diff"
-	"github.com/TBD54566975/x/tools/internal/robustio"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/internal/analysisflags"
+	"github.com/TBD54566975/golang-tools/go/packages"
+	"github.com/TBD54566975/golang-tools/internal/analysisinternal"
+	"github.com/TBD54566975/golang-tools/internal/diff"
+	"github.com/TBD54566975/golang-tools/internal/robustio"
 )
 
 var (

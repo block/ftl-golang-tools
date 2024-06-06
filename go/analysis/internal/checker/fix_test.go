@@ -16,10 +16,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/analysistest"
-	"github.com/TBD54566975/x/tools/go/analysis/multichecker"
-	"github.com/TBD54566975/x/tools/internal/testenv"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/analysistest"
+	"github.com/TBD54566975/golang-tools/go/analysis/multichecker"
+	"github.com/TBD54566975/golang-tools/internal/testenv"
 )
 
 // These are the analyzers available to the multichecker.

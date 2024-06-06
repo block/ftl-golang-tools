@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TBD54566975/x/tools/internal/stack/stacktest"
-	"github.com/TBD54566975/x/tools/internal/testenv"
+	"github.com/TBD54566975/golang-tools/internal/stack/stacktest"
+	"github.com/TBD54566975/golang-tools/internal/testenv"
 )
 
 func TestIdleTimeout(t *testing.T) {

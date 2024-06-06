@@ -16,13 +16,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/debug"
-	"github.com/TBD54566975/x/tools/gopls/internal/doc"
-	"github.com/TBD54566975/x/tools/gopls/internal/filecache"
-	licensespkg "github.com/TBD54566975/x/tools/gopls/internal/licenses"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/browser"
-	goplsbug "github.com/TBD54566975/x/tools/gopls/internal/util/bug"
-	"github.com/TBD54566975/x/tools/internal/tool"
+	"github.com/TBD54566975/golang-tools/gopls/internal/debug"
+	"github.com/TBD54566975/golang-tools/gopls/internal/doc"
+	"github.com/TBD54566975/golang-tools/gopls/internal/filecache"
+	licensespkg "github.com/TBD54566975/golang-tools/gopls/internal/licenses"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/browser"
+	goplsbug "github.com/TBD54566975/golang-tools/gopls/internal/util/bug"
+	"github.com/TBD54566975/golang-tools/internal/tool"
 )
 
 // help implements the help command.
@@ -223,7 +223,7 @@ func (j *apiJSON) DetailedHelp(f *flag.FlagSet) {
 	fmt.Fprint(f.Output(), `
 The api-json command prints a JSON value that describes
 and documents all gopls' public interfaces.
-Its schema is defined by github.com/TBD54566975/x/tools/gopls/internal/doc.API.
+Its schema is defined by github.com/TBD54566975/golang-tools/gopls/internal/doc.API.
 `)
 	printFlagDefaults(f)
 }

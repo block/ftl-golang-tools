@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	. "github.com/TBD54566975/x/tools/gopls/internal/test/integration"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	. "github.com/TBD54566975/golang-tools/gopls/internal/test/integration"
 )
 
 // Test for golang/go#50267: diagnostics should be re-sent after a file is

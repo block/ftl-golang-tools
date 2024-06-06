@@ -109,7 +109,7 @@ The package... arguments specify a list of packages
 in the style of the go tool; see "go help packages".
 Hint: use "all" or "..." to match the entire workspace.
 
-For details, see https://pkg.go.dev/github.com/TBD54566975/x/tools/cmd/fiximports
+For details, see https://pkg.go.dev/github.com/TBD54566975/golang-tools/cmd/fiximports
 
 Flags:
   -n:	       dry run: show changes, but don't apply them

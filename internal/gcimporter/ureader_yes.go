@@ -13,8 +13,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/TBD54566975/x/tools/internal/aliases"
-	"github.com/TBD54566975/x/tools/internal/pkgbits"
+	"github.com/TBD54566975/golang-tools/internal/aliases"
+	"github.com/TBD54566975/golang-tools/internal/pkgbits"
 )
 
 // A pkgReader holds the shared state for reading a unified IR package

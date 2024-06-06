@@ -12,9 +12,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/TBD54566975/x/tools/internal/gopathwalk"
-	"github.com/TBD54566975/x/tools/internal/stdlib"
 	"golang.org/x/mod/module"
+	"github.com/TBD54566975/golang-tools/internal/gopathwalk"
+	"github.com/TBD54566975/golang-tools/internal/stdlib"
 )
 
 // To find packages to import, the resolver needs to know about all of

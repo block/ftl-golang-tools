@@ -11,12 +11,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/cache"
-	"github.com/TBD54566975/x/tools/gopls/internal/cache/parsego"
-	"github.com/TBD54566975/x/tools/gopls/internal/file"
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/bug"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/safetoken"
+	"github.com/TBD54566975/golang-tools/gopls/internal/cache"
+	"github.com/TBD54566975/golang-tools/gopls/internal/cache/parsego"
+	"github.com/TBD54566975/golang-tools/gopls/internal/file"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/bug"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/safetoken"
 )
 
 // FoldingRangeInfo holds range and kind info of folding for an ast.Node

@@ -13,16 +13,16 @@ import (
 	"go/token"
 	"go/types"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/ast/astutil"
-	"github.com/TBD54566975/x/tools/go/types/typeutil"
-	"github.com/TBD54566975/x/tools/gopls/internal/cache"
-	"github.com/TBD54566975/x/tools/gopls/internal/cache/parsego"
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/safetoken"
-	"github.com/TBD54566975/x/tools/internal/diff"
-	"github.com/TBD54566975/x/tools/internal/event"
-	"github.com/TBD54566975/x/tools/internal/refactor/inline"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/ast/astutil"
+	"github.com/TBD54566975/golang-tools/go/types/typeutil"
+	"github.com/TBD54566975/golang-tools/gopls/internal/cache"
+	"github.com/TBD54566975/golang-tools/gopls/internal/cache/parsego"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/safetoken"
+	"github.com/TBD54566975/golang-tools/internal/diff"
+	"github.com/TBD54566975/golang-tools/internal/event"
+	"github.com/TBD54566975/golang-tools/internal/refactor/inline"
 )
 
 // enclosingStaticCall returns the innermost function call enclosing

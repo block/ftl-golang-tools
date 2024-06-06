@@ -8,8 +8,8 @@ import (
 	"go/build"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/go/analysis/analysistest"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/framepointer"
+	"github.com/TBD54566975/golang-tools/go/analysis/analysistest"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/framepointer"
 )
 
 func Test(t *testing.T) {

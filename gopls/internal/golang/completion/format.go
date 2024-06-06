@@ -13,13 +13,13 @@ import (
 	"go/types"
 	"strings"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/golang"
-	"github.com/TBD54566975/x/tools/gopls/internal/golang/completion/snippet"
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/safetoken"
-	"github.com/TBD54566975/x/tools/internal/aliases"
-	"github.com/TBD54566975/x/tools/internal/event"
-	"github.com/TBD54566975/x/tools/internal/imports"
+	"github.com/TBD54566975/golang-tools/gopls/internal/golang"
+	"github.com/TBD54566975/golang-tools/gopls/internal/golang/completion/snippet"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/safetoken"
+	"github.com/TBD54566975/golang-tools/internal/aliases"
+	"github.com/TBD54566975/golang-tools/internal/event"
+	"github.com/TBD54566975/golang-tools/internal/imports"
 )
 
 var (

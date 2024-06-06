@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
 )
 
 // BenchmarkTyping simulates typing steadily in a single file at different

@@ -4,7 +4,7 @@
 
 // Package mapfs file provides an implementation of the FileSystem
 // interface based on the contents of a map[string]string.
-package mapfs // import "github.com/TBD54566975/x/tools/godoc/vfs/mapfs"
+package mapfs // import "github.com/TBD54566975/golang-tools/godoc/vfs/mapfs"
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TBD54566975/x/tools/godoc/vfs"
+	"github.com/TBD54566975/golang-tools/godoc/vfs"
 )
 
 // New returns a new FileSystem from the provided map.

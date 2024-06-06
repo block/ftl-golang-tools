@@ -21,10 +21,10 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/internal/event"
-	"github.com/TBD54566975/x/tools/internal/event/core"
-	"github.com/TBD54566975/x/tools/internal/event/export"
-	"github.com/TBD54566975/x/tools/internal/event/label"
+	"github.com/TBD54566975/golang-tools/internal/event"
+	"github.com/TBD54566975/golang-tools/internal/event/core"
+	"github.com/TBD54566975/golang-tools/internal/event/export"
+	"github.com/TBD54566975/golang-tools/internal/event/label"
 )
 
 func init() {

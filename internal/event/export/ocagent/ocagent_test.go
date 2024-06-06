@@ -15,13 +15,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TBD54566975/x/tools/internal/event"
-	"github.com/TBD54566975/x/tools/internal/event/core"
-	"github.com/TBD54566975/x/tools/internal/event/export"
-	"github.com/TBD54566975/x/tools/internal/event/export/metric"
-	"github.com/TBD54566975/x/tools/internal/event/export/ocagent"
-	"github.com/TBD54566975/x/tools/internal/event/keys"
-	"github.com/TBD54566975/x/tools/internal/event/label"
+	"github.com/TBD54566975/golang-tools/internal/event"
+	"github.com/TBD54566975/golang-tools/internal/event/core"
+	"github.com/TBD54566975/golang-tools/internal/event/export"
+	"github.com/TBD54566975/golang-tools/internal/event/export/metric"
+	"github.com/TBD54566975/golang-tools/internal/event/export/ocagent"
+	"github.com/TBD54566975/golang-tools/internal/event/keys"
+	"github.com/TBD54566975/golang-tools/internal/event/label"
 )
 
 const testNodeStr = `{

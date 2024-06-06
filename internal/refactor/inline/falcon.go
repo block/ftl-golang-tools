@@ -16,9 +16,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/TBD54566975/x/tools/go/types/typeutil"
-	"github.com/TBD54566975/x/tools/internal/aliases"
-	"github.com/TBD54566975/x/tools/internal/typeparams"
+	"github.com/TBD54566975/golang-tools/go/types/typeutil"
+	"github.com/TBD54566975/golang-tools/internal/aliases"
+	"github.com/TBD54566975/golang-tools/internal/typeparams"
 )
 
 // falconResult is the result of the analysis of the callee.

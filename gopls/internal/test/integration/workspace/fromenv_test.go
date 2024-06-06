@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	. "github.com/TBD54566975/x/tools/gopls/internal/test/integration"
+	. "github.com/TBD54566975/golang-tools/gopls/internal/test/integration"
 )
 
 // Test that setting go.work via environment variables or settings works.

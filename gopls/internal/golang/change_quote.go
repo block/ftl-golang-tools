@@ -10,13 +10,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/TBD54566975/x/tools/go/ast/astutil"
-	"github.com/TBD54566975/x/tools/gopls/internal/cache/parsego"
-	"github.com/TBD54566975/x/tools/gopls/internal/file"
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/bug"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/safetoken"
-	"github.com/TBD54566975/x/tools/internal/diff"
+	"github.com/TBD54566975/golang-tools/go/ast/astutil"
+	"github.com/TBD54566975/golang-tools/gopls/internal/cache/parsego"
+	"github.com/TBD54566975/golang-tools/gopls/internal/file"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/bug"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/safetoken"
+	"github.com/TBD54566975/golang-tools/internal/diff"
 )
 
 // convertStringLiteral reports whether we can convert between raw and interpreted

@@ -12,7 +12,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/version"
+	"github.com/TBD54566975/golang-tools/gopls/internal/version"
 )
 
 func TestPrintVersionInfoJSON(t *testing.T) {

@@ -12,10 +12,10 @@ import (
 	"go/token"
 	"log"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/internal/analysisutil"
-	"github.com/TBD54566975/x/tools/go/ast/inspector"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/TBD54566975/golang-tools/go/ast/inspector"
 )
 
 //go:embed doc.go
@@ -24,7 +24,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:             "unreachable",
 	Doc:              analysisutil.MustExtractDoc(doc, "unreachable"),
-	URL:              "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/unreachable",
+	URL:              "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/unreachable",
 	Requires:         []*analysis.Analyzer{inspect.Analyzer},
 	RunDespiteErrors: true,
 	Run:              run,

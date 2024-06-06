@@ -1,6 +1,6 @@
 # `gopls`, the Go language server
 
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/TBD54566975/x/tools/gopls)](https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/TBD54566975/golang-tools/gopls)](https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls)
 
 `gopls` (pronounced "Go please") is the official Go [language server] developed
 by the Go team. It provides IDE features to any [LSP]-compatible editor.
@@ -36,7 +36,7 @@ If you do want to get the latest stable version of `gopls`, run the following
 command:
 
 ```sh
-go install github.com/TBD54566975/x/tools/gopls@latest
+go install github.com/TBD54566975/golang-tools/gopls@latest
 ```
 
 Learn more in the

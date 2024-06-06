@@ -11,12 +11,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	"github.com/TBD54566975/x/tools/internal/event"
-	jsonrpc2_v2 "github.com/TBD54566975/x/tools/internal/jsonrpc2_v2"
-	"github.com/TBD54566975/x/tools/internal/testenv"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/internal/event"
+	jsonrpc2_v2 "github.com/TBD54566975/golang-tools/internal/jsonrpc2_v2"
+	"github.com/TBD54566975/golang-tools/internal/testenv"
 
-	. "github.com/TBD54566975/x/tools/gopls/internal/lsprpc"
+	. "github.com/TBD54566975/golang-tools/gopls/internal/lsprpc"
 )
 
 func GoEnvMiddleware() (Middleware, error) {

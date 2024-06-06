@@ -10,12 +10,12 @@ import (
 	"go/ast"
 	"go/types"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/ctrlflow"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/internal/analysisutil"
-	"github.com/TBD54566975/x/tools/go/ast/inspector"
-	"github.com/TBD54566975/x/tools/go/cfg"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/ctrlflow"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/TBD54566975/golang-tools/go/ast/inspector"
+	"github.com/TBD54566975/golang-tools/go/cfg"
 )
 
 //go:embed doc.go
@@ -24,7 +24,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name: "lostcancel",
 	Doc:  analysisutil.MustExtractDoc(doc, "lostcancel"),
-	URL:  "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/lostcancel",
+	URL:  "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/lostcancel",
 	Run:  run,
 	Requires: []*analysis.Analyzer{
 		inspect.Analyzer,

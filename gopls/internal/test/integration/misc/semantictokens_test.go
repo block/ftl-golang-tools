@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	. "github.com/TBD54566975/x/tools/gopls/internal/test/integration"
-	"github.com/TBD54566975/x/tools/gopls/internal/test/integration/fake"
 	"github.com/google/go-cmp/cmp"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	. "github.com/TBD54566975/golang-tools/gopls/internal/test/integration"
+	"github.com/TBD54566975/golang-tools/gopls/internal/test/integration/fake"
 )
 
 func TestBadURICrash_VSCodeIssue1498(t *testing.T) {

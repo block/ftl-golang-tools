@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/go/analysis/analysistest"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/loopclosure"
-	"github.com/TBD54566975/x/tools/internal/testenv"
-	"github.com/TBD54566975/x/tools/internal/testfiles"
+	"github.com/TBD54566975/golang-tools/go/analysis/analysistest"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/loopclosure"
+	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/TBD54566975/golang-tools/internal/testfiles"
 )
 
 func Test(t *testing.T) {

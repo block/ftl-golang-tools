@@ -13,7 +13,7 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/TBD54566975/x/tools/internal/event"
+	"github.com/TBD54566975/golang-tools/internal/event"
 )
 
 // autoNetwork is the pseudo network type used to signal that gopls should use

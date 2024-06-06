@@ -14,11 +14,11 @@ import (
 	"go/types"
 	"strings"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/internal/analysisutil"
-	"github.com/TBD54566975/x/tools/go/ast/inspector"
-	"github.com/TBD54566975/x/tools/go/types/typeutil"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/TBD54566975/golang-tools/go/ast/inspector"
+	"github.com/TBD54566975/golang-tools/go/types/typeutil"
 )
 
 const badFormat = "2006-02-01"
@@ -30,7 +30,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "timeformat",
 	Doc:      analysisutil.MustExtractDoc(doc, "timeformat"),
-	URL:      "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/timeformat",
+	URL:      "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/timeformat",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

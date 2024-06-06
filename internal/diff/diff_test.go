@@ -15,9 +15,9 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/TBD54566975/x/tools/internal/diff"
-	"github.com/TBD54566975/x/tools/internal/diff/difftest"
-	"github.com/TBD54566975/x/tools/internal/testenv"
+	"github.com/TBD54566975/golang-tools/internal/diff"
+	"github.com/TBD54566975/golang-tools/internal/diff/difftest"
+	"github.com/TBD54566975/golang-tools/internal/testenv"
 )
 
 func TestApply(t *testing.T) {
@@ -162,9 +162,9 @@ func TestToUnified(t *testing.T) {
 }
 
 func TestRegressionOld001(t *testing.T) {
-	a := "// Copyright 2019 The Go Authors. All rights reserved.\n// Use of this source code is governed by a BSD-style\n// license that can be found in the LICENSE file.\n\npackage diff_test\n\nimport (\n\t\"fmt\"\n\t\"math/rand\"\n\t\"strings\"\n\t\"testing\"\n\n\t\"github.com/TBD54566975/x/tools/gopls/internal/lsp/diff\"\n\t\"github.com/TBD54566975/x/tools/internal/diff/difftest\"\n\t\"github.com/TBD54566975/x/tools/gopls/internal/span\"\n)\n"
+	a := "// Copyright 2019 The Go Authors. All rights reserved.\n// Use of this source code is governed by a BSD-style\n// license that can be found in the LICENSE file.\n\npackage diff_test\n\nimport (\n\t\"fmt\"\n\t\"math/rand\"\n\t\"strings\"\n\t\"testing\"\n\n\t\"github.com/TBD54566975/golang-tools/gopls/internal/lsp/diff\"\n\t\"github.com/TBD54566975/golang-tools/internal/diff/difftest\"\n\t\"github.com/TBD54566975/golang-tools/gopls/internal/span\"\n)\n"
 
-	b := "// Copyright 2019 The Go Authors. All rights reserved.\n// Use of this source code is governed by a BSD-style\n// license that can be found in the LICENSE file.\n\npackage diff_test\n\nimport (\n\t\"fmt\"\n\t\"math/rand\"\n\t\"strings\"\n\t\"testing\"\n\n\t\"github.com/google/safehtml/template\"\n\t\"github.com/TBD54566975/x/tools/gopls/internal/lsp/diff\"\n\t\"github.com/TBD54566975/x/tools/internal/diff/difftest\"\n\t\"github.com/TBD54566975/x/tools/gopls/internal/span\"\n)\n"
+	b := "// Copyright 2019 The Go Authors. All rights reserved.\n// Use of this source code is governed by a BSD-style\n// license that can be found in the LICENSE file.\n\npackage diff_test\n\nimport (\n\t\"fmt\"\n\t\"math/rand\"\n\t\"strings\"\n\t\"testing\"\n\n\t\"github.com/google/safehtml/template\"\n\t\"github.com/TBD54566975/golang-tools/gopls/internal/lsp/diff\"\n\t\"github.com/TBD54566975/golang-tools/internal/diff/difftest\"\n\t\"github.com/TBD54566975/golang-tools/gopls/internal/span\"\n)\n"
 	diffs := diff.Strings(a, b)
 	got, err := diff.Apply(a, diffs)
 	if err != nil {

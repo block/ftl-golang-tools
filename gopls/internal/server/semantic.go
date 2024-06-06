@@ -7,12 +7,12 @@ package server
 import (
 	"context"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/file"
-	"github.com/TBD54566975/x/tools/gopls/internal/golang"
-	"github.com/TBD54566975/x/tools/gopls/internal/label"
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	"github.com/TBD54566975/x/tools/gopls/internal/template"
-	"github.com/TBD54566975/x/tools/internal/event"
+	"github.com/TBD54566975/golang-tools/gopls/internal/file"
+	"github.com/TBD54566975/golang-tools/gopls/internal/golang"
+	"github.com/TBD54566975/golang-tools/gopls/internal/label"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/gopls/internal/template"
+	"github.com/TBD54566975/golang-tools/internal/event"
 )
 
 func (s *server) SemanticTokensFull(ctx context.Context, params *protocol.SemanticTokensParams) (*protocol.SemanticTokens, error) {

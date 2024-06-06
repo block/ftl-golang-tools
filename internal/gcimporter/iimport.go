@@ -21,9 +21,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/TBD54566975/x/tools/go/types/objectpath"
-	"github.com/TBD54566975/x/tools/internal/aliases"
-	"github.com/TBD54566975/x/tools/internal/typesinternal"
+	"github.com/TBD54566975/golang-tools/go/types/objectpath"
+	"github.com/TBD54566975/golang-tools/internal/aliases"
+	"github.com/TBD54566975/golang-tools/internal/typesinternal"
 )
 
 type intReader struct {

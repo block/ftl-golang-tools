@@ -11,8 +11,8 @@ import (
 	"go/token"
 	"path/filepath"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/cache/parsego"
-	"github.com/TBD54566975/x/tools/gopls/internal/file"
+	"github.com/TBD54566975/golang-tools/gopls/internal/cache/parsego"
+	"github.com/TBD54566975/golang-tools/gopls/internal/file"
 )
 
 // ParseGo parses the file whose contents are provided by fh.

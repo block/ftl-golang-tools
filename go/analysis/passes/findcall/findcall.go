@@ -15,7 +15,7 @@ import (
 	"go/ast"
 	"go/types"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis"
 )
 
 const Doc = `find calls to a particular function
@@ -26,7 +26,7 @@ of a particular name.`
 var Analyzer = &analysis.Analyzer{
 	Name:             "findcall",
 	Doc:              Doc,
-	URL:              "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/findcall",
+	URL:              "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/findcall",
 	Run:              run,
 	RunDespiteErrors: true,
 	FactTypes:        []analysis.Fact{new(foundFact)},

@@ -13,7 +13,7 @@ import (
 	"io"
 	"math/big"
 
-	"github.com/TBD54566975/x/tools/internal/aliases"
+	"github.com/TBD54566975/golang-tools/internal/aliases"
 )
 
 // TODO(gri) use tabwriter for alignment?

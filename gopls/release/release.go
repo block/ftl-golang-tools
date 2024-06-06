@@ -7,7 +7,7 @@
 //
 // To run:
 //
-// $ cd $GOPATH/src/github.com/TBD54566975/x/tools/gopls
+// $ cd $GOPATH/src/github.com/TBD54566975/golang-tools/gopls
 // $ go run release/release.go -version=<version>
 package main
 
@@ -80,16 +80,16 @@ func validateGoModFile(goplsDir string) error {
 		return err
 	}
 	hash := string(stdout)
-	// Find the github.com/TBD54566975/x/tools require line and compare the versions.
+	// Find the github.com/TBD54566975/golang-tools require line and compare the versions.
 	var version string
 	for _, req := range gomod.Require {
-		if req.Mod.Path == "github.com/TBD54566975/x/tools" {
+		if req.Mod.Path == "github.com/TBD54566975/golang-tools" {
 			version = req.Mod.Version
 			break
 		}
 	}
 	if version == "" {
-		return fmt.Errorf("no require for github.com/TBD54566975/x/tools")
+		return fmt.Errorf("no require for github.com/TBD54566975/golang-tools")
 	}
 	split := strings.Split(version, "-")
 	if len(split) != 3 {
@@ -100,7 +100,7 @@ func validateGoModFile(goplsDir string) error {
 		return fmt.Errorf("unexpected pseudoversion format %s", version)
 	}
 	if !strings.HasPrefix(hash, last) {
-		return fmt.Errorf("github.com/TBD54566975/x/tools pseudoversion should be at commit %s, instead got %s", hash, last)
+		return fmt.Errorf("github.com/TBD54566975/golang-tools pseudoversion should be at commit %s, instead got %s", hash, last)
 	}
 	return nil
 }

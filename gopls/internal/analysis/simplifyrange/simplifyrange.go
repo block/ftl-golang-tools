@@ -12,10 +12,10 @@ import (
 	"go/token"
 	"go/types"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/x/tools/go/ast/inspector"
-	"github.com/TBD54566975/x/tools/internal/analysisinternal"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/golang-tools/go/ast/inspector"
+	"github.com/TBD54566975/golang-tools/internal/analysisinternal"
 )
 
 //go:embed doc.go
@@ -26,7 +26,7 @@ var Analyzer = &analysis.Analyzer{
 	Doc:      analysisinternal.MustExtractDoc(doc, "simplifyrange"),
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
-	URL:      "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/simplifyrange",
+	URL:      "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/simplifyrange",
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {

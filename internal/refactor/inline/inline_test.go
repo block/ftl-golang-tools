@@ -22,14 +22,14 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/TBD54566975/x/tools/go/ast/astutil"
-	"github.com/TBD54566975/x/tools/go/expect"
-	"github.com/TBD54566975/x/tools/go/packages"
-	"github.com/TBD54566975/x/tools/go/types/typeutil"
-	"github.com/TBD54566975/x/tools/internal/diff"
-	"github.com/TBD54566975/x/tools/internal/refactor/inline"
-	"github.com/TBD54566975/x/tools/internal/testenv"
-	"github.com/TBD54566975/x/tools/txtar"
+	"github.com/TBD54566975/golang-tools/go/ast/astutil"
+	"github.com/TBD54566975/golang-tools/go/expect"
+	"github.com/TBD54566975/golang-tools/go/packages"
+	"github.com/TBD54566975/golang-tools/go/types/typeutil"
+	"github.com/TBD54566975/golang-tools/internal/diff"
+	"github.com/TBD54566975/golang-tools/internal/refactor/inline"
+	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/TBD54566975/golang-tools/txtar"
 )
 
 // TestData executes test scenarios specified by files in testdata/*.txtar.

@@ -13,14 +13,14 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/cache"
-	"github.com/TBD54566975/x/tools/gopls/internal/cache/metadata"
-	"github.com/TBD54566975/x/tools/gopls/internal/cache/parsego"
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/astutil"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/bug"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/safetoken"
-	"github.com/TBD54566975/x/tools/internal/tokeninternal"
+	"github.com/TBD54566975/golang-tools/gopls/internal/cache"
+	"github.com/TBD54566975/golang-tools/gopls/internal/cache/metadata"
+	"github.com/TBD54566975/golang-tools/gopls/internal/cache/parsego"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/astutil"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/bug"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/safetoken"
+	"github.com/TBD54566975/golang-tools/internal/tokeninternal"
 )
 
 // IsGenerated gets and reads the file denoted by uri and reports

@@ -6,8 +6,8 @@
 package main
 
 import (
-	"github.com/TBD54566975/x/tools/go/analysis/singlechecker"
-	"github.com/TBD54566975/x/tools/gopls/internal/analysis/unusedparams"
+	"github.com/TBD54566975/golang-tools/go/analysis/singlechecker"
+	"github.com/TBD54566975/golang-tools/gopls/internal/analysis/unusedparams"
 )
 
 func main() { singlechecker.Main(unusedparams.Analyzer) }

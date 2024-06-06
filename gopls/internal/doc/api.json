@@ -799,7 +799,7 @@
 			},
 			{
 				"Name": "codelenses",
-				"Type": "map[github.com/TBD54566975/x/tools/gopls/internal/protocol.CodeLensSource]bool",
+				"Type": "map[github.com/TBD54566975/golang-tools/gopls/internal/protocol.CodeLensSource]bool",
 				"Doc": "codelenses overrides the enabled/disabled state of each of gopls'\nsources of [Code Lenses](codelenses.md).\n\nExample Usage:\n\n```json5\n\"gopls\": {\n...\n  \"codelenses\": {\n    \"generate\": false,  // Don't show the `go generate` lens.\n    \"gc_details\": true  // Show a code lens toggling the display of gc's choices.\n  }\n...\n}\n```\n",
 				"EnumKeys": {
 					"ValueType": "bool",
@@ -958,14 +958,14 @@
 			"Title": "Apply a fix",
 			"Doc": "Applies a fix to a region of source code.",
 			"ArgDoc": "{\n\t// The name of the fix to apply.\n\t//\n\t// For fixes suggested by analyzers, this is a string constant\n\t// advertised by the analyzer that matches the Category of\n\t// the analysis.Diagnostic with a SuggestedFix containing no edits.\n\t//\n\t// For fixes suggested by code actions, this is a string agreed\n\t// upon by the code action and golang.ApplyFix.\n\t\"Fix\": string,\n\t// The file URI for the document to fix.\n\t\"URI\": string,\n\t// The document range to scan for fixes.\n\t\"Range\": {\n\t\t\"start\": {\n\t\t\t\"line\": uint32,\n\t\t\t\"character\": uint32,\n\t\t},\n\t\t\"end\": {\n\t\t\t\"line\": uint32,\n\t\t\t\"character\": uint32,\n\t\t},\n\t},\n\t// Whether to resolve and return the edits.\n\t\"ResolveEdits\": bool,\n}",
-			"ResultDoc": "{\n\t// Holds changes to existing resources.\n\t\"changes\": map[github.com/TBD54566975/x/tools/gopls/internal/protocol.DocumentURI][]github.com/TBD54566975/x/tools/gopls/internal/protocol.TextEdit,\n\t// Depending on the client capability `workspace.workspaceEdit.resourceOperations` document changes\n\t// are either an array of `TextDocumentEdit`s to express changes to n different text documents\n\t// where each text document edit addresses a specific version of a text document. Or it can contain\n\t// above `TextDocumentEdit`s mixed with create, rename and delete file / folder operations.\n\t//\n\t// Whether a client supports versioned document edits is expressed via\n\t// `workspace.workspaceEdit.documentChanges` client capability.\n\t//\n\t// If a client neither supports `documentChanges` nor `workspace.workspaceEdit.resourceOperations` then\n\t// only plain `TextEdit`s using the `changes` property are supported.\n\t\"documentChanges\": []{\n\t\t\"TextDocumentEdit\": {\n\t\t\t\"textDocument\": { ... },\n\t\t\t\"edits\": { ... },\n\t\t},\n\t\t\"CreateFile\": {\n\t\t\t\"kind\": string,\n\t\t\t\"uri\": string,\n\t\t\t\"options\": { ... },\n\t\t\t\"ResourceOperation\": { ... },\n\t\t},\n\t\t\"RenameFile\": {\n\t\t\t\"kind\": string,\n\t\t\t\"oldUri\": string,\n\t\t\t\"newUri\": string,\n\t\t\t\"options\": { ... },\n\t\t\t\"ResourceOperation\": { ... },\n\t\t},\n\t\t\"DeleteFile\": {\n\t\t\t\"kind\": string,\n\t\t\t\"uri\": string,\n\t\t\t\"options\": { ... },\n\t\t\t\"ResourceOperation\": { ... },\n\t\t},\n\t},\n\t// A map of change annotations that can be referenced in `AnnotatedTextEdit`s or create, rename and\n\t// delete file / folder operations.\n\t//\n\t// Whether clients honor this property depends on the client capability `workspace.changeAnnotationSupport`.\n\t//\n\t// @since 3.16.0\n\t\"changeAnnotations\": map[string]github.com/TBD54566975/x/tools/gopls/internal/protocol.ChangeAnnotation,\n}"
+			"ResultDoc": "{\n\t// Holds changes to existing resources.\n\t\"changes\": map[github.com/TBD54566975/golang-tools/gopls/internal/protocol.DocumentURI][]github.com/TBD54566975/golang-tools/gopls/internal/protocol.TextEdit,\n\t// Depending on the client capability `workspace.workspaceEdit.resourceOperations` document changes\n\t// are either an array of `TextDocumentEdit`s to express changes to n different text documents\n\t// where each text document edit addresses a specific version of a text document. Or it can contain\n\t// above `TextDocumentEdit`s mixed with create, rename and delete file / folder operations.\n\t//\n\t// Whether a client supports versioned document edits is expressed via\n\t// `workspace.workspaceEdit.documentChanges` client capability.\n\t//\n\t// If a client neither supports `documentChanges` nor `workspace.workspaceEdit.resourceOperations` then\n\t// only plain `TextEdit`s using the `changes` property are supported.\n\t\"documentChanges\": []{\n\t\t\"TextDocumentEdit\": {\n\t\t\t\"textDocument\": { ... },\n\t\t\t\"edits\": { ... },\n\t\t},\n\t\t\"CreateFile\": {\n\t\t\t\"kind\": string,\n\t\t\t\"uri\": string,\n\t\t\t\"options\": { ... },\n\t\t\t\"ResourceOperation\": { ... },\n\t\t},\n\t\t\"RenameFile\": {\n\t\t\t\"kind\": string,\n\t\t\t\"oldUri\": string,\n\t\t\t\"newUri\": string,\n\t\t\t\"options\": { ... },\n\t\t\t\"ResourceOperation\": { ... },\n\t\t},\n\t\t\"DeleteFile\": {\n\t\t\t\"kind\": string,\n\t\t\t\"uri\": string,\n\t\t\t\"options\": { ... },\n\t\t\t\"ResourceOperation\": { ... },\n\t\t},\n\t},\n\t// A map of change annotations that can be referenced in `AnnotatedTextEdit`s or create, rename and\n\t// delete file / folder operations.\n\t//\n\t// Whether clients honor this property depends on the client capability `workspace.changeAnnotationSupport`.\n\t//\n\t// @since 3.16.0\n\t\"changeAnnotations\": map[string]github.com/TBD54566975/golang-tools/gopls/internal/protocol.ChangeAnnotation,\n}"
 		},
 		{
 			"Command": "gopls.change_signature",
 			"Title": "Perform a \"change signature\" refactoring",
 			"Doc": "This command is experimental, currently only supporting parameter removal.\nIts signature will certainly change in the future (pun intended).",
 			"ArgDoc": "{\n\t\"RemoveParameter\": {\n\t\t\"uri\": string,\n\t\t\"range\": {\n\t\t\t\"start\": { ... },\n\t\t\t\"end\": { ... },\n\t\t},\n\t},\n\t// Whether to resolve and return the edits.\n\t\"ResolveEdits\": bool,\n}",
-			"ResultDoc": "{\n\t// Holds changes to existing resources.\n\t\"changes\": map[github.com/TBD54566975/x/tools/gopls/internal/protocol.DocumentURI][]github.com/TBD54566975/x/tools/gopls/internal/protocol.TextEdit,\n\t// Depending on the client capability `workspace.workspaceEdit.resourceOperations` document changes\n\t// are either an array of `TextDocumentEdit`s to express changes to n different text documents\n\t// where each text document edit addresses a specific version of a text document. Or it can contain\n\t// above `TextDocumentEdit`s mixed with create, rename and delete file / folder operations.\n\t//\n\t// Whether a client supports versioned document edits is expressed via\n\t// `workspace.workspaceEdit.documentChanges` client capability.\n\t//\n\t// If a client neither supports `documentChanges` nor `workspace.workspaceEdit.resourceOperations` then\n\t// only plain `TextEdit`s using the `changes` property are supported.\n\t\"documentChanges\": []{\n\t\t\"TextDocumentEdit\": {\n\t\t\t\"textDocument\": { ... },\n\t\t\t\"edits\": { ... },\n\t\t},\n\t\t\"CreateFile\": {\n\t\t\t\"kind\": string,\n\t\t\t\"uri\": string,\n\t\t\t\"options\": { ... },\n\t\t\t\"ResourceOperation\": { ... },\n\t\t},\n\t\t\"RenameFile\": {\n\t\t\t\"kind\": string,\n\t\t\t\"oldUri\": string,\n\t\t\t\"newUri\": string,\n\t\t\t\"options\": { ... },\n\t\t\t\"ResourceOperation\": { ... },\n\t\t},\n\t\t\"DeleteFile\": {\n\t\t\t\"kind\": string,\n\t\t\t\"uri\": string,\n\t\t\t\"options\": { ... },\n\t\t\t\"ResourceOperation\": { ... },\n\t\t},\n\t},\n\t// A map of change annotations that can be referenced in `AnnotatedTextEdit`s or create, rename and\n\t// delete file / folder operations.\n\t//\n\t// Whether clients honor this property depends on the client capability `workspace.changeAnnotationSupport`.\n\t//\n\t// @since 3.16.0\n\t\"changeAnnotations\": map[string]github.com/TBD54566975/x/tools/gopls/internal/protocol.ChangeAnnotation,\n}"
+			"ResultDoc": "{\n\t// Holds changes to existing resources.\n\t\"changes\": map[github.com/TBD54566975/golang-tools/gopls/internal/protocol.DocumentURI][]github.com/TBD54566975/golang-tools/gopls/internal/protocol.TextEdit,\n\t// Depending on the client capability `workspace.workspaceEdit.resourceOperations` document changes\n\t// are either an array of `TextDocumentEdit`s to express changes to n different text documents\n\t// where each text document edit addresses a specific version of a text document. Or it can contain\n\t// above `TextDocumentEdit`s mixed with create, rename and delete file / folder operations.\n\t//\n\t// Whether a client supports versioned document edits is expressed via\n\t// `workspace.workspaceEdit.documentChanges` client capability.\n\t//\n\t// If a client neither supports `documentChanges` nor `workspace.workspaceEdit.resourceOperations` then\n\t// only plain `TextEdit`s using the `changes` property are supported.\n\t\"documentChanges\": []{\n\t\t\"TextDocumentEdit\": {\n\t\t\t\"textDocument\": { ... },\n\t\t\t\"edits\": { ... },\n\t\t},\n\t\t\"CreateFile\": {\n\t\t\t\"kind\": string,\n\t\t\t\"uri\": string,\n\t\t\t\"options\": { ... },\n\t\t\t\"ResourceOperation\": { ... },\n\t\t},\n\t\t\"RenameFile\": {\n\t\t\t\"kind\": string,\n\t\t\t\"oldUri\": string,\n\t\t\t\"newUri\": string,\n\t\t\t\"options\": { ... },\n\t\t\t\"ResourceOperation\": { ... },\n\t\t},\n\t\t\"DeleteFile\": {\n\t\t\t\"kind\": string,\n\t\t\t\"uri\": string,\n\t\t\t\"options\": { ... },\n\t\t\t\"ResourceOperation\": { ... },\n\t\t},\n\t},\n\t// A map of change annotations that can be referenced in `AnnotatedTextEdit`s or create, rename and\n\t// delete file / folder operations.\n\t//\n\t// Whether clients honor this property depends on the client capability `workspace.changeAnnotationSupport`.\n\t//\n\t// @since 3.16.0\n\t\"changeAnnotations\": map[string]github.com/TBD54566975/golang-tools/gopls/internal/protocol.ChangeAnnotation,\n}"
 		},
 		{
 			"Command": "gopls.check_upgrades",
@@ -1000,7 +1000,7 @@
 			"Title": "Get known vulncheck result",
 			"Doc": "Fetch the result of latest vulnerability check (`govulncheck`).",
 			"ArgDoc": "{\n\t// The file URI.\n\t\"URI\": string,\n}",
-			"ResultDoc": "map[github.com/TBD54566975/x/tools/gopls/internal/protocol.DocumentURI]*github.com/TBD54566975/x/tools/gopls/internal/vulncheck.Result"
+			"ResultDoc": "map[github.com/TBD54566975/golang-tools/gopls/internal/protocol.DocumentURI]*github.com/TBD54566975/golang-tools/gopls/internal/vulncheck.Result"
 		},
 		{
 			"Command": "gopls.free_symbols",
@@ -1240,325 +1240,325 @@
 		{
 			"Name": "appends",
 			"Doc": "check for missing values after append\n\nThis checker reports calls to append that pass\nno values to be appended to the slice.\n\n\ts := []string{\"a\", \"b\", \"c\"}\n\t_ = append(s)\n\nSuch calls are always no-ops and often indicate an\nunderlying mistake.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/appends",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/appends",
 			"Default": true
 		},
 		{
 			"Name": "asmdecl",
 			"Doc": "report mismatches between assembly files and Go declarations",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/asmdecl",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/asmdecl",
 			"Default": true
 		},
 		{
 			"Name": "assign",
 			"Doc": "check for useless assignments\n\nThis checker reports assignments of the form x = x or a[i] = a[i].\nThese are almost always useless, and even when they aren't they are\nusually a mistake.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/assign",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/assign",
 			"Default": true
 		},
 		{
 			"Name": "atomic",
 			"Doc": "check for common mistakes using the sync/atomic package\n\nThe atomic checker looks for assignment statements of the form:\n\n\tx = atomic.AddUint64(\u0026x, 1)\n\nwhich are not atomic.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/atomic",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/atomic",
 			"Default": true
 		},
 		{
 			"Name": "atomicalign",
 			"Doc": "check for non-64-bits-aligned arguments to sync/atomic functions",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/atomicalign",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/atomicalign",
 			"Default": true
 		},
 		{
 			"Name": "bools",
 			"Doc": "check for common mistakes involving boolean operators",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/bools",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/bools",
 			"Default": true
 		},
 		{
 			"Name": "buildtag",
 			"Doc": "check //go:build and // +build directives",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/buildtag",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/buildtag",
 			"Default": true
 		},
 		{
 			"Name": "cgocall",
 			"Doc": "detect some violations of the cgo pointer passing rules\n\nCheck for invalid cgo pointer passing.\nThis looks for code that uses cgo to call C code passing values\nwhose types are almost always invalid according to the cgo pointer\nsharing rules.\nSpecifically, it warns about attempts to pass a Go chan, map, func,\nor slice to C, either directly, or via a pointer, array, or struct.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/cgocall",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/cgocall",
 			"Default": true
 		},
 		{
 			"Name": "composites",
 			"Doc": "check for unkeyed composite literals\n\nThis analyzer reports a diagnostic for composite literals of struct\ntypes imported from another package that do not use the field-keyed\nsyntax. Such literals are fragile because the addition of a new field\n(even if unexported) to the struct will cause compilation to fail.\n\nAs an example,\n\n\terr = \u0026net.DNSConfigError{err}\n\nshould be replaced by:\n\n\terr = \u0026net.DNSConfigError{Err: err}\n",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/composite",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/composite",
 			"Default": true
 		},
 		{
 			"Name": "copylocks",
 			"Doc": "check for locks erroneously passed by value\n\nInadvertently copying a value containing a lock, such as sync.Mutex or\nsync.WaitGroup, may cause both copies to malfunction. Generally such\nvalues should be referred to through a pointer.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/copylock",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/copylock",
 			"Default": true
 		},
 		{
 			"Name": "deepequalerrors",
 			"Doc": "check for calls of reflect.DeepEqual on error values\n\nThe deepequalerrors checker looks for calls of the form:\n\n    reflect.DeepEqual(err1, err2)\n\nwhere err1 and err2 are errors. Using reflect.DeepEqual to compare\nerrors is discouraged.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/deepequalerrors",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/deepequalerrors",
 			"Default": true
 		},
 		{
 			"Name": "defers",
 			"Doc": "report common mistakes in defer statements\n\nThe defers analyzer reports a diagnostic when a defer statement would\nresult in a non-deferred call to time.Since, as experience has shown\nthat this is nearly always a mistake.\n\nFor example:\n\n\tstart := time.Now()\n\t...\n\tdefer recordLatency(time.Since(start)) // error: call to time.Since is not deferred\n\nThe correct code is:\n\n\tdefer func() { recordLatency(time.Since(start)) }()",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/defers",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/defers",
 			"Default": true
 		},
 		{
 			"Name": "deprecated",
 			"Doc": "check for use of deprecated identifiers\n\nThe deprecated analyzer looks for deprecated symbols and package\nimports.\n\nSee https://go.dev/wiki/Deprecated to learn about Go's convention\nfor documenting and signaling deprecated identifiers.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/deprecated",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/deprecated",
 			"Default": true
 		},
 		{
 			"Name": "directive",
 			"Doc": "check Go toolchain directives such as //go:debug\n\nThis analyzer checks for problems with known Go toolchain directives\nin all Go source files in a package directory, even those excluded by\n//go:build constraints, and all non-Go source files too.\n\nFor //go:debug (see https://go.dev/doc/godebug), the analyzer checks\nthat the directives are placed only in Go source files, only above the\npackage comment, and only in package main or *_test.go files.\n\nSupport for other known directives may be added in the future.\n\nThis analyzer does not check //go:build, which is handled by the\nbuildtag analyzer.\n",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/directive",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/directive",
 			"Default": true
 		},
 		{
 			"Name": "embed",
 			"Doc": "check //go:embed directive usage\n\nThis analyzer checks that the embed package is imported if //go:embed\ndirectives are present, providing a suggested fix to add the import if\nit is missing.\n\nThis analyzer also checks that //go:embed directives precede the\ndeclaration of a single variable.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/embeddirective",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/embeddirective",
 			"Default": true
 		},
 		{
 			"Name": "errorsas",
 			"Doc": "report passing non-pointer or non-error values to errors.As\n\nThe errorsas analysis reports calls to errors.As where the type\nof the second argument is not a pointer to a type implementing error.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/errorsas",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/errorsas",
 			"Default": true
 		},
 		{
 			"Name": "fieldalignment",
 			"Doc": "find structs that would use less memory if their fields were sorted\n\nThis analyzer find structs that can be rearranged to use less memory, and provides\na suggested edit with the most compact order.\n\nNote that there are two different diagnostics reported. One checks struct size,\nand the other reports \"pointer bytes\" used. Pointer bytes is how many bytes of the\nobject that the garbage collector has to potentially scan for pointers, for example:\n\n\tstruct { uint32; string }\n\nhave 16 pointer bytes because the garbage collector has to scan up through the string's\ninner pointer.\n\n\tstruct { string; *uint32 }\n\nhas 24 pointer bytes because it has to scan further through the *uint32.\n\n\tstruct { string; uint32 }\n\nhas 8 because it can stop immediately after the string pointer.\n\nBe aware that the most compact order is not always the most efficient.\nIn rare cases it may cause two variables each updated by its own goroutine\nto occupy the same CPU cache line, inducing a form of memory contention\nknown as \"false sharing\" that slows down both goroutines.\n",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/fieldalignment",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/fieldalignment",
 			"Default": false
 		},
 		{
 			"Name": "fillreturns",
 			"Doc": "suggest fixes for errors due to an incorrect number of return values\n\nThis checker provides suggested fixes for type errors of the\ntype \"wrong number of return values (want %d, got %d)\". For example:\n\n\tfunc m() (int, string, *bool, error) {\n\t\treturn\n\t}\n\nwill turn into\n\n\tfunc m() (int, string, *bool, error) {\n\t\treturn 0, \"\", nil, nil\n\t}\n\nThis functionality is similar to https://github.com/sqs/goreturns.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/fillreturns",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/fillreturns",
 			"Default": true
 		},
 		{
 			"Name": "framepointer",
 			"Doc": "report assembly that clobbers the frame pointer before saving it",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/framepointer",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/framepointer",
 			"Default": true
 		},
 		{
 			"Name": "httpresponse",
 			"Doc": "check for mistakes using HTTP responses\n\nA common mistake when using the net/http package is to defer a function\ncall to close the http.Response Body before checking the error that\ndetermines whether the response is valid:\n\n\tresp, err := http.Head(url)\n\tdefer resp.Body.Close()\n\tif err != nil {\n\t\tlog.Fatal(err)\n\t}\n\t// (defer statement belongs here)\n\nThis checker helps uncover latent nil dereference bugs by reporting a\ndiagnostic for such mistakes.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/httpresponse",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/httpresponse",
 			"Default": true
 		},
 		{
 			"Name": "ifaceassert",
 			"Doc": "detect impossible interface-to-interface type assertions\n\nThis checker flags type assertions v.(T) and corresponding type-switch cases\nin which the static type V of v is an interface that cannot possibly implement\nthe target interface T. This occurs when V and T contain methods with the same\nname but different signatures. Example:\n\n\tvar v interface {\n\t\tRead()\n\t}\n\t_ = v.(io.Reader)\n\nThe Read method in v has a different signature than the Read method in\nio.Reader, so this assertion cannot succeed.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/ifaceassert",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/ifaceassert",
 			"Default": true
 		},
 		{
 			"Name": "infertypeargs",
 			"Doc": "check for unnecessary type arguments in call expressions\n\nExplicit type arguments may be omitted from call expressions if they can be\ninferred from function arguments, or from other type arguments:\n\n\tfunc f[T any](T) {}\n\t\n\tfunc _() {\n\t\tf[string](\"foo\") // string could be inferred\n\t}\n",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/infertypeargs",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/infertypeargs",
 			"Default": true
 		},
 		{
 			"Name": "loopclosure",
 			"Doc": "check references to loop variables from within nested functions\n\nThis analyzer reports places where a function literal references the\niteration variable of an enclosing loop, and the loop calls the function\nin such a way (e.g. with go or defer) that it may outlive the loop\niteration and possibly observe the wrong value of the variable.\n\nNote: An iteration variable can only outlive a loop iteration in Go versions \u003c=1.21.\nIn Go 1.22 and later, the loop variable lifetimes changed to create a new\niteration variable per loop iteration. (See go.dev/issue/60078.)\n\nIn this example, all the deferred functions run after the loop has\ncompleted, so all observe the final value of v [\u003cgo1.22].\n\n\tfor _, v := range list {\n\t    defer func() {\n\t        use(v) // incorrect\n\t    }()\n\t}\n\nOne fix is to create a new variable for each iteration of the loop:\n\n\tfor _, v := range list {\n\t    v := v // new var per iteration\n\t    defer func() {\n\t        use(v) // ok\n\t    }()\n\t}\n\nAfter Go version 1.22, the previous two for loops are equivalent\nand both are correct.\n\nThe next example uses a go statement and has a similar problem [\u003cgo1.22].\nIn addition, it has a data race because the loop updates v\nconcurrent with the goroutines accessing it.\n\n\tfor _, v := range elem {\n\t    go func() {\n\t        use(v)  // incorrect, and a data race\n\t    }()\n\t}\n\nA fix is the same as before. The checker also reports problems\nin goroutines started by golang.org/x/sync/errgroup.Group.\nA hard-to-spot variant of this form is common in parallel tests:\n\n\tfunc Test(t *testing.T) {\n\t    for _, test := range tests {\n\t        t.Run(test.name, func(t *testing.T) {\n\t            t.Parallel()\n\t            use(test) // incorrect, and a data race\n\t        })\n\t    }\n\t}\n\nThe t.Parallel() call causes the rest of the function to execute\nconcurrent with the loop [\u003cgo1.22].\n\nThe analyzer reports references only in the last statement,\nas it is not deep enough to understand the effects of subsequent\nstatements that might render the reference benign.\n(\"Last statement\" is defined recursively in compound\nstatements such as if, switch, and select.)\n\nSee: https://golang.org/doc/go_faq.html#closures_and_goroutines",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/loopclosure",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/loopclosure",
 			"Default": true
 		},
 		{
 			"Name": "lostcancel",
 			"Doc": "check cancel func returned by context.WithCancel is called\n\nThe cancellation function returned by context.WithCancel, WithTimeout,\nand WithDeadline must be called or the new context will remain live\nuntil its parent context is cancelled.\n(The background context is never cancelled.)",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/lostcancel",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/lostcancel",
 			"Default": true
 		},
 		{
 			"Name": "nilfunc",
 			"Doc": "check for useless comparisons between functions and nil\n\nA useless comparison is one like f == nil as opposed to f() == nil.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/nilfunc",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/nilfunc",
 			"Default": true
 		},
 		{
 			"Name": "nilness",
 			"Doc": "check for redundant or impossible nil comparisons\n\nThe nilness checker inspects the control-flow graph of each function in\na package and reports nil pointer dereferences, degenerate nil\npointers, and panics with nil values. A degenerate comparison is of the form\nx==nil or x!=nil where x is statically known to be nil or non-nil. These are\noften a mistake, especially in control flow related to errors. Panics with nil\nvalues are checked because they are not detectable by\n\n\tif r := recover(); r != nil {\n\nThis check reports conditions such as:\n\n\tif f == nil { // impossible condition (f is a function)\n\t}\n\nand:\n\n\tp := \u0026v\n\t...\n\tif p != nil { // tautological condition\n\t}\n\nand:\n\n\tif p == nil {\n\t\tprint(*p) // nil dereference\n\t}\n\nand:\n\n\tif p == nil {\n\t\tpanic(p)\n\t}\n\nSometimes the control flow may be quite complex, making bugs hard\nto spot. In the example below, the err.Error expression is\nguaranteed to panic because, after the first return, err must be\nnil. The intervening loop is just a distraction.\n\n\t...\n\terr := g.Wait()\n\tif err != nil {\n\t\treturn err\n\t}\n\tpartialSuccess := false\n\tfor _, err := range errs {\n\t\tif err == nil {\n\t\t\tpartialSuccess = true\n\t\t\tbreak\n\t\t}\n\t}\n\tif partialSuccess {\n\t\treportStatus(StatusMessage{\n\t\t\tCode:   code.ERROR,\n\t\t\tDetail: err.Error(), // \"nil dereference in dynamic method call\"\n\t\t})\n\t\treturn nil\n\t}\n\n...",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/nilness",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/nilness",
 			"Default": true
 		},
 		{
 			"Name": "nonewvars",
 			"Doc": "suggested fixes for \"no new vars on left side of :=\"\n\nThis checker provides suggested fixes for type errors of the\ntype \"no new vars on left side of :=\". For example:\n\n\tz := 1\n\tz := 2\n\nwill turn into\n\n\tz := 1\n\tz = 2",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/nonewvars",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/nonewvars",
 			"Default": true
 		},
 		{
 			"Name": "noresultvalues",
 			"Doc": "suggested fixes for unexpected return values\n\nThis checker provides suggested fixes for type errors of the\ntype \"no result values expected\" or \"too many return values\".\nFor example:\n\n\tfunc z() { return nil }\n\nwill turn into\n\n\tfunc z() { return }",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/noresultvalues",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/noresultvalues",
 			"Default": true
 		},
 		{
 			"Name": "printf",
 			"Doc": "check consistency of Printf format strings and arguments\n\nThe check applies to calls of the formatting functions such as\n[fmt.Printf] and [fmt.Sprintf], as well as any detected wrappers of\nthose functions such as [log.Printf]. It reports a variety of\nmistakes such as syntax errors in the format string and mismatches\n(of number and type) between the verbs and their arguments.\n\nSee the documentation of the fmt package for the complete set of\nformat operators and their operand types.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/printf",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/printf",
 			"Default": true
 		},
 		{
 			"Name": "shadow",
 			"Doc": "check for possible unintended shadowing of variables\n\nThis analyzer check for shadowed variables.\nA shadowed variable is a variable declared in an inner scope\nwith the same name and type as a variable in an outer scope,\nand where the outer variable is mentioned after the inner one\nis declared.\n\n(This definition can be refined; the module generates too many\nfalse positives and is not yet enabled by default.)\n\nFor example:\n\n\tfunc BadRead(f *os.File, buf []byte) error {\n\t\tvar err error\n\t\tfor {\n\t\t\tn, err := f.Read(buf) // shadows the function variable 'err'\n\t\t\tif err != nil {\n\t\t\t\tbreak // causes return of wrong value\n\t\t\t}\n\t\t\tfoo(buf)\n\t\t}\n\t\treturn err\n\t}",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/shadow",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/shadow",
 			"Default": false
 		},
 		{
 			"Name": "shift",
 			"Doc": "check for shifts that equal or exceed the width of the integer",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/shift",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/shift",
 			"Default": true
 		},
 		{
 			"Name": "sigchanyzer",
 			"Doc": "check for unbuffered channel of os.Signal\n\nThis checker reports call expression of the form\n\n\tsignal.Notify(c \u003c-chan os.Signal, sig ...os.Signal),\n\nwhere c is an unbuffered channel, which can be at risk of missing the signal.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/sigchanyzer",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/sigchanyzer",
 			"Default": true
 		},
 		{
 			"Name": "simplifycompositelit",
 			"Doc": "check for composite literal simplifications\n\nAn array, slice, or map composite literal of the form:\n\n\t[]T{T{}, T{}}\n\nwill be simplified to:\n\n\t[]T{{}, {}}\n\nThis is one of the simplifications that \"gofmt -s\" applies.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/simplifycompositelit",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/simplifycompositelit",
 			"Default": true
 		},
 		{
 			"Name": "simplifyrange",
 			"Doc": "check for range statement simplifications\n\nA range of the form:\n\n\tfor x, _ = range v {...}\n\nwill be simplified to:\n\n\tfor x = range v {...}\n\nA range of the form:\n\n\tfor _ = range v {...}\n\nwill be simplified to:\n\n\tfor range v {...}\n\nThis is one of the simplifications that \"gofmt -s\" applies.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/simplifyrange",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/simplifyrange",
 			"Default": true
 		},
 		{
 			"Name": "simplifyslice",
 			"Doc": "check for slice simplifications\n\nA slice expression of the form:\n\n\ts[a:len(s)]\n\nwill be simplified to:\n\n\ts[a:]\n\nThis is one of the simplifications that \"gofmt -s\" applies.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/simplifyslice",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/simplifyslice",
 			"Default": true
 		},
 		{
 			"Name": "slog",
 			"Doc": "check for invalid structured logging calls\n\nThe slog checker looks for calls to functions from the log/slog\npackage that take alternating key-value pairs. It reports calls\nwhere an argument in a key position is neither a string nor a\nslog.Attr, and where a final key is missing its value.\nFor example,it would report\n\n\tslog.Warn(\"message\", 11, \"k\") // slog.Warn arg \"11\" should be a string or a slog.Attr\n\nand\n\n\tslog.Info(\"message\", \"k1\", v1, \"k2\") // call to slog.Info missing a final value",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/slog",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/slog",
 			"Default": true
 		},
 		{
 			"Name": "sortslice",
 			"Doc": "check the argument type of sort.Slice\n\nsort.Slice requires an argument of a slice type. Check that\nthe interface{} value passed to sort.Slice is actually a slice.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/sortslice",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/sortslice",
 			"Default": true
 		},
 		{
 			"Name": "stdmethods",
 			"Doc": "check signature of methods of well-known interfaces\n\nSometimes a type may be intended to satisfy an interface but may fail to\ndo so because of a mistake in its method signature.\nFor example, the result of this WriteTo method should be (int64, error),\nnot error, to satisfy io.WriterTo:\n\n\ttype myWriterTo struct{...}\n\tfunc (myWriterTo) WriteTo(w io.Writer) error { ... }\n\nThis check ensures that each method whose name matches one of several\nwell-known interface methods from the standard library has the correct\nsignature for that interface.\n\nChecked method names include:\n\n\tFormat GobEncode GobDecode MarshalJSON MarshalXML\n\tPeek ReadByte ReadFrom ReadRune Scan Seek\n\tUnmarshalJSON UnreadByte UnreadRune WriteByte\n\tWriteTo",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/stdmethods",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/stdmethods",
 			"Default": true
 		},
 		{
 			"Name": "stdversion",
 			"Doc": "report uses of too-new standard library symbols\n\nThe stdversion analyzer reports references to symbols in the standard\nlibrary that were introduced by a Go release higher than the one in\nforce in the referring file. (Recall that the file's Go version is\ndefined by the 'go' directive its module's go.mod file, or by a\n\"//go:build go1.X\" build tag at the top of the file.)\n\nThe analyzer does not report a diagnostic for a reference to a \"too\nnew\" field or method of a type that is itself \"too new\", as this may\nhave false positives, for example if fields or methods are accessed\nthrough a type alias that is guarded by a Go version constraint.\n",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/stdversion",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/stdversion",
 			"Default": true
 		},
 		{
 			"Name": "stringintconv",
 			"Doc": "check for string(int) conversions\n\nThis checker flags conversions of the form string(x) where x is an integer\n(but not byte or rune) type. Such conversions are discouraged because they\nreturn the UTF-8 representation of the Unicode code point x, and not a decimal\nstring representation of x as one might expect. Furthermore, if x denotes an\ninvalid code point, the conversion cannot be statically rejected.\n\nFor conversions that intend on using the code point, consider replacing them\nwith string(rune(x)). Otherwise, strconv.Itoa and its equivalents return the\nstring representation of the value in the desired base.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/stringintconv",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/stringintconv",
 			"Default": true
 		},
 		{
 			"Name": "structtag",
 			"Doc": "check that struct field tags conform to reflect.StructTag.Get\n\nAlso report certain struct tags (json, xml) used with unexported fields.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/structtag",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/structtag",
 			"Default": true
 		},
 		{
 			"Name": "stubmethods",
 			"Doc": "detect missing methods and fix with stub implementations\n\nThis analyzer detects type-checking errors due to missing methods\nin assignments from concrete types to interface types, and offers\na suggested fix that will create a set of stub methods so that\nthe concrete type satisfies the interface.\n\nFor example, this function will not compile because the value\nNegativeErr{} does not implement the \"error\" interface:\n\n\tfunc sqrt(x float64) (float64, error) {\n\t\tif x \u003c 0 {\n\t\t\treturn 0, NegativeErr{} // error: missing method\n\t\t}\n\t\t...\n\t}\n\n\ttype NegativeErr struct{}\n\nThis analyzer will suggest a fix to declare this method:\n\n\t// Error implements error.Error.\n\tfunc (NegativeErr) Error() string {\n\t\tpanic(\"unimplemented\")\n\t}\n\n(At least, it appears to behave that way, but technically it\ndoesn't use the SuggestedFix mechanism and the stub is created by\nlogic in gopls's golang.stub function.)",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/stubmethods",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/stubmethods",
 			"Default": true
 		},
 		{
 			"Name": "testinggoroutine",
 			"Doc": "report calls to (*testing.T).Fatal from goroutines started by a test\n\nFunctions that abruptly terminate a test, such as the Fatal, Fatalf, FailNow, and\nSkip{,f,Now} methods of *testing.T, must be called from the test goroutine itself.\nThis checker detects calls to these functions that occur within a goroutine\nstarted by the test. For example:\n\n\tfunc TestFoo(t *testing.T) {\n\t    go func() {\n\t        t.Fatal(\"oops\") // error: (*T).Fatal called from non-test goroutine\n\t    }()\n\t}",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/testinggoroutine",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/testinggoroutine",
 			"Default": true
 		},
 		{
 			"Name": "tests",
 			"Doc": "check for common mistaken usages of tests and examples\n\nThe tests checker walks Test, Benchmark, Fuzzing and Example functions checking\nmalformed names, wrong signatures and examples documenting non-existent\nidentifiers.\n\nPlease see the documentation for package testing in golang.org/pkg/testing\nfor the conventions that are enforced for Tests, Benchmarks, and Examples.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/tests",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/tests",
 			"Default": true
 		},
 		{
 			"Name": "timeformat",
 			"Doc": "check for calls of (time.Time).Format or time.Parse with 2006-02-01\n\nThe timeformat checker looks for time formats with the 2006-02-01 (yyyy-dd-mm)\nformat. Internationally, \"yyyy-dd-mm\" does not occur in common calendar date\nstandards, and so it is more likely that 2006-01-02 (yyyy-mm-dd) was intended.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/timeformat",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/timeformat",
 			"Default": true
 		},
 		{
 			"Name": "undeclaredname",
 			"Doc": "suggested fixes for \"undeclared name: \u003c\u003e\"\n\nThis checker provides suggested fixes for type errors of the\ntype \"undeclared name: \u003c\u003e\". It will either insert a new statement,\nsuch as:\n\n\t\u003c\u003e :=\n\nor a new function declaration, such as:\n\n\tfunc \u003c\u003e(inferred parameters) {\n\t\tpanic(\"implement me!\")\n\t}",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/undeclaredname",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/undeclaredname",
 			"Default": true
 		},
 		{
 			"Name": "unmarshal",
 			"Doc": "report passing non-pointer or non-interface values to unmarshal\n\nThe unmarshal analysis reports calls to functions such as json.Unmarshal\nin which the argument type is not a pointer or an interface.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/unmarshal",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/unmarshal",
 			"Default": true
 		},
 		{
 			"Name": "unreachable",
 			"Doc": "check for unreachable code\n\nThe unreachable analyzer finds statements that execution can never reach\nbecause they are preceded by an return statement, a call to panic, an\ninfinite loop, or similar constructs.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/unreachable",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/unreachable",
 			"Default": true
 		},
 		{
 			"Name": "unsafeptr",
 			"Doc": "check for invalid conversions of uintptr to unsafe.Pointer\n\nThe unsafeptr analyzer reports likely incorrect uses of unsafe.Pointer\nto convert integers to pointers. A conversion from uintptr to\nunsafe.Pointer is invalid if it implies that there is a uintptr-typed\nword in memory that holds a pointer value, because that word will be\ninvisible to stack copying and to the garbage collector.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/unsafeptr",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/unsafeptr",
 			"Default": true
 		},
 		{
 			"Name": "unusedparams",
 			"Doc": "check for unused parameters of functions\n\nThe unusedparams analyzer checks functions to see if there are\nany parameters that are not being used.\n\nTo ensure soundness, it ignores:\n  - \"address-taken\" functions, that is, functions that are used as\n    a value rather than being called directly; their signatures may\n    be required to conform to a func type.\n  - exported functions or methods, since they may be address-taken\n    in another package.\n  - unexported methods whose name matches an interface method\n    declared in the same package, since the method's signature\n    may be required to conform to the interface type.\n  - functions with empty bodies, or containing just a call to panic.\n  - parameters that are unnamed, or named \"_\", the blank identifier.\n\nThe analyzer suggests a fix of replacing the parameter name by \"_\",\nbut in such cases a deeper fix can be obtained by invoking the\n\"Refactor: remove unused parameter\" code action, which will\neliminate the parameter entirely, along with all corresponding\narguments at call sites, while taking care to preserve any side\neffects in the argument expressions; see\nhttps://github.com/golang/tools/releases/tag/gopls%2Fv0.14.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/unusedparams",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/unusedparams",
 			"Default": true
 		},
 		{
 			"Name": "unusedresult",
 			"Doc": "check for unused results of calls to some functions\n\nSome functions like fmt.Errorf return a result and have no side\neffects, so it is always a mistake to discard the result. Other\nfunctions may return an error that must not be ignored, or a cleanup\noperation that must be called. This analyzer reports calls to\nfunctions like these when the result of the call is ignored.\n\nThe set of functions may be controlled using flags.",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/unusedresult",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/unusedresult",
 			"Default": true
 		},
 		{
 			"Name": "unusedvariable",
 			"Doc": "check for unused variables and suggest fixes",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/unusedvariable",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/unusedvariable",
 			"Default": false
 		},
 		{
 			"Name": "unusedwrite",
 			"Doc": "checks for unused writes\n\nThe analyzer reports instances of writes to struct fields and\narrays that are never read. Specifically, when a struct object\nor an array is copied, its elements are copied implicitly by\nthe compiler, and any element write to this copy does nothing\nwith the original object.\n\nFor example:\n\n\ttype T struct { x int }\n\n\tfunc f(input []T) {\n\t\tfor i, v := range input {  // v is a copy\n\t\t\tv.x = i  // unused write to field x\n\t\t}\n\t}\n\nAnother example is about non-pointer receiver:\n\n\ttype T struct { x int }\n\n\tfunc (t T) f() {  // t is a copy\n\t\tt.x = i  // unused write to field x\n\t}",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/unusedwrite",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/unusedwrite",
 			"Default": true
 		},
 		{
 			"Name": "useany",
 			"Doc": "check for constraints that could be simplified to \"any\"",
-			"URL": "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/useany",
+			"URL": "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/useany",
 			"Default": false
 		}
 	],

@@ -3,8 +3,8 @@
 // license that can be found in the LICENSE file.
 
 // Package eg implements the example-based refactoring tool whose
-// command-line is defined in github.com/TBD54566975/x/tools/cmd/eg.
-package eg // import "github.com/TBD54566975/x/tools/refactor/eg"
+// command-line is defined in github.com/TBD54566975/golang-tools/cmd/eg.
+package eg // import "github.com/TBD54566975/golang-tools/refactor/eg"
 
 import (
 	"bytes"

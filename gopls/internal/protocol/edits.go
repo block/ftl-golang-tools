@@ -7,7 +7,7 @@ package protocol
 import (
 	"fmt"
 
-	"github.com/TBD54566975/x/tools/internal/diff"
+	"github.com/TBD54566975/golang-tools/internal/diff"
 )
 
 // EditsFromDiffEdits converts diff.Edits to a non-nil slice of LSP TextEdits.

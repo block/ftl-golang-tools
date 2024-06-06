@@ -42,7 +42,7 @@
 //
 // * os.Exit is implemented using panic, causing deferred functions to
 // run.
-package interp // import "github.com/TBD54566975/x/tools/go/ssa/interp"
+package interp // import "github.com/TBD54566975/golang-tools/go/ssa/interp"
 
 import (
 	"fmt"
@@ -54,8 +54,8 @@ import (
 	"sync/atomic"
 	_ "unsafe"
 
-	"github.com/TBD54566975/x/tools/go/ssa"
-	"github.com/TBD54566975/x/tools/internal/typeparams"
+	"github.com/TBD54566975/golang-tools/go/ssa"
+	"github.com/TBD54566975/golang-tools/internal/typeparams"
 )
 
 type continuation int
@@ -726,5 +726,5 @@ func Interpret(mainpkg *ssa.Package, mode Mode, sizes types.Sizes, filename stri
 
 // TODO(taking): Hack while proposal #66601 is being finalized.
 //
-//go:linkname deferStack github.com/TBD54566975/x/tools/go/ssa.deferStack
+//go:linkname deferStack github.com/TBD54566975/golang-tools/go/ssa.deferStack
 func deferStack(i *ssa.Defer) ssa.Value

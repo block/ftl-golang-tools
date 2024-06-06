@@ -6,8 +6,8 @@
 package main
 
 import (
-	"github.com/TBD54566975/x/tools/go/analysis/passes/findcall"
-	"github.com/TBD54566975/x/tools/go/analysis/singlechecker"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/findcall"
+	"github.com/TBD54566975/golang-tools/go/analysis/singlechecker"
 )
 
 func main() { singlechecker.Main(findcall.Analyzer) }

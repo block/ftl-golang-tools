@@ -11,12 +11,12 @@ import (
 	"go/types"
 	"strings"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/internal/analysisutil"
-	"github.com/TBD54566975/x/tools/go/ast/inspector"
-	"github.com/TBD54566975/x/tools/internal/aliases"
-	"github.com/TBD54566975/x/tools/internal/typeparams"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/TBD54566975/golang-tools/go/ast/inspector"
+	"github.com/TBD54566975/golang-tools/internal/aliases"
+	"github.com/TBD54566975/golang-tools/internal/typeparams"
 )
 
 //go:embed doc.go
@@ -25,7 +25,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "stringintconv",
 	Doc:      analysisutil.MustExtractDoc(doc, "stringintconv"),
-	URL:      "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/stringintconv",
+	URL:      "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/stringintconv",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

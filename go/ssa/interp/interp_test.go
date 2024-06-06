@@ -29,11 +29,11 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/TBD54566975/x/tools/go/loader"
-	"github.com/TBD54566975/x/tools/go/ssa"
-	"github.com/TBD54566975/x/tools/go/ssa/interp"
-	"github.com/TBD54566975/x/tools/go/ssa/ssautil"
-	"github.com/TBD54566975/x/tools/internal/testenv"
+	"github.com/TBD54566975/golang-tools/go/loader"
+	"github.com/TBD54566975/golang-tools/go/ssa"
+	"github.com/TBD54566975/golang-tools/go/ssa/interp"
+	"github.com/TBD54566975/golang-tools/go/ssa/ssautil"
+	"github.com/TBD54566975/golang-tools/internal/testenv"
 )
 
 // Each line contains a space-separated list of $GOROOT/test/
@@ -189,7 +189,7 @@ func run(t *testing.T, input string, goroot string) {
 		interp.CapturedOutput = nil
 	}()
 
-	hint = fmt.Sprintf("To dump SSA representation, run:\n%% go build github.com/TBD54566975/x/tools/cmd/ssadump && ./ssadump -test -build=CFP %s\n", input)
+	hint = fmt.Sprintf("To dump SSA representation, run:\n%% go build github.com/TBD54566975/golang-tools/cmd/ssadump && ./ssadump -test -build=CFP %s\n", input)
 
 	iprog, err := conf.Load()
 	if err != nil {
@@ -212,7 +212,7 @@ func run(t *testing.T, input string, goroot string) {
 	if sizes.Sizeof(types.Typ[types.Int]) < 4 {
 		panic("bogus SizesFor")
 	}
-	hint = fmt.Sprintf("To trace execution, run:\n%% go build github.com/TBD54566975/x/tools/cmd/ssadump && ./ssadump -build=C -test -run --interp=T %s\n", input)
+	hint = fmt.Sprintf("To trace execution, run:\n%% go build github.com/TBD54566975/golang-tools/cmd/ssadump && ./ssadump -build=C -test -run --interp=T %s\n", input)
 	var imode interp.Mode // default mode
 	// imode |= interp.DisableRecover // enable for debugging
 	// imode |= interp.EnableTracing // enable for debugging

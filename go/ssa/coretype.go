@@ -7,8 +7,8 @@ package ssa
 import (
 	"go/types"
 
-	"github.com/TBD54566975/x/tools/internal/aliases"
-	"github.com/TBD54566975/x/tools/internal/typeparams"
+	"github.com/TBD54566975/golang-tools/internal/aliases"
+	"github.com/TBD54566975/golang-tools/internal/typeparams"
 )
 
 // Utilities for dealing with core types.

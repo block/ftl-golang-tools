@@ -1,14 +1,14 @@
 # Go Tools
 
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/TBD54566975/x/tools)](https://pkg.go.dev/github.com/TBD54566975/x/tools)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/TBD54566975/golang-tools)](https://pkg.go.dev/github.com/TBD54566975/golang-tools)
 
-This repository provides the `github.com/TBD54566975/x/tools` module, comprising
+This repository provides the `github.com/TBD54566975/golang-tools` module, comprising
 various tools and packages mostly for static analysis of Go programs,
 some of which are listed below.
 Use the "Go reference" link above for more information about any package.
 
 It also contains the
-[`github.com/TBD54566975/x/tools/gopls`](https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls)
+[`github.com/TBD54566975/golang-tools/gopls`](https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls)
 module, whose root package is a language-server protocol (LSP) server for Go.
 An LSP server analyses the source code of a project and
 responds to requests from a wide range of editors such as VSCode and
@@ -28,7 +28,7 @@ Selected commands:
 
 These commands may be fetched with a command such as
 ```
-go install github.com/TBD54566975/x/tools/cmd/goimports@latest
+go install github.com/TBD54566975/golang-tools/cmd/goimports@latest
 ```
 
 Selected packages:
@@ -64,15 +64,15 @@ Numerous other packages provide more esoteric functionality.
 
 <!-- Some that didn't make the cut:
 
-github.com/TBD54566975/x/tools/benchmark/parse
-github.com/TBD54566975/x/tools/go/ast/astutil
-github.com/TBD54566975/x/tools/go/types/typeutil
-github.com/TBD54566975/x/tools/playground
-github.com/TBD54566975/x/tools/present
-github.com/TBD54566975/x/tools/refactor/importgraph
-github.com/TBD54566975/x/tools/refactor/rename
-github.com/TBD54566975/x/tools/refactor/satisfy
-github.com/TBD54566975/x/tools/txtar
+github.com/TBD54566975/golang-tools/benchmark/parse
+github.com/TBD54566975/golang-tools/go/ast/astutil
+github.com/TBD54566975/golang-tools/go/types/typeutil
+github.com/TBD54566975/golang-tools/playground
+github.com/TBD54566975/golang-tools/present
+github.com/TBD54566975/golang-tools/refactor/importgraph
+github.com/TBD54566975/golang-tools/refactor/rename
+github.com/TBD54566975/golang-tools/refactor/satisfy
+github.com/TBD54566975/golang-tools/txtar
 
 -->
 

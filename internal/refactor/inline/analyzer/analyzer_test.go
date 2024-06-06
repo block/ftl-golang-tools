@@ -9,8 +9,8 @@ package analyzer_test
 import (
 	"testing"
 
-	"github.com/TBD54566975/x/tools/go/analysis/analysistest"
-	inlineanalyzer "github.com/TBD54566975/x/tools/internal/refactor/inline/analyzer"
+	"github.com/TBD54566975/golang-tools/go/analysis/analysistest"
+	inlineanalyzer "github.com/TBD54566975/golang-tools/internal/refactor/inline/analyzer"
 )
 
 func TestAnalyzer(t *testing.T) {

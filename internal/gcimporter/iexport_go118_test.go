@@ -20,8 +20,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/internal/gcimporter"
-	"github.com/TBD54566975/x/tools/internal/testenv"
+	"github.com/TBD54566975/golang-tools/internal/gcimporter"
+	"github.com/TBD54566975/golang-tools/internal/testenv"
 )
 
 // TODO(rfindley): migrate this to testdata, as has been done in the standard library.

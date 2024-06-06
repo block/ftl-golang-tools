@@ -19,13 +19,13 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/internal/analysisutil"
-	"github.com/TBD54566975/x/tools/go/ast/inspector"
-	"github.com/TBD54566975/x/tools/go/types/typeutil"
-	"github.com/TBD54566975/x/tools/internal/aliases"
-	"github.com/TBD54566975/x/tools/internal/typeparams"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/TBD54566975/golang-tools/go/ast/inspector"
+	"github.com/TBD54566975/golang-tools/go/types/typeutil"
+	"github.com/TBD54566975/golang-tools/internal/aliases"
+	"github.com/TBD54566975/golang-tools/internal/typeparams"
 )
 
 func init() {
@@ -38,7 +38,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:       "printf",
 	Doc:        analysisutil.MustExtractDoc(doc, "printf"),
-	URL:        "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/printf",
+	URL:        "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/printf",
 	Requires:   []*analysis.Analyzer{inspect.Analyzer},
 	Run:        run,
 	ResultType: reflect.TypeOf((*Result)(nil)),

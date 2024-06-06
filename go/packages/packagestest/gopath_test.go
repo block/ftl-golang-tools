@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/go/packages/packagestest"
+	"github.com/TBD54566975/golang-tools/go/packages/packagestest"
 )
 
 func TestGOPATHExport(t *testing.T) {

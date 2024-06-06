@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // Package blog implements a web server for articles written in present format.
-package blog // import "github.com/TBD54566975/x/tools/blog"
+package blog // import "github.com/TBD54566975/golang-tools/blog"
 
 import (
 	"bytes"
@@ -20,8 +20,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TBD54566975/x/tools/blog/atom"
-	"github.com/TBD54566975/x/tools/present"
+	"github.com/TBD54566975/golang-tools/blog/atom"
+	"github.com/TBD54566975/golang-tools/present"
 )
 
 var (

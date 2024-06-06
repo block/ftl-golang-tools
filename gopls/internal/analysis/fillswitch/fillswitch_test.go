@@ -8,9 +8,9 @@ import (
 	"go/token"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/analysistest"
-	"github.com/TBD54566975/x/tools/gopls/internal/analysis/fillswitch"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/analysistest"
+	"github.com/TBD54566975/golang-tools/gopls/internal/analysis/fillswitch"
 )
 
 // analyzer allows us to test the fillswitch code action using the analysistest
@@ -26,7 +26,7 @@ var analyzer = &analysis.Analyzer{
 		}
 		return nil, nil
 	},
-	URL:              "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/fillswitch",
+	URL:              "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/fillswitch",
 	RunDespiteErrors: true,
 }
 

@@ -21,8 +21,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/filecache"
-	"github.com/TBD54566975/x/tools/internal/testenv"
+	"github.com/TBD54566975/golang-tools/gopls/internal/filecache"
+	"github.com/TBD54566975/golang-tools/internal/testenv"
 	"golang.org/x/sync/errgroup"
 )
 

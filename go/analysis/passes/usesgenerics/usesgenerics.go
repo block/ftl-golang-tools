@@ -8,11 +8,11 @@ import (
 	_ "embed"
 	"reflect"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/internal/analysisutil"
-	"github.com/TBD54566975/x/tools/go/ast/inspector"
-	"github.com/TBD54566975/x/tools/internal/typeparams/genericfeatures"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/TBD54566975/golang-tools/go/ast/inspector"
+	"github.com/TBD54566975/golang-tools/internal/typeparams/genericfeatures"
 )
 
 //go:embed doc.go
@@ -21,7 +21,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:       "usesgenerics",
 	Doc:        analysisutil.MustExtractDoc(doc, "usesgenerics"),
-	URL:        "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/usesgenerics",
+	URL:        "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/usesgenerics",
 	Requires:   []*analysis.Analyzer{inspect.Analyzer},
 	Run:        run,
 	ResultType: reflect.TypeOf((*Result)(nil)),

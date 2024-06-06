@@ -11,12 +11,12 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/util/bug"
-	"github.com/TBD54566975/x/tools/internal/event"
-	"github.com/TBD54566975/x/tools/internal/jsonrpc2"
-	jsonrpc2_v2 "github.com/TBD54566975/x/tools/internal/jsonrpc2_v2"
-	"github.com/TBD54566975/x/tools/internal/xcontext"
 	"golang.org/x/telemetry/crashmonitor"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/bug"
+	"github.com/TBD54566975/golang-tools/internal/event"
+	"github.com/TBD54566975/golang-tools/internal/jsonrpc2"
+	jsonrpc2_v2 "github.com/TBD54566975/golang-tools/internal/jsonrpc2_v2"
+	"github.com/TBD54566975/golang-tools/internal/xcontext"
 )
 
 var (

@@ -17,15 +17,15 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol/command"
-	"github.com/TBD54566975/x/tools/gopls/internal/test/integration/fake/glob"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/bug"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/pathutil"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/slices"
-	"github.com/TBD54566975/x/tools/internal/jsonrpc2"
-	"github.com/TBD54566975/x/tools/internal/jsonrpc2/servertest"
-	"github.com/TBD54566975/x/tools/internal/xcontext"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol/command"
+	"github.com/TBD54566975/golang-tools/gopls/internal/test/integration/fake/glob"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/bug"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/pathutil"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/slices"
+	"github.com/TBD54566975/golang-tools/internal/jsonrpc2"
+	"github.com/TBD54566975/golang-tools/internal/jsonrpc2/servertest"
+	"github.com/TBD54566975/golang-tools/internal/xcontext"
 )
 
 // Editor is a fake client editor.  It keeps track of client state and can be

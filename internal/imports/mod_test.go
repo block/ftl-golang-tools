@@ -19,11 +19,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TBD54566975/x/tools/internal/gocommand"
-	"github.com/TBD54566975/x/tools/internal/gopathwalk"
-	"github.com/TBD54566975/x/tools/internal/proxydir"
-	"github.com/TBD54566975/x/tools/internal/testenv"
-	"github.com/TBD54566975/x/tools/txtar"
+	"github.com/TBD54566975/golang-tools/internal/gocommand"
+	"github.com/TBD54566975/golang-tools/internal/gopathwalk"
+	"github.com/TBD54566975/golang-tools/internal/proxydir"
+	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/TBD54566975/golang-tools/txtar"
 	"golang.org/x/mod/module"
 )
 

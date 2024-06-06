@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/TBD54566975/x/tools/gopls/internal/test/integration"
-	"github.com/TBD54566975/x/tools/internal/testenv"
+	. "github.com/TBD54566975/golang-tools/gopls/internal/test/integration"
+	"github.com/TBD54566975/golang-tools/internal/testenv"
 )
 
 var go121bin = flag.String("go121bin", "", "bin directory containing go 1.21 or later")

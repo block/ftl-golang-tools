@@ -7,7 +7,7 @@ package analysisinternal_test
 import (
 	"testing"
 
-	"github.com/TBD54566975/x/tools/internal/analysisinternal"
+	"github.com/TBD54566975/golang-tools/internal/analysisinternal"
 )
 
 func TestExtractDoc(t *testing.T) {

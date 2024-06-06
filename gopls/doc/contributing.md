@@ -18,7 +18,7 @@ claiming it.
 
 ## Getting started
 
-Most of the `gopls` logic is in the `github.com/TBD54566975/x/tools/gopls/internal`
+Most of the `gopls` logic is in the `github.com/TBD54566975/golang-tools/gopls/internal`
 directory. See [design/implementation.md] for an overview of the code organization.
 
 ## Build
@@ -35,8 +35,8 @@ your `gopls` version looks like this:
 
 ```bash
 $ gopls version
-github.com/TBD54566975/x/tools/gopls master
-    github.com/TBD54566975/x/tools/gopls@(devel)
+github.com/TBD54566975/golang-tools/gopls master
+    github.com/TBD54566975/golang-tools/gopls@(devel)
 ```
 
 ## Getting help
@@ -137,7 +137,7 @@ need help.
 When you mail your CL and you or a fellow contributor assigns the
 `Run-TryBot=1` label in Gerrit, the
 [TryBots](https://golang.org/doc/contribute.html#trybots) will run tests in
-both the `github.com/TBD54566975/x/tools` and `github.com/TBD54566975/x/tools/gopls` modules, as
+both the `github.com/TBD54566975/golang-tools` and `github.com/TBD54566975/golang-tools/gopls` modules, as
 described above.
 
 Furthermore, an additional "gopls-CI" pass will be run by _Kokoro_, which is a

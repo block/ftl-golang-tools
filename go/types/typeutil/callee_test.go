@@ -13,8 +13,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/go/types/typeutil"
-	"github.com/TBD54566975/x/tools/internal/versions"
+	"github.com/TBD54566975/golang-tools/go/types/typeutil"
+	"github.com/TBD54566975/golang-tools/internal/versions"
 )
 
 func TestStaticCallee(t *testing.T) {

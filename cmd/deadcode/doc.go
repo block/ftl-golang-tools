@@ -30,7 +30,7 @@ package. Use -filter= to display all results.
 
 Example: show all dead code within the gopls module:
 
-	$ deadcode -test github.com/TBD54566975/x/tools/gopls/...
+	$ deadcode -test github.com/TBD54566975/golang-tools/gopls/...
 
 The analysis can soundly analyze dynamic calls though func values,
 interface methods, and reflection. However, it does not currently
@@ -75,10 +75,10 @@ on each Package record. So, this template shows dead functions grouped
 by package:
 
 	$ deadcode -f='{{println .Path}}{{range .Funcs}}{{printf "\t%s\n" .Name}}{{end}}{{println}}' -test ./gopls/...
-	github.com/TBD54566975/x/tools/gopls/internal/lsp
+	github.com/TBD54566975/golang-tools/gopls/internal/lsp
 		openClientEditor
 
-	github.com/TBD54566975/x/tools/gopls/internal/template
+	github.com/TBD54566975/golang-tools/gopls/internal/template
 		Parsed.WriteNode
 		wrNode.writeNode
 
@@ -87,7 +87,7 @@ by package:
 The -whylive=function flag explain why the named function is not dead
 by showing an arbitrary shortest path to it from one of the main functions.
 (To enumerate the functions in a program, or for more sophisticated
-call graph queries, use github.com/TBD54566975/x/tools/cmd/callgraph.)
+call graph queries, use github.com/TBD54566975/golang-tools/cmd/callgraph.)
 
 Fully static call paths are preferred over paths involving dynamic
 edges, even if longer. Paths starting from a non-test package are
@@ -101,12 +101,12 @@ The default format shows, for each edge in the path, whether the call
 is static or dynamic, and its source line number. For example:
 
 	$ deadcode -whylive=bytes.Buffer.String -test ./cmd/deadcode/...
-	                 github.com/TBD54566975/x/tools/cmd/deadcode.main
-	static@L0117 --> github.com/TBD54566975/x/tools/go/packages.Load
-	static@L0262 --> github.com/TBD54566975/x/tools/go/packages.defaultDriver
-	static@L0305 --> github.com/TBD54566975/x/tools/go/packages.goListDriver
-	static@L0153 --> github.com/TBD54566975/x/tools/go/packages.goListDriver$1
-	static@L0154 --> github.com/TBD54566975/x/tools/go/internal/packagesdriver.GetSizesForArgsGolist
+	                 github.com/TBD54566975/golang-tools/cmd/deadcode.main
+	static@L0117 --> github.com/TBD54566975/golang-tools/go/packages.Load
+	static@L0262 --> github.com/TBD54566975/golang-tools/go/packages.defaultDriver
+	static@L0305 --> github.com/TBD54566975/golang-tools/go/packages.goListDriver
+	static@L0153 --> github.com/TBD54566975/golang-tools/go/packages.goListDriver$1
+	static@L0154 --> github.com/TBD54566975/golang-tools/go/internal/packagesdriver.GetSizesForArgsGolist
 	static@L0044 --> bytes.Buffer.String
 
 # JSON schema

@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/go/gccgoexportdata"
+	"github.com/TBD54566975/golang-tools/go/gccgoexportdata"
 )
 
 // Test ensures this package can read gccgo export data from the

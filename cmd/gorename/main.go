@@ -6,9 +6,9 @@
 // identifiers in Go source code.
 //
 // Run with -help for usage information, or view the Usage constant in
-// package github.com/TBD54566975/x/tools/refactor/rename, which contains most of
+// package github.com/TBD54566975/golang-tools/refactor/rename, which contains most of
 // the implementation.
-package main // import "github.com/TBD54566975/x/tools/cmd/gorename"
+package main // import "github.com/TBD54566975/golang-tools/cmd/gorename"
 
 import (
 	"flag"
@@ -17,8 +17,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/TBD54566975/x/tools/go/buildutil"
-	"github.com/TBD54566975/x/tools/refactor/rename"
+	"github.com/TBD54566975/golang-tools/go/buildutil"
+	"github.com/TBD54566975/golang-tools/refactor/rename"
 )
 
 var (

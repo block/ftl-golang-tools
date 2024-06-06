@@ -13,11 +13,11 @@ import (
 	"go/format"
 	"go/types"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/internal/analysisutil"
-	"github.com/TBD54566975/x/tools/go/ast/inspector"
-	"github.com/TBD54566975/x/tools/go/types/typeutil"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/TBD54566975/golang-tools/go/ast/inspector"
+	"github.com/TBD54566975/golang-tools/go/types/typeutil"
 )
 
 const Doc = `check the argument type of sort.Slice
@@ -28,7 +28,7 @@ the interface{} value passed to sort.Slice is actually a slice.`
 var Analyzer = &analysis.Analyzer{
 	Name:     "sortslice",
 	Doc:      Doc,
-	URL:      "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/sortslice",
+	URL:      "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/sortslice",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

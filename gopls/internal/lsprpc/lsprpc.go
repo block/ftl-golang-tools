@@ -19,15 +19,15 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/cache"
-	"github.com/TBD54566975/x/tools/gopls/internal/debug"
-	"github.com/TBD54566975/x/tools/gopls/internal/label"
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol/command"
-	"github.com/TBD54566975/x/tools/gopls/internal/server"
-	"github.com/TBD54566975/x/tools/gopls/internal/settings"
-	"github.com/TBD54566975/x/tools/internal/event"
-	"github.com/TBD54566975/x/tools/internal/jsonrpc2"
+	"github.com/TBD54566975/golang-tools/gopls/internal/cache"
+	"github.com/TBD54566975/golang-tools/gopls/internal/debug"
+	"github.com/TBD54566975/golang-tools/gopls/internal/label"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol/command"
+	"github.com/TBD54566975/golang-tools/gopls/internal/server"
+	"github.com/TBD54566975/golang-tools/gopls/internal/settings"
+	"github.com/TBD54566975/golang-tools/internal/event"
+	"github.com/TBD54566975/golang-tools/internal/jsonrpc2"
 )
 
 // Unique identifiers for client/server.

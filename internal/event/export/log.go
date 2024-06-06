@@ -10,9 +10,9 @@ import (
 	"io"
 	"sync"
 
-	"github.com/TBD54566975/x/tools/internal/event"
-	"github.com/TBD54566975/x/tools/internal/event/core"
-	"github.com/TBD54566975/x/tools/internal/event/label"
+	"github.com/TBD54566975/golang-tools/internal/event"
+	"github.com/TBD54566975/golang-tools/internal/event/core"
+	"github.com/TBD54566975/golang-tools/internal/event/label"
 )
 
 // LogWriter returns an Exporter that logs events to the supplied writer.

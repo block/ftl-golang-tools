@@ -15,11 +15,11 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/ast/astutil"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/safetoken"
-	"github.com/TBD54566975/x/tools/internal/aliases"
-	"github.com/TBD54566975/x/tools/internal/analysisinternal"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/ast/astutil"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/safetoken"
+	"github.com/TBD54566975/golang-tools/internal/aliases"
+	"github.com/TBD54566975/golang-tools/internal/analysisinternal"
 )
 
 //go:embed doc.go
@@ -31,7 +31,7 @@ var Analyzer = &analysis.Analyzer{
 	Requires:         []*analysis.Analyzer{},
 	Run:              run,
 	RunDespiteErrors: true,
-	URL:              "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/undeclaredname",
+	URL:              "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/undeclaredname",
 }
 
 // The prefix for this error message changed in Go 1.20.

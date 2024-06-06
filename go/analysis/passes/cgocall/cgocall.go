@@ -17,9 +17,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/internal/analysisutil"
-	"github.com/TBD54566975/x/tools/go/ast/astutil"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/TBD54566975/golang-tools/go/ast/astutil"
 )
 
 const debug = false
@@ -36,7 +36,7 @@ or slice to C, either directly, or via a pointer, array, or struct.`
 var Analyzer = &analysis.Analyzer{
 	Name:             "cgocall",
 	Doc:              Doc,
-	URL:              "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/cgocall",
+	URL:              "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/cgocall",
 	RunDespiteErrors: true,
 	Run:              run,
 }

@@ -7,7 +7,7 @@ package diagnostics
 import (
 	"testing"
 
-	. "github.com/TBD54566975/x/tools/gopls/internal/test/integration"
+	. "github.com/TBD54566975/golang-tools/gopls/internal/test/integration"
 )
 
 // Test that the import error does not mention GOPATH when building with

@@ -43,14 +43,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/cache"
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/astutil"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/bug"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/safetoken"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/slices"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/typesutil"
-	"github.com/TBD54566975/x/tools/internal/typesinternal"
+	"github.com/TBD54566975/golang-tools/gopls/internal/cache"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/astutil"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/bug"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/safetoken"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/slices"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/typesutil"
+	"github.com/TBD54566975/golang-tools/internal/typesinternal"
 )
 
 // TODO(adonovan): factor these two functions into an interface.

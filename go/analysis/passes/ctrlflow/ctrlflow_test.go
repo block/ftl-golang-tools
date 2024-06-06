@@ -8,8 +8,8 @@ import (
 	"go/ast"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/go/analysis/analysistest"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/ctrlflow"
+	"github.com/TBD54566975/golang-tools/go/analysis/analysistest"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/ctrlflow"
 )
 
 func Test(t *testing.T) {

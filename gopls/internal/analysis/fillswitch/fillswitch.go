@@ -11,7 +11,7 @@ import (
 	"go/token"
 	"go/types"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis"
 )
 
 // Diagnose computes diagnostics for switch statements with missing cases

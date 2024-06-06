@@ -10,10 +10,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TBD54566975/x/tools/internal/event"
-	"github.com/TBD54566975/x/tools/internal/event/core"
-	"github.com/TBD54566975/x/tools/internal/event/keys"
-	"github.com/TBD54566975/x/tools/internal/event/label"
+	"github.com/TBD54566975/golang-tools/internal/event"
+	"github.com/TBD54566975/golang-tools/internal/event/core"
+	"github.com/TBD54566975/golang-tools/internal/event/keys"
+	"github.com/TBD54566975/golang-tools/internal/event/label"
 )
 
 var Entries = keys.New("metric_entries", "The set of metrics calculated for an event")

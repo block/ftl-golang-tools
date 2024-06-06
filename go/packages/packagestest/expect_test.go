@@ -8,8 +8,8 @@ import (
 	"go/token"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/go/expect"
-	"github.com/TBD54566975/x/tools/go/packages/packagestest"
+	"github.com/TBD54566975/golang-tools/go/expect"
+	"github.com/TBD54566975/golang-tools/go/packages/packagestest"
 )
 
 func TestExpect(t *testing.T) {

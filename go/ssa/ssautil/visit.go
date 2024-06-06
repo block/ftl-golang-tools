@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package ssautil // import "github.com/TBD54566975/x/tools/go/ssa/ssautil"
+package ssautil // import "github.com/TBD54566975/golang-tools/go/ssa/ssautil"
 
 import (
 	"go/ast"
 	"go/types"
 
-	"github.com/TBD54566975/x/tools/go/ssa"
+	"github.com/TBD54566975/golang-tools/go/ssa"
 
 	_ "unsafe" // for linkname hack
 )
@@ -153,5 +153,5 @@ func MainPackages(pkgs []*ssa.Package) []*ssa.Package {
 // AllFunctions doc comment, or nil if the package is not from syntax.
 // But perhaps overloading nil vs empty slice is too subtle.
 //
-//go:linkname isSyntactic github.com/TBD54566975/x/tools/go/ssa.isSyntactic
+//go:linkname isSyntactic github.com/TBD54566975/golang-tools/go/ssa.isSyntactic
 func isSyntactic(pkg *ssa.Package) bool

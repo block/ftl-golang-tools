@@ -15,10 +15,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/internal/analysisflags"
-	"github.com/TBD54566975/x/tools/go/analysis/internal/checker"
-	"github.com/TBD54566975/x/tools/go/analysis/unitchecker"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/internal/analysisflags"
+	"github.com/TBD54566975/golang-tools/go/analysis/internal/checker"
+	"github.com/TBD54566975/golang-tools/go/analysis/unitchecker"
 )
 
 func Main(analyzers ...*analysis.Analyzer) {

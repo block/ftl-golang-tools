@@ -22,13 +22,13 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/ast/astutil"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/safetoken"
-	"github.com/TBD54566975/x/tools/internal/aliases"
-	"github.com/TBD54566975/x/tools/internal/analysisinternal"
-	"github.com/TBD54566975/x/tools/internal/fuzzy"
-	"github.com/TBD54566975/x/tools/internal/typeparams"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/ast/astutil"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/safetoken"
+	"github.com/TBD54566975/golang-tools/internal/aliases"
+	"github.com/TBD54566975/golang-tools/internal/analysisinternal"
+	"github.com/TBD54566975/golang-tools/internal/fuzzy"
+	"github.com/TBD54566975/golang-tools/internal/typeparams"
 )
 
 // Diagnose computes diagnostics for fillable struct literals overlapping with

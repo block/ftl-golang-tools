@@ -10,9 +10,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	"github.com/TBD54566975/x/tools/gopls/internal/server"
 	"github.com/google/go-cmp/cmp"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/gopls/internal/server"
 )
 
 var (

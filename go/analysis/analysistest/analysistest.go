@@ -22,12 +22,12 @@ import (
 	"testing"
 	"text/scanner"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/internal/checker"
-	"github.com/TBD54566975/x/tools/go/packages"
-	"github.com/TBD54566975/x/tools/internal/diff"
-	"github.com/TBD54566975/x/tools/internal/testenv"
-	"github.com/TBD54566975/x/tools/txtar"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/internal/checker"
+	"github.com/TBD54566975/golang-tools/go/packages"
+	"github.com/TBD54566975/golang-tools/internal/diff"
+	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/TBD54566975/golang-tools/txtar"
 )
 
 // WriteFiles is a helper function that creates a temporary directory
@@ -137,7 +137,7 @@ func RunWithSuggestedFixes(t Testing, dir string, a *analysis.Analyzer, patterns
 		n := runtime.Callers(1, pcs[:])
 		frames := runtime.CallersFrames(pcs[:n])
 		fr, _ := frames.Next()
-		if fr.Func != nil && strings.HasPrefix(fr.Func.Name(), "github.com/TBD54566975/x/tools/") {
+		if fr.Func != nil && strings.HasPrefix(fr.Func.Name(), "github.com/TBD54566975/golang-tools/") {
 			inTools = true
 		}
 	}
@@ -295,7 +295,7 @@ func applyDiffsAndCompare(src, golden []byte, edits []diff.Edit, fileName string
 // Run applies an analysis to the packages denoted by the "go list" patterns.
 //
 // It loads the packages from the specified
-// directory using github.com/TBD54566975/x/tools/go/packages, runs the analysis on
+// directory using github.com/TBD54566975/golang-tools/go/packages, runs the analysis on
 // them, and checks that each analysis emits the expected diagnostics
 // and facts specified by the contents of '// want ...' comments in the
 // package's source files. It treats a comment of the form

@@ -120,7 +120,7 @@
 // The version can be arbitrary text, but to pass all.bash's API check, it must
 // contain the substring “devel”. The VERSION file must be created before
 // building either version of the toolchain.
-package main // import "github.com/TBD54566975/x/tools/cmd/toolstash"
+package main // import "github.com/TBD54566975/golang-tools/cmd/toolstash"
 
 import (
 	"bufio"
@@ -145,7 +145,7 @@ Examples:
 	toolstash compile x.go
 	toolstash -cmp compile x.go
 
-For details, godoc github.com/TBD54566975/x/tools/cmd/toolstash
+For details, godoc github.com/TBD54566975/golang-tools/cmd/toolstash
 `
 
 func usage() {

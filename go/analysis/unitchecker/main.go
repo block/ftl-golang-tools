@@ -6,7 +6,7 @@
 // +build ignore
 
 // This file provides an example command for static checkers
-// conforming to the github.com/TBD54566975/x/tools/go/analysis API.
+// conforming to the github.com/TBD54566975/golang-tools/go/analysis API.
 // It serves as a model for the behavior of the cmd/vet tool in $GOROOT.
 // Being based on the unitchecker driver, it must be run by go vet:
 //
@@ -17,38 +17,38 @@
 package main
 
 import (
-	"github.com/TBD54566975/x/tools/go/analysis/unitchecker"
+	"github.com/TBD54566975/golang-tools/go/analysis/unitchecker"
 
-	"github.com/TBD54566975/x/tools/go/analysis/passes/appends"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/asmdecl"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/assign"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/atomic"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/bools"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/buildtag"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/cgocall"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/composite"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/copylock"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/directive"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/errorsas"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/framepointer"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/httpresponse"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/ifaceassert"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/loopclosure"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/lostcancel"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/nilfunc"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/printf"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/shift"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/sigchanyzer"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/stdmethods"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/stringintconv"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/structtag"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/testinggoroutine"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/tests"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/timeformat"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/unmarshal"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/unreachable"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/unsafeptr"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/unusedresult"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/appends"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/asmdecl"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/assign"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/atomic"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/bools"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/buildtag"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/cgocall"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/composite"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/copylock"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/directive"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/errorsas"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/framepointer"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/httpresponse"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/ifaceassert"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/loopclosure"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/lostcancel"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/nilfunc"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/printf"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/shift"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/sigchanyzer"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/stdmethods"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/stringintconv"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/structtag"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/testinggoroutine"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/tests"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/timeformat"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/unmarshal"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/unreachable"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/unsafeptr"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/unusedresult"
 )
 
 func main() {

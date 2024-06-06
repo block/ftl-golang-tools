@@ -7,7 +7,7 @@ package ssa
 import (
 	"go/types"
 
-	"github.com/TBD54566975/x/tools/internal/aliases"
+	"github.com/TBD54566975/golang-tools/internal/aliases"
 )
 
 // Type substituter for a fixed set of replacement types.

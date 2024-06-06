@@ -12,9 +12,9 @@ import (
 	"go/token"
 	"go/types"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/x/tools/go/ast/inspector"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/golang-tools/go/ast/inspector"
 )
 
 const Doc = `check for constraints that could be simplified to "any"`
@@ -24,7 +24,7 @@ var Analyzer = &analysis.Analyzer{
 	Doc:      Doc,
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
-	URL:      "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/useany",
+	URL:      "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/useany",
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {

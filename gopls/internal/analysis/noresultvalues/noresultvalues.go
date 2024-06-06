@@ -12,10 +12,10 @@ import (
 
 	_ "embed"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/x/tools/go/ast/inspector"
-	"github.com/TBD54566975/x/tools/internal/analysisinternal"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/golang-tools/go/ast/inspector"
+	"github.com/TBD54566975/golang-tools/internal/analysisinternal"
 )
 
 //go:embed doc.go
@@ -27,7 +27,7 @@ var Analyzer = &analysis.Analyzer{
 	Requires:         []*analysis.Analyzer{inspect.Analyzer},
 	Run:              run,
 	RunDespiteErrors: true,
-	URL:              "https://pkg.go.dev/github.com/TBD54566975/x/tools/gopls/internal/analysis/noresultvalues",
+	URL:              "https://pkg.go.dev/github.com/TBD54566975/golang-tools/gopls/internal/analysis/noresultvalues",
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {

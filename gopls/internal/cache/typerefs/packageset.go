@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/cache/metadata"
+	"github.com/TBD54566975/golang-tools/gopls/internal/cache/metadata"
 )
 
 // PackageIndex stores common data to enable efficient representation of

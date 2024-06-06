@@ -21,9 +21,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TBD54566975/x/tools/go/ast/astutil"
-	"github.com/TBD54566975/x/tools/go/internal/cgo"
-	"github.com/TBD54566975/x/tools/internal/versions"
+	"github.com/TBD54566975/golang-tools/go/ast/astutil"
+	"github.com/TBD54566975/golang-tools/go/internal/cgo"
+	"github.com/TBD54566975/golang-tools/internal/versions"
 )
 
 var ignoreVendor build.ImportMode

@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	"github.com/TBD54566975/x/tools/internal/tool"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/internal/tool"
 )
 
 // links implements the links verb for gopls.

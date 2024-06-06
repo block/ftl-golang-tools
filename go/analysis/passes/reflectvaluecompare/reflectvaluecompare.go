@@ -10,11 +10,11 @@ import (
 	"go/token"
 	"go/types"
 
-	"github.com/TBD54566975/x/tools/go/analysis"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/x/tools/go/analysis/passes/internal/analysisutil"
-	"github.com/TBD54566975/x/tools/go/ast/inspector"
-	"github.com/TBD54566975/x/tools/go/types/typeutil"
+	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
+	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/TBD54566975/golang-tools/go/ast/inspector"
+	"github.com/TBD54566975/golang-tools/go/types/typeutil"
 )
 
 //go:embed doc.go
@@ -23,7 +23,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "reflectvaluecompare",
 	Doc:      analysisutil.MustExtractDoc(doc, "reflectvaluecompare"),
-	URL:      "https://pkg.go.dev/github.com/TBD54566975/x/tools/go/analysis/passes/reflectvaluecompare",
+	URL:      "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/reflectvaluecompare",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

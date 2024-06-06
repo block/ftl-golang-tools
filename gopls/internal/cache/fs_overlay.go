@@ -8,8 +8,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/file"
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/gopls/internal/file"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
 )
 
 // An overlayFS is a file.Source that keeps track of overlays on top of a

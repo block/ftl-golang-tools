@@ -15,7 +15,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/go/loader"
+	"github.com/TBD54566975/golang-tools/go/loader"
 )
 
 // loadProgram creates loader.Program out of p.

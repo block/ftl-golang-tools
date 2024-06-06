@@ -7,8 +7,8 @@ package typesinternal
 import (
 	"go/types"
 
-	"github.com/TBD54566975/x/tools/internal/stdlib"
-	"github.com/TBD54566975/x/tools/internal/versions"
+	"github.com/TBD54566975/golang-tools/internal/stdlib"
+	"github.com/TBD54566975/golang-tools/internal/versions"
 )
 
 // TooNewStdSymbols computes the set of package-level symbols

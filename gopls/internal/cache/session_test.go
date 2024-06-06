@@ -11,11 +11,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	"github.com/TBD54566975/x/tools/gopls/internal/settings"
-	"github.com/TBD54566975/x/tools/gopls/internal/test/integration/fake"
-	"github.com/TBD54566975/x/tools/internal/testenv"
 	"github.com/google/go-cmp/cmp"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/gopls/internal/settings"
+	"github.com/TBD54566975/golang-tools/gopls/internal/test/integration/fake"
+	"github.com/TBD54566975/golang-tools/internal/testenv"
 )
 
 func TestZeroConfigAlgorithm(t *testing.T) {

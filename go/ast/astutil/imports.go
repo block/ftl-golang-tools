@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // Package astutil contains common utilities for working with the Go AST.
-package astutil // import "github.com/TBD54566975/x/tools/go/ast/astutil"
+package astutil // import "github.com/TBD54566975/golang-tools/go/ast/astutil"
 
 import (
 	"fmt"
@@ -195,7 +195,7 @@ func AddNamedImport(fset *token.FileSet, f *ast.File, name, path string) (added 
 
 func isThirdParty(importPath string) bool {
 	// Third party package import path usually contains "." (".com", ".org", ...)
-	// This logic is taken from github.com/TBD54566975/x/tools/imports package.
+	// This logic is taken from github.com/TBD54566975/golang-tools/imports package.
 	return strings.Contains(importPath, ".")
 }
 

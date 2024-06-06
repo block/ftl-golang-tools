@@ -18,15 +18,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TBD54566975/x/tools/go/gcexportdata"
-	"github.com/TBD54566975/x/tools/go/packages"
-	"github.com/TBD54566975/x/tools/gopls/internal/cache/metadata"
-	"github.com/TBD54566975/x/tools/gopls/internal/cache/parsego"
-	"github.com/TBD54566975/x/tools/gopls/internal/cache/typerefs"
-	"github.com/TBD54566975/x/tools/gopls/internal/protocol"
-	"github.com/TBD54566975/x/tools/gopls/internal/util/astutil"
-	"github.com/TBD54566975/x/tools/internal/packagesinternal"
-	"github.com/TBD54566975/x/tools/internal/testenv"
+	"github.com/TBD54566975/golang-tools/go/gcexportdata"
+	"github.com/TBD54566975/golang-tools/go/packages"
+	"github.com/TBD54566975/golang-tools/gopls/internal/cache/metadata"
+	"github.com/TBD54566975/golang-tools/gopls/internal/cache/parsego"
+	"github.com/TBD54566975/golang-tools/gopls/internal/cache/typerefs"
+	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/TBD54566975/golang-tools/gopls/internal/util/astutil"
+	"github.com/TBD54566975/golang-tools/internal/packagesinternal"
+	"github.com/TBD54566975/golang-tools/internal/testenv"
 )
 
 var (

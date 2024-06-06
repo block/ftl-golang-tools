@@ -7,8 +7,8 @@ package misc
 import (
 	"testing"
 
-	. "github.com/TBD54566975/x/tools/gopls/internal/test/integration"
-	"github.com/TBD54566975/x/tools/gopls/internal/test/integration/fake"
+	. "github.com/TBD54566975/golang-tools/gopls/internal/test/integration"
+	"github.com/TBD54566975/golang-tools/gopls/internal/test/integration/fake"
 )
 
 // Smoke test that simultaneous editing sessions in the same workspace works.
