@@ -265,6 +265,16 @@ func (*T) M() { /*in T.M*/}
 			if got != test.want {
 				t.Errorf("pattern %q => %s; want %s", test.re, got, test.want)
 			}
+=======
+	// Invoke the "View package documentation" code
+	// action to start the server.
+	var docAction *protocol.CodeAction
+	actions := env.CodeActionForFile(filename, nil)
+	for _, act := range actions {
+		if act.Title == "View package documentation" {
+			docAction = &act
+			break
+>>>>>>> ee16ed760 (gopls/internal/test/integration: style tweaks to CodeAction)
 		}
 	})
 }
