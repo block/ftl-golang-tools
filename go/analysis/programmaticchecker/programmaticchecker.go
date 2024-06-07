@@ -2,6 +2,8 @@
 package programmaticchecker
 
 import (
+	"sync"
+
 	"github.com/TBD54566975/golang-tools/go/analysis"
 	"github.com/TBD54566975/golang-tools/go/analysis/internal/checker"
 	"github.com/TBD54566975/golang-tools/go/packages"
@@ -9,13 +11,15 @@ import (
 
 type AnalyzerResults map[*analysis.Analyzer]any
 
-var globalResults map[*analysis.Analyzer]interface{}
+var globalResults sync.Map
 
 var resultFetcher = &analysis.Analyzer{
 	Name: "resultFetcher",
 	Doc:  "propogates the results from all analyzers to return to the caller",
 	Run: func(pass *analysis.Pass) (interface{}, error) {
-		globalResults = pass.ResultOf
+		for k, v := range pass.ResultOf {
+			globalResults.Store(k, v)
+		}
 		return nil, nil
 	},
 }
@@ -29,7 +33,7 @@ type Config struct {
 	Patterns []string
 }
 
-func Run(cfg Config, analyzers ...*analysis.Analyzer) (*AnalyzerResults, error) {
+func Run(cfg Config, analyzers ...*analysis.Analyzer) (AnalyzerResults, error) {
 	resultFetcher.Requires = analyzers
 	resultFetcher.RunDespiteErrors = cfg.RunDespiteLoadErrors
 	withResult := append(analyzers, resultFetcher)
@@ -39,11 +43,14 @@ func Run(cfg Config, analyzers ...*analysis.Analyzer) (*AnalyzerResults, error) 
 
 	checker.Run(cfg.Patterns, withResult, checker.WithLoadConfig(cfg.LoadConfig), checker.WithRunDespiteLoadErrors(cfg.RunDespiteLoadErrors))
 
-	result := make(AnalyzerResults)
-	for _, a := range analyzers {
-		if r, ok := globalResults[a]; ok {
-			result[a] = r
+	result := AnalyzerResults{}
+	globalResults.Range(func(key, value interface{}) bool {
+		analyzer, ok := key.(*analysis.Analyzer)
+		if !ok {
+			return false
 		}
-	}
-	return &result, nil
+		result[analyzer] = value
+		return true
+	})
+	return result, nil
 }
