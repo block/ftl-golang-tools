@@ -20,14 +20,24 @@ var resultFetcher = &analysis.Analyzer{
 	},
 }
 
-func Run(patterns []string, loadConfig packages.Config, analyzers ...*analysis.Analyzer) (*AnalyzerResults, error) {
+type Config struct {
+	// LoadConfig is the packages.Config to use when loading packages.
+	LoadConfig packages.Config
+	// RunDespiteLoadErrors specifies whether to run the analysis even if there are package load errors.
+	RunDespiteLoadErrors bool
+	// Patterns specify directory patterns for the package loader.
+	Patterns []string
+}
+
+func Run(cfg Config, analyzers ...*analysis.Analyzer) (*AnalyzerResults, error) {
 	resultFetcher.Requires = analyzers
+	resultFetcher.RunDespiteErrors = cfg.RunDespiteLoadErrors
 	withResult := append(analyzers, resultFetcher)
 	if err := analysis.Validate(withResult); err != nil {
 		return nil, err
 	}
 
-	checker.Run(patterns, withResult, checker.WithLoadConfig(loadConfig))
+	checker.Run(cfg.Patterns, withResult, checker.WithLoadConfig(cfg.LoadConfig), checker.WithRunDespiteLoadErrors(cfg.RunDespiteLoadErrors))
 
 	result := make(AnalyzerResults)
 	for _, a := range analyzers {

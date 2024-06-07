@@ -73,7 +73,8 @@ func RegisterFlags() {
 }
 
 type checkerOptions struct {
-	loadConfig *packages.Config
+	loadConfig           *packages.Config
+	runDespiteLoadErrors bool
 }
 
 type Option func(option *checkerOptions)
@@ -81,6 +82,12 @@ type Option func(option *checkerOptions)
 func WithLoadConfig(config packages.Config) Option {
 	return func(co *checkerOptions) {
 		co.loadConfig = &config
+	}
+}
+
+func WithRunDespiteLoadErrors(shouldRun bool) Option {
+	return func(co *checkerOptions) {
+		co.runDespiteLoadErrors = shouldRun
 	}
 }
 
@@ -150,7 +157,7 @@ func Run(args []string, analyzers []*analysis.Analyzer, opts ...Option) (exitcod
 	// facts, we need source only for the initial packages.
 	allSyntax := needFacts(analyzers)
 	initial, err := load(args, allSyntax, cfg)
-	if err != nil {
+	if err != nil && !cfg.runDespiteLoadErrors {
 		if _, ok := err.(typeParseError); !ok {
 			// Fail when some of the errors are not
 			// related to parsing nor typing.
