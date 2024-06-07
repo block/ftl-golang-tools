@@ -6,6 +6,24 @@ package analysis
 
 import "go/token"
 
+// A SimpleDiagnostic is a simplified representation of Diagnostic for use in APIs that don't have access
+// to package loader types.
+type SimpleDiagnostic struct {
+	Pos      SimplePosition
+	End      SimplePosition // optional
+	Category string         // optional
+	Message  string
+}
+
+// A SimplePosition is a simplified representation of token.Position for use in APIs that don't have access to
+// package loader types.
+type SimplePosition struct {
+	Filename string
+	Line     int
+	Column   int
+	Offset   int
+}
+
 // A Diagnostic is a message associated with a source location or range.
 //
 // An Analyzer may return a variety of diagnostics; the optional Category,
@@ -40,6 +58,27 @@ type Diagnostic struct {
 	// Related contains optional secondary positions and messages
 	// related to the primary diagnostic.
 	Related []RelatedInformation
+}
+
+func (d Diagnostic) ToSimple(fset *token.FileSet) SimpleDiagnostic {
+	pos := fset.Position(d.Pos)
+	end := fset.Position(d.End)
+	return SimpleDiagnostic{
+		Pos: SimplePosition{
+			Filename: pos.Filename,
+			Line:     pos.Line,
+			Column:   pos.Column,
+			Offset:   pos.Offset,
+		},
+		End: SimplePosition{
+			Filename: end.Filename,
+			Line:     end.Line,
+			Column:   end.Column,
+			Offset:   end.Offset,
+		},
+		Category: d.Category,
+		Message:  d.Message,
+	}
 }
 
 // RelatedInformation contains information related to a diagnostic.
