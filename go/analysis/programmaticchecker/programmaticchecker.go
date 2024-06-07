@@ -31,7 +31,9 @@ func Run(patterns []string, loadConfig packages.Config, analyzers ...*analysis.A
 
 	result := make(AnalyzerResults)
 	for _, a := range analyzers {
-		result[a] = globalResults[a]
+		if r, ok := globalResults[a]; ok {
+			result[a] = r
+		}
 	}
 	return &result, nil
 }
