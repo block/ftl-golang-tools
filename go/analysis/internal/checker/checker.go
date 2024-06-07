@@ -71,6 +71,18 @@ func RegisterFlags() {
 	flag.BoolVar(&Fix, "fix", false, "apply all suggested fixes")
 }
 
+type checkerOptions struct {
+	loadConfig *packages.Config
+}
+
+type Option func(option *checkerOptions)
+
+func WithLoadConfig(config packages.Config) Option {
+	return func(co *checkerOptions) {
+		co.loadConfig = &config
+	}
+}
+
 // Run loads the packages specified by args using go/packages,
 // then applies the specified analyzers to them.
 // Analysis flags must already have been set.
@@ -78,7 +90,12 @@ func RegisterFlags() {
 // It provides most of the logic for the main functions of both the
 // singlechecker and the multi-analysis commands.
 // It returns the appropriate exit code.
-func Run(args []string, analyzers []*analysis.Analyzer) (exitcode int) {
+func Run(args []string, analyzers []*analysis.Analyzer, opts ...Option) (exitcode int) {
+	cfg := &checkerOptions{}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
 	if CPUProfile != "" {
 		f, err := os.Create(CPUProfile)
 		if err != nil {
@@ -131,7 +148,7 @@ func Run(args []string, analyzers []*analysis.Analyzer) (exitcode int) {
 	// Optimization: if the selected analyzers don't produce/consume
 	// facts, we need source only for the initial packages.
 	allSyntax := needFacts(analyzers)
-	initial, err := load(args, allSyntax)
+	initial, err := load(args, allSyntax, cfg)
 	if err != nil {
 		log.Print(err)
 		return 1
@@ -171,15 +188,20 @@ func Run(args []string, analyzers []*analysis.Analyzer) (exitcode int) {
 
 // load loads the initial packages. Returns only top-level loading
 // errors. Does not consider errors in packages.
-func load(patterns []string, allSyntax bool) ([]*packages.Package, error) {
-	mode := packages.LoadSyntax
-	if allSyntax {
-		mode = packages.LoadAllSyntax
-	}
-	mode |= packages.NeedModule
-	conf := packages.Config{
-		Mode:  mode,
-		Tests: IncludeTests,
+func load(patterns []string, allSyntax bool, opts *checkerOptions) ([]*packages.Package, error) {
+	var conf packages.Config
+	if opts.loadConfig != nil {
+		conf = *opts.loadConfig
+	} else {
+		mode := packages.LoadSyntax
+		if allSyntax {
+			mode = packages.LoadAllSyntax
+		}
+		mode |= packages.NeedModule
+		conf = packages.Config{
+			Mode:  mode,
+			Tests: IncludeTests,
+		}
 	}
 	initial, err := packages.Load(&conf, patterns...)
 	if err == nil && len(initial) == 0 {
