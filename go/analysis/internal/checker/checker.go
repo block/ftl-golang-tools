@@ -129,7 +129,7 @@ func RunWithResult(args []string, analyzers []*analysis.Analyzer, opts ...Option
 			diags = append(diags, d.ToSimple(root.pass.Fset))
 		}
 	}
-	return results, diagnostics, nil
+	return results, diags, nil
 }
 
 func runInternal(args []string, analyzers []*analysis.Analyzer, opts ...Option) ([]*action, error) {
