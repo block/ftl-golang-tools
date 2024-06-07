@@ -91,6 +91,40 @@ func WithLoadConfig(config packages.Config) Option {
 // singlechecker and the multi-analysis commands.
 // It returns the appropriate exit code.
 func Run(args []string, analyzers []*analysis.Analyzer, opts ...Option) (exitcode int) {
+	roots, err := runInternal(args, analyzers, opts...)
+	if err != nil {
+		log.Print(err)
+		return 1
+	}
+
+	// Print the results.
+	return printDiagnostics(roots)
+}
+
+// Run loads the packages specified by args using go/packages,
+// then applies the specified analyzers to them.
+// Analysis flags must already have been set.
+// Analyzers must be valid according to [analysis.Validate].
+// 
+// Returns results and diagnostics produced by the analyzers.
+func RunWithResult(args []string, analyzers []*analysis.Analyzer, opts ...Option) (analyzerResults map[*analysis.Analyzer]interface{}, diagnostics []analysis.SimpleDiagnostic, err error) {
+	roots, err := runInternal(args, analyzers, opts...)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	diags := []analysis.SimpleDiagnostic{}
+	results := make(map[*analysis.Analyzer]interface{})
+	for _, root := range roots {
+		results[root.a] = root.result
+		for _, d := range root.diagnostics {
+			diags = append(diags, d.ToSimple(root.pass.Fset))
+		}
+	}
+	return results, diagnostics, nil
+}
+
+func runInternal(args []string, analyzers []*analysis.Analyzer, opts ...Option) ([]*action, error) {
 	cfg := &checkerOptions{}
 	for _, opt := range opts {
 		opt(cfg)
@@ -149,9 +183,8 @@ func Run(args []string, analyzers []*analysis.Analyzer, opts ...Option) (exitcod
 	// facts, we need source only for the initial packages.
 	allSyntax := needFacts(analyzers)
 	initial, err := load(args, allSyntax, cfg)
-	if err != nil {
-		log.Print(err)
-		return 1
+	if err != nil && !cfg.runDespiteLoadErrors {
+		return nil, err
 	}
 
 	pkgsExitCode := 0
@@ -171,19 +204,11 @@ func Run(args []string, analyzers []*analysis.Analyzer, opts ...Option) (exitcod
 	if Fix {
 		if err := applyFixes(roots); err != nil {
 			// Fail when applying fixes failed.
-			log.Print(err)
-			return 1
+			return nil, err
 		}
 	}
 
-	// Print the results. If !RunDespiteErrors and there
-	// are errors in the packages, this will have 0 exit
-	// code. Otherwise, we prefer to return exit code
-	// indicating diagnostics.
-	if diagExitCode := printDiagnostics(roots); diagExitCode != 0 {
-		return diagExitCode // there were diagnostics
-	}
-	return pkgsExitCode // package errors but no diagnostics
+	return roots, nil
 }
 
 // load loads the initial packages. Returns only top-level loading
