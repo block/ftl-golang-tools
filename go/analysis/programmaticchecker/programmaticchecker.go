@@ -13,6 +13,8 @@ type Config struct {
 	LoadConfig packages.Config
 	// RunDespiteLoadErrors specifies whether to run the analysis even if there are package load errors.
 	RunDespiteLoadErrors bool
+	// BypassImportAnalysis specifies whether to skip analysis of imported/dependent packages.
+	BypassImportAnalysis bool
 	// Patterns specify directory patterns for the package loader.
 	Patterns []string
 }
@@ -25,5 +27,6 @@ func Run(cfg Config, analyzers ...*analysis.Analyzer) (analyzerResults map[*anal
 	return checker.RunWithResult(cfg.Patterns, analyzers,
 		checker.WithLoadConfig(cfg.LoadConfig),
 		checker.WithRunDespiteLoadErrors(cfg.RunDespiteLoadErrors),
+		checker.WithBypassImportAnalysis(cfg.BypassImportAnalysis),
 	)
 }
