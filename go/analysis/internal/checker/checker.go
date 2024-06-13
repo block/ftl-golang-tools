@@ -91,6 +91,13 @@ func WithRunDespiteLoadErrors(shouldRun bool) Option {
 	}
 }
 
+// WithBypassImportAnalysis dictates whether analysis is performed on imported packages.
+func WithBypassImportAnalysis(shouldBypass bool) Option {
+	return func(co *checkerOptions) {
+		co.runDespiteLoadErrors = shouldBypass
+	}
+}
+
 // Run loads the packages specified by args using go/packages,
 // then applies the specified analyzers to them.
 // Analysis flags must already have been set.
@@ -201,7 +208,7 @@ func runInternal(args []string, analyzers []*analysis.Analyzer, opts ...Option) 
 	}
 
 	// Run the analysis.
-	roots := analyze(initial, analyzers)
+	roots := analyze(initial, analyzers, cfg.runDespiteLoadErrors)
 
 	// Apply fixes.
 	if Fix {
@@ -286,7 +293,7 @@ func loadingError(initial []*packages.Package) error {
 // This entry point is used only by analysistest.
 func TestAnalyzer(a *analysis.Analyzer, pkgs []*packages.Package) []*TestAnalyzerResult {
 	var results []*TestAnalyzerResult
-	for _, act := range analyze(pkgs, []*analysis.Analyzer{a}) {
+	for _, act := range analyze(pkgs, []*analysis.Analyzer{a}, false) {
 		facts := make(map[types.Object][]analysis.Fact)
 		for key, fact := range act.objectFacts {
 			if key.obj.Pkg() == act.pass.Pkg {
@@ -312,7 +319,7 @@ type TestAnalyzerResult struct {
 	Err         error
 }
 
-func analyze(pkgs []*packages.Package, analyzers []*analysis.Analyzer) []*action {
+func analyze(pkgs []*packages.Package, analyzers []*analysis.Analyzer, bypassImports bool) []*action {
 	// Construct the action graph.
 	if dbg('v') {
 		log.Printf("building graph of analysis passes")
@@ -341,7 +348,7 @@ func analyze(pkgs []*packages.Package, analyzers []*analysis.Analyzer) []*action
 
 			// An analysis that consumes/produces facts
 			// must run on the package's dependencies too.
-			if len(a.FactTypes) > 0 {
+			if len(a.FactTypes) > 0 && !bypassImports {
 				paths := make([]string, 0, len(pkg.Imports))
 				for path := range pkg.Imports {
 					paths = append(paths, path)
