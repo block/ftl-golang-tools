@@ -23,10 +23,13 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"runtime/trace"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"golang.org/x/exp/maps"
 
 	"github.com/TBD54566975/golang-tools/go/analysis"
 	"github.com/TBD54566975/golang-tools/go/analysis/internal/analysisflags"
@@ -73,8 +76,9 @@ func RegisterFlags() {
 }
 
 type checkerOptions struct {
-	loadConfig           *packages.Config
-	runDespiteLoadErrors bool
+	loadConfig                  *packages.Config
+	runDespiteLoadErrors        bool
+	reverseImportExecutionOrder bool
 }
 
 type Option func(option *checkerOptions)
@@ -91,10 +95,11 @@ func WithRunDespiteLoadErrors(shouldRun bool) Option {
 	}
 }
 
-// WithBypassImportAnalysis dictates whether analysis is performed on imported packages.
-func WithBypassImportAnalysis(shouldBypass bool) Option {
+// If true, analysis will be executed on any packages that import a given package _after_ the package itself.
+// This reverses the default dependency execution order for imports (in which imports are executed first).
+func WithReverseImportExecutionOrder(reverse bool) Option {
 	return func(co *checkerOptions) {
-		co.runDespiteLoadErrors = shouldBypass
+		co.reverseImportExecutionOrder = reverse
 	}
 }
 
@@ -120,18 +125,18 @@ func Run(args []string, analyzers []*analysis.Analyzer, opts ...Option) (exitcod
 // then applies the specified analyzers to them.
 // Analysis flags must already have been set.
 // Analyzers must be valid according to [analysis.Validate].
-// 
+//
 // Returns results and diagnostics produced by the analyzers.
-func RunWithResult(args []string, analyzers []*analysis.Analyzer, opts ...Option) (analyzerResults map[*analysis.Analyzer]interface{}, diagnostics []analysis.SimpleDiagnostic, err error) {
+func RunWithResult(args []string, analyzers []*analysis.Analyzer, opts ...Option) (analyzerResults map[*analysis.Analyzer][]interface{}, diagnostics []analysis.SimpleDiagnostic, err error) {
 	roots, err := runInternal(args, analyzers, opts...)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	diags := []analysis.SimpleDiagnostic{}
-	results := make(map[*analysis.Analyzer]interface{})
+	results := make(map[*analysis.Analyzer][]interface{})
 	for _, root := range roots {
-		results[root.a] = root.result
+		results[root.a] = append(results[root.a], root.result)
 		for _, d := range root.diagnostics {
 			diags = append(diags, d.ToSimple(root.pass.Fset))
 		}
@@ -208,7 +213,7 @@ func runInternal(args []string, analyzers []*analysis.Analyzer, opts ...Option) 
 	}
 
 	// Run the analysis.
-	roots := analyze(initial, analyzers, cfg.runDespiteLoadErrors)
+	roots := analyze(initial, analyzers, cfg)
 
 	// Apply fixes.
 	if Fix {
@@ -293,7 +298,7 @@ func loadingError(initial []*packages.Package) error {
 // This entry point is used only by analysistest.
 func TestAnalyzer(a *analysis.Analyzer, pkgs []*packages.Package) []*TestAnalyzerResult {
 	var results []*TestAnalyzerResult
-	for _, act := range analyze(pkgs, []*analysis.Analyzer{a}, false) {
+	for _, act := range analyze(pkgs, []*analysis.Analyzer{a}, &checkerOptions{}) {
 		facts := make(map[types.Object][]analysis.Fact)
 		for key, fact := range act.objectFacts {
 			if key.obj.Pkg() == act.pass.Pkg {
@@ -319,7 +324,7 @@ type TestAnalyzerResult struct {
 	Err         error
 }
 
-func analyze(pkgs []*packages.Package, analyzers []*analysis.Analyzer, bypassImports bool) []*action {
+func analyze(pkgs []*packages.Package, analyzers []*analysis.Analyzer, opts *checkerOptions) []*action {
 	// Construct the action graph.
 	if dbg('v') {
 		log.Printf("building graph of analysis passes")
@@ -348,15 +353,27 @@ func analyze(pkgs []*packages.Package, analyzers []*analysis.Analyzer, bypassImp
 
 			// An analysis that consumes/produces facts
 			// must run on the package's dependencies too.
-			if len(a.FactTypes) > 0 && !bypassImports {
-				paths := make([]string, 0, len(pkg.Imports))
-				for path := range pkg.Imports {
-					paths = append(paths, path)
-				}
-				sort.Strings(paths) // for determinism
-				for _, path := range paths {
-					dep := mkAction(a, pkg.Imports[path])
-					act.deps = append(act.deps, dep)
+			if len(a.FactTypes) > 0 {
+				if opts.reverseImportExecutionOrder {
+					for _, p := range pkgs {
+						if p == pkg {
+							continue
+						}
+						if slices.Contains(maps.Values(p.Imports), pkg) {
+							dep := mkAction(a, p)
+							act.deps = append(act.deps, dep)
+						}
+					}
+				} else {
+					paths := make([]string, 0, len(pkg.Imports))
+					for path := range pkg.Imports {
+						paths = append(paths, path)
+					}
+					sort.Strings(paths) // for determinism
+					for _, path := range paths {
+						dep := mkAction(a, pkg.Imports[path])
+						act.deps = append(act.deps, dep)
+					}
 				}
 			}
 
@@ -999,10 +1016,10 @@ func (act *action) exportObjectFact(obj types.Object, fact analysis.Fact) {
 		log.Panicf("%s: Pass.ExportObjectFact(%s, %T) called after Run", act, obj, fact)
 	}
 
-	if obj.Pkg() != act.pkg.Types {
-		log.Panicf("internal error: in analysis %s of package %s: Fact.Set(%s, %T): can't set facts on objects belonging another package",
-			act.a, act.pkg, obj, fact)
-	}
+	//if obj.Pkg() != act.pkg.Types {
+	//	log.Panicf("internal error: in analysis %s of package %s: Fact.Set(%s, %T): can't set facts on objects belonging another package",
+	//		act.a, act.pkg, obj, fact)
+	//}
 
 	key := objectFactKey{obj, factType(fact)}
 	act.objectFacts[key] = fact // clobber any existing entry
