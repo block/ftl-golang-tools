@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -470,6 +471,7 @@ func (v *View) filterFunc() func(protocol.DocumentURI) bool {
 func (v *View) shutdown() {
 	// Cancel the initial workspace load if it is still running.
 	v.cancelInitialWorkspaceLoad()
+	v.importsState.stopTimer()
 
 	v.snapshotMu.Lock()
 	if v.snapshot != nil {
@@ -478,6 +480,14 @@ func (v *View) shutdown() {
 		v.snapshot = nil
 	}
 	v.snapshotMu.Unlock()
+}
+
+// ScanImports scans the module cache synchronously.
+// For use in tests.
+func (v *View) ScanImports() {
+	gomodcache := v.folder.Env.GOMODCACHE
+	dirCache := v.importsState.modCache.dirCache(gomodcache)
+	imports.ScanModuleCache(gomodcache, dirCache, log.Printf)
 }
 
 // IgnoredFile reports if a file would be ignored by a `go list` of the whole
