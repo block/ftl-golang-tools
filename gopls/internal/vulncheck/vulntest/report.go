@@ -13,6 +13,7 @@ import (
 
 	"github.com/worstell/x/tools/gopls/internal/vulncheck/osv"
 	"golang.org/x/mod/semver"
+	"gopkg.in/yaml.v3"
 )
 
 //
