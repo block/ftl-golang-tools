@@ -12,11 +12,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol/command"
-	"github.com/TBD54566975/golang-tools/gopls/internal/server"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/slices"
-	"github.com/TBD54566975/golang-tools/internal/tool"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
+	"github.com/block/ftl-golang-tools/gopls/internal/server"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/slices"
+	"github.com/block/ftl-golang-tools/internal/tool"
 )
 
 // execute implements the LSP ExecuteCommand verb for gopls.

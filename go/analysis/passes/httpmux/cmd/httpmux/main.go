@@ -6,8 +6,8 @@
 package main
 
 import (
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/httpmux"
-	"github.com/TBD54566975/golang-tools/go/analysis/singlechecker"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/httpmux"
+	"github.com/block/ftl-golang-tools/go/analysis/singlechecker"
 )
 
 func main() { singlechecker.Main(httpmux.Analyzer) }

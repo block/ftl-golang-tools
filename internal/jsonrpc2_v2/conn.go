@@ -14,10 +14,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/TBD54566975/golang-tools/internal/event"
-	"github.com/TBD54566975/golang-tools/internal/event/keys"
-	"github.com/TBD54566975/golang-tools/internal/event/label"
-	"github.com/TBD54566975/golang-tools/internal/jsonrpc2"
+	"github.com/block/ftl-golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/internal/event/keys"
+	"github.com/block/ftl-golang-tools/internal/event/label"
+	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
 )
 
 // Binder builds a connection configuration.

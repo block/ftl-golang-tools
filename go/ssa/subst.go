@@ -7,8 +7,8 @@ package ssa
 import (
 	"go/types"
 
-	"github.com/TBD54566975/golang-tools/go/types/typeutil"
-	"github.com/TBD54566975/golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/aliases"
 )
 
 // subster defines a type substitution operation of a set of type parameters

@@ -11,8 +11,8 @@ import (
 	"go/types"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/ssa"
-	"github.com/TBD54566975/golang-tools/go/ssa/ssautil"
+	"github.com/block/ftl-golang-tools/go/ssa"
+	"github.com/block/ftl-golang-tools/go/ssa/ssautil"
 )
 
 // Tests that MethodValue returns the expected method.

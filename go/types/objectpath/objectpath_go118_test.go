@@ -8,9 +8,9 @@ import (
 	"go/types"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/buildutil"
-	"github.com/TBD54566975/golang-tools/go/loader"
-	"github.com/TBD54566975/golang-tools/go/types/objectpath"
+	"github.com/block/ftl-golang-tools/go/buildutil"
+	"github.com/block/ftl-golang-tools/go/loader"
+	"github.com/block/ftl-golang-tools/go/types/objectpath"
 )
 
 func TestGenericPaths(t *testing.T) {

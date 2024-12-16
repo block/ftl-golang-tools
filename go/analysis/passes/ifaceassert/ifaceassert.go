@@ -9,11 +9,11 @@ import (
 	"go/ast"
 	"go/types"
 
-	"github.com/TBD54566975/golang-tools/go/analysis"
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
-	"github.com/TBD54566975/golang-tools/go/ast/inspector"
-	"github.com/TBD54566975/golang-tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
 //go:embed doc.go
@@ -22,7 +22,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "ifaceassert",
 	Doc:      analysisutil.MustExtractDoc(doc, "ifaceassert"),
-	URL:      "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/ifaceassert",
+	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/ifaceassert",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

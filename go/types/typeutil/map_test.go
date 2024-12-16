@@ -16,7 +16,7 @@ import (
 	"go/types"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
 )
 
 var (

@@ -7,9 +7,9 @@ package export
 import (
 	"io"
 
-	"github.com/TBD54566975/golang-tools/internal/event/core"
-	"github.com/TBD54566975/golang-tools/internal/event/keys"
-	"github.com/TBD54566975/golang-tools/internal/event/label"
+	"github.com/block/ftl-golang-tools/internal/event/core"
+	"github.com/block/ftl-golang-tools/internal/event/keys"
+	"github.com/block/ftl-golang-tools/internal/event/label"
 )
 
 type Printer struct {

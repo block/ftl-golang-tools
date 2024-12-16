@@ -15,9 +15,9 @@ import (
 	"testing"
 
 	"golang.org/x/sync/errgroup"
-	"github.com/TBD54566975/golang-tools/go/packages"
-	"github.com/TBD54566975/golang-tools/internal/gcimporter"
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/internal/gcimporter"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 // TestShallowStd type-checks the standard library using shallow export data.

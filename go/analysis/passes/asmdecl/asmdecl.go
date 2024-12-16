@@ -18,8 +18,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/go/analysis"
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
 )
 
 const Doc = "report mismatches between assembly files and Go declarations"
@@ -27,7 +27,7 @@ const Doc = "report mismatches between assembly files and Go declarations"
 var Analyzer = &analysis.Analyzer{
 	Name: "asmdecl",
 	Doc:  Doc,
-	URL:  "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/asmdecl",
+	URL:  "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/asmdecl",
 	Run:  run,
 }
 

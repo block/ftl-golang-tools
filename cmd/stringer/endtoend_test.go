@@ -21,7 +21,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 // This file contains a test that compiles and runs each program in testdata

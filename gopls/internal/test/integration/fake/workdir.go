@@ -18,8 +18,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/internal/robustio"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/internal/robustio"
 )
 
 // RelativeTo is a helper for operations relative to a given directory.

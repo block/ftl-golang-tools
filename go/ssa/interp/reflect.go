@@ -17,8 +17,8 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/TBD54566975/golang-tools/go/ssa"
-	"github.com/TBD54566975/golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/go/ssa"
+	"github.com/block/ftl-golang-tools/internal/aliases"
 )
 
 type opaqueType struct {

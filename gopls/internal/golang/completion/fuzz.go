@@ -10,7 +10,7 @@ import (
 	"go/types"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 )
 
 // golang/go#51089

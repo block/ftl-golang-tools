@@ -15,7 +15,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/TBD54566975/golang-tools/internal/versions"
+	"github.com/block/ftl-golang-tools/internal/versions"
 )
 
 // NewProgram returns a new SSA Program.

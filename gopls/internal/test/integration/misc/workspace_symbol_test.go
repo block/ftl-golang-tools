@@ -7,8 +7,8 @@ package misc
 import (
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/settings"
-	. "github.com/TBD54566975/golang-tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 	"github.com/google/go-cmp/cmp"
 )
 

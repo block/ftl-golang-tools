@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/godoc/vfs"
+	"github.com/block/ftl-golang-tools/godoc/vfs"
 )
 
 var (

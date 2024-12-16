@@ -15,7 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 // WriteModuleVersion creates a directory in the proxy dir for a module.

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/test/compare"
-	. "github.com/TBD54566975/golang-tools/gopls/internal/test/integration"
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/gopls/internal/test/compare"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 const unformattedProgram = `

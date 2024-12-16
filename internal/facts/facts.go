@@ -46,8 +46,8 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/TBD54566975/golang-tools/go/analysis"
-	"github.com/TBD54566975/golang-tools/go/types/objectpath"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/types/objectpath"
 )
 
 const debug = false

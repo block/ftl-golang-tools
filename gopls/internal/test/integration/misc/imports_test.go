@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/test/compare"
-	. "github.com/TBD54566975/golang-tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/gopls/internal/test/compare"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 )
 
 // Tests golang/go#38815.

@@ -23,7 +23,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/go/internal/gccgoimporter"
+	"github.com/block/ftl-golang-tools/go/internal/gccgoimporter"
 )
 
 // CompilerInfo executes the specified gccgo compiler and returns

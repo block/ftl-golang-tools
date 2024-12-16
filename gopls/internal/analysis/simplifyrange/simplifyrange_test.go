@@ -8,9 +8,9 @@ import (
 	"go/build"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/analysis/analysistest"
-	"github.com/TBD54566975/golang-tools/gopls/internal/analysis/simplifyrange"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/slices"
+	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
+	"github.com/block/ftl-golang-tools/gopls/internal/analysis/simplifyrange"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/slices"
 )
 
 func Test(t *testing.T) {

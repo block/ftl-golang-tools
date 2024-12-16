@@ -30,12 +30,12 @@ import (
 
 	"golang.org/x/exp/maps"
 
-	"github.com/TBD54566975/golang-tools/go/analysis"
-	"github.com/TBD54566975/golang-tools/go/analysis/internal/analysisflags"
-	"github.com/TBD54566975/golang-tools/go/packages"
-	"github.com/TBD54566975/golang-tools/internal/analysisinternal"
-	"github.com/TBD54566975/golang-tools/internal/diff"
-	"github.com/TBD54566975/golang-tools/internal/robustio"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/internal/analysisflags"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/internal/diff"
+	"github.com/block/ftl-golang-tools/internal/robustio"
 )
 
 var (

@@ -59,8 +59,8 @@ package vta
 import (
 	"go/types"
 
-	"github.com/TBD54566975/golang-tools/go/callgraph"
-	"github.com/TBD54566975/golang-tools/go/ssa"
+	"github.com/block/ftl-golang-tools/go/callgraph"
+	"github.com/block/ftl-golang-tools/go/ssa"
 )
 
 // CallGraph uses the VTA algorithm to compute call graph for all functions

@@ -7,7 +7,7 @@ package embeddirective
 import (
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/analysis/analysistest"
+	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
 )
 
 func Test(t *testing.T) {

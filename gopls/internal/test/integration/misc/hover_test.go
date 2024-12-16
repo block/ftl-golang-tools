@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	. "github.com/TBD54566975/golang-tools/gopls/internal/test/integration"
-	"github.com/TBD54566975/golang-tools/gopls/internal/test/integration/fake"
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 func TestHoverUnexported(t *testing.T) {
@@ -352,7 +352,7 @@ package main
 var A int
 // [fmt.Println]
 var B int
-// [github.com/TBD54566975/golang-tools/go/packages.Package.String]
+// [github.com/block/ftl-golang-tools/go/packages.Package.String]
 var C int
 `
 	var tests = []struct {
@@ -361,7 +361,7 @@ var C int
 	}{
 		{"A", "fmt"},
 		{"B", "fmt#Println"},
-		{"C", "github.com/TBD54566975/golang-tools/go/packages#Package.String"},
+		{"C", "github.com/block/ftl-golang-tools/go/packages#Package.String"},
 	}
 	for _, test := range tests {
 		Run(t, input, func(t *testing.T, env *Env) {

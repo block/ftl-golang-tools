@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/container/intsets"
+	"github.com/block/ftl-golang-tools/container/intsets"
 )
 
 func TestBasics(t *testing.T) {

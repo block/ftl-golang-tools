@@ -12,11 +12,11 @@ import (
 	"go/types"
 	"regexp"
 
-	"github.com/TBD54566975/golang-tools/go/analysis"
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/golang-tools/go/ast/inspector"
-	"github.com/TBD54566975/golang-tools/internal/typesinternal"
-	"github.com/TBD54566975/golang-tools/internal/versions"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/internal/versions"
 )
 
 const Doc = `report uses of too-new standard library symbols
@@ -37,7 +37,7 @@ var Analyzer = &analysis.Analyzer{
 	Name:             "stdversion",
 	Doc:              Doc,
 	Requires:         []*analysis.Analyzer{inspect.Analyzer},
-	URL:              "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/stdversion",
+	URL:              "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/stdversion",
 	RunDespiteErrors: true,
 	Run:              run,
 }

@@ -10,7 +10,7 @@
 // space-efficient than equivalent operations on sets based on the Go
 // map type.  The IsEmpty, Min, Max, Clear and TakeMin operations
 // require constant time.
-package intsets // import "github.com/TBD54566975/golang-tools/container/intsets"
+package intsets // import "github.com/block/ftl-golang-tools/container/intsets"
 
 // TODO(adonovan):
 // - Add InsertAll(...int), RemoveAll(...int)

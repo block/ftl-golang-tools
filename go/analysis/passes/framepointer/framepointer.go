@@ -11,8 +11,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/go/analysis"
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
 )
 
 const Doc = "report assembly that clobbers the frame pointer before saving it"
@@ -20,7 +20,7 @@ const Doc = "report assembly that clobbers the frame pointer before saving it"
 var Analyzer = &analysis.Analyzer{
 	Name: "framepointer",
 	Doc:  Doc,
-	URL:  "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/framepointer",
+	URL:  "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/framepointer",
 	Run:  run,
 }
 

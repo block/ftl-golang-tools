@@ -23,8 +23,8 @@ import (
 
 	"io"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/browser"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/maps"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/browser"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/maps"
 	"golang.org/x/telemetry"
 )
 
@@ -71,7 +71,7 @@ func main() {
 				log.Fatal(err)
 			}
 			for _, prog := range report.Programs {
-				if prog.Program == "github.com/TBD54566975/golang-tools/gopls" && len(prog.Stacks) > 0 {
+				if prog.Program == "github.com/block/ftl-golang-tools/gopls" && len(prog.Stacks) > 0 {
 					// Include applicable client names (e.g. vscode, eglot).
 					var clients []string
 					var clientSuffix string
@@ -230,7 +230,7 @@ func newIssue(stack, id, jsonURL string, counts map[string]int64) string {
 		if strings.Contains(line, "internal/util/bug.") {
 			continue // not interesting
 		}
-		if _, rest, ok := strings.Cut(line, "github.com/TBD54566975/golang-tools/gopls/"); ok {
+		if _, rest, ok := strings.Cut(line, "github.com/block/ftl-golang-tools/gopls/"); ok {
 			if i := strings.IndexByte(rest, '.'); i >= 0 {
 				rest = rest[i+1:]
 				rest = strings.TrimPrefix(rest, "(*")
@@ -263,7 +263,7 @@ func newIssue(stack, id, jsonURL string, counts map[string]int64) string {
 	}
 	fmt.Fprintf(body, "```\n\n")
 
-	fmt.Fprintf(body, "Issue created by github.com/TBD54566975/golang-tools/gopls/internal/telemetry/cmd/stacks.\n")
+	fmt.Fprintf(body, "Issue created by github.com/block/ftl-golang-tools/gopls/internal/telemetry/cmd/stacks.\n")
 
 	const labels = "gopls,Tools,gopls/telemetry-wins,NeedsInvestigation"
 

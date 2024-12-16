@@ -11,7 +11,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/packages/packagestest"
+	"github.com/block/ftl-golang-tools/go/packages/packagestest"
 )
 
 var testdata = []packagestest.Module{{

@@ -16,8 +16,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/TBD54566975/golang-tools/go/analysis"
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
 )
 
 const Doc = "check //go:build and // +build directives"
@@ -25,7 +25,7 @@ const Doc = "check //go:build and // +build directives"
 var Analyzer = &analysis.Analyzer{
 	Name: "buildtag",
 	Doc:  Doc,
-	URL:  "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/buildtag",
+	URL:  "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/buildtag",
 	Run:  runBuildTag,
 }
 

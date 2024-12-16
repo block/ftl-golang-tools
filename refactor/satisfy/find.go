@@ -11,7 +11,7 @@
 // THIS PACKAGE IS EXPERIMENTAL AND MAY CHANGE AT ANY TIME.
 //
 // It is provided only for the gopls tool. It requires well-typed inputs.
-package satisfy // import "github.com/TBD54566975/golang-tools/refactor/satisfy"
+package satisfy // import "github.com/block/ftl-golang-tools/refactor/satisfy"
 
 // NOTES:
 //
@@ -43,9 +43,9 @@ import (
 	"go/token"
 	"go/types"
 
-	"github.com/TBD54566975/golang-tools/go/ast/astutil"
-	"github.com/TBD54566975/golang-tools/go/types/typeutil"
-	"github.com/TBD54566975/golang-tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
 // A Constraint records the fact that the RHS type does and must
@@ -706,7 +706,7 @@ func (f *Finder) stmt(s ast.Stmt) {
 	}
 }
 
-// -- Plundered from github.com/TBD54566975/golang-tools/go/ssa -----------------
+// -- Plundered from github.com/block/ftl-golang-tools/go/ssa -----------------
 
 func unparen(e ast.Expr) ast.Expr { return astutil.Unparen(e) }
 

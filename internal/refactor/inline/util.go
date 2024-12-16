@@ -14,7 +14,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
 func is[T any](x any) bool {

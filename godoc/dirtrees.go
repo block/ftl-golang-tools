@@ -17,7 +17,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/godoc/vfs"
+	"github.com/block/ftl-golang-tools/godoc/vfs"
 )
 
 // Conventional name for directories containing test data.

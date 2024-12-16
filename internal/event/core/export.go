@@ -10,7 +10,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/TBD54566975/golang-tools/internal/event/label"
+	"github.com/block/ftl-golang-tools/internal/event/label"
 )
 
 // Exporter is a function that handles events.

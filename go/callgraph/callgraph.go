@@ -30,7 +30,7 @@ Calls to built-in functions (e.g. panic, println) are not represented
 in the call graph; they are treated like built-in operators of the
 language.
 */
-package callgraph // import "github.com/TBD54566975/golang-tools/go/callgraph"
+package callgraph // import "github.com/block/ftl-golang-tools/go/callgraph"
 
 // TODO(adonovan): add a function to eliminate wrappers from the
 // callgraph, preserving topology.
@@ -43,7 +43,7 @@ import (
 	"fmt"
 	"go/token"
 
-	"github.com/TBD54566975/golang-tools/go/ssa"
+	"github.com/block/ftl-golang-tools/go/ssa"
 )
 
 // A Graph represents a call graph.

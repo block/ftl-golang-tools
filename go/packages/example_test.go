@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/TBD54566975/golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/go/packages"
 )
 
 // Example demonstrates how to load the packages specified on the

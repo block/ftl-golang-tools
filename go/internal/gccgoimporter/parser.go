@@ -21,8 +21,8 @@ import (
 	"text/scanner"
 	"unicode/utf8"
 
-	"github.com/TBD54566975/golang-tools/internal/aliases"
-	"github.com/TBD54566975/golang-tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 type parser struct {

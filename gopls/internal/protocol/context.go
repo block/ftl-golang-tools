@@ -9,11 +9,11 @@ import (
 	"context"
 	"sync"
 
-	"github.com/TBD54566975/golang-tools/internal/event"
-	"github.com/TBD54566975/golang-tools/internal/event/core"
-	"github.com/TBD54566975/golang-tools/internal/event/export"
-	"github.com/TBD54566975/golang-tools/internal/event/label"
-	"github.com/TBD54566975/golang-tools/internal/xcontext"
+	"github.com/block/ftl-golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/internal/event/core"
+	"github.com/block/ftl-golang-tools/internal/event/export"
+	"github.com/block/ftl-golang-tools/internal/event/label"
+	"github.com/block/ftl-golang-tools/internal/xcontext"
 )
 
 type contextKey int

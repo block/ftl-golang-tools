@@ -15,7 +15,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 // Golden represents a test case.

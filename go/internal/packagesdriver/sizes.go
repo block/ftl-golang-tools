@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/internal/gocommand"
+	"github.com/block/ftl-golang-tools/internal/gocommand"
 )
 
 // TODO(adonovan): move back into go/packages.

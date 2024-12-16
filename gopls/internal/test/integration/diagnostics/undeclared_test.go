@@ -7,8 +7,8 @@ package diagnostics
 import (
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	. "github.com/TBD54566975/golang-tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 )
 
 func TestUndeclaredDiagnostics(t *testing.T) {

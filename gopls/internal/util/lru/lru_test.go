@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/lru"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/lru"
 	"golang.org/x/sync/errgroup"
 )
 

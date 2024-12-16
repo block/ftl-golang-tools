@@ -94,7 +94,7 @@ Result:
 ```
 {
 	// Holds changes to existing resources.
-	"changes": map[github.com/TBD54566975/golang-tools/gopls/internal/protocol.DocumentURI][]github.com/TBD54566975/golang-tools/gopls/internal/protocol.TextEdit,
+	"changes": map[github.com/block/ftl-golang-tools/gopls/internal/protocol.DocumentURI][]github.com/block/ftl-golang-tools/gopls/internal/protocol.TextEdit,
 	// Depending on the client capability `workspace.workspaceEdit.resourceOperations` document changes
 	// are either an array of `TextDocumentEdit`s to express changes to n different text documents
 	// where each text document edit addresses a specific version of a text document. Or it can contain
@@ -136,7 +136,7 @@ Result:
 	// Whether clients honor this property depends on the client capability `workspace.changeAnnotationSupport`.
 	//
 	// @since 3.16.0
-	"changeAnnotations": map[string]github.com/TBD54566975/golang-tools/gopls/internal/protocol.ChangeAnnotation,
+	"changeAnnotations": map[string]github.com/block/ftl-golang-tools/gopls/internal/protocol.ChangeAnnotation,
 }
 ```
 
@@ -180,7 +180,7 @@ Result:
 ```
 {
 	// Holds changes to existing resources.
-	"changes": map[github.com/TBD54566975/golang-tools/gopls/internal/protocol.DocumentURI][]github.com/TBD54566975/golang-tools/gopls/internal/protocol.TextEdit,
+	"changes": map[github.com/block/ftl-golang-tools/gopls/internal/protocol.DocumentURI][]github.com/block/ftl-golang-tools/gopls/internal/protocol.TextEdit,
 	// Depending on the client capability `workspace.workspaceEdit.resourceOperations` document changes
 	// are either an array of `TextDocumentEdit`s to express changes to n different text documents
 	// where each text document edit addresses a specific version of a text document. Or it can contain
@@ -222,7 +222,7 @@ Result:
 	// Whether clients honor this property depends on the client capability `workspace.changeAnnotationSupport`.
 	//
 	// @since 3.16.0
-	"changeAnnotations": map[string]github.com/TBD54566975/golang-tools/gopls/internal/protocol.ChangeAnnotation,
+	"changeAnnotations": map[string]github.com/block/ftl-golang-tools/gopls/internal/protocol.ChangeAnnotation,
 }
 ```
 
@@ -307,7 +307,7 @@ Args:
 Result:
 
 ```
-map[github.com/TBD54566975/golang-tools/gopls/internal/protocol.DocumentURI]*github.com/TBD54566975/golang-tools/gopls/internal/vulncheck.Result
+map[github.com/block/ftl-golang-tools/gopls/internal/protocol.DocumentURI]*github.com/block/ftl-golang-tools/gopls/internal/vulncheck.Result
 ```
 
 ## `gopls.free_symbols`: **Browse free symbols referenced by the selection in a browser.**

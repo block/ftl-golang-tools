@@ -12,13 +12,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/packages"
-	"github.com/TBD54566975/golang-tools/internal/diff"
-	"github.com/TBD54566975/golang-tools/internal/diff/myers"
-	"github.com/TBD54566975/golang-tools/internal/drivertest"
-	"github.com/TBD54566975/golang-tools/internal/packagesinternal"
-	"github.com/TBD54566975/golang-tools/internal/testfiles"
-	"github.com/TBD54566975/golang-tools/txtar"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/internal/diff"
+	"github.com/block/ftl-golang-tools/internal/diff/myers"
+	"github.com/block/ftl-golang-tools/internal/drivertest"
+	"github.com/block/ftl-golang-tools/internal/packagesinternal"
+	"github.com/block/ftl-golang-tools/internal/testfiles"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 func TestMain(m *testing.M) {

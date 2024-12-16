@@ -4,7 +4,7 @@
 
 // callgraph: a tool for reporting the call graph of a Go program.
 // See Usage for details, or run with -help.
-package main // import "github.com/TBD54566975/golang-tools/cmd/callgraph"
+package main // import "github.com/block/ftl-golang-tools/cmd/callgraph"
 
 // TODO(adonovan):
 //
@@ -30,15 +30,15 @@ import (
 	"runtime"
 	"text/template"
 
-	"github.com/TBD54566975/golang-tools/go/buildutil"
-	"github.com/TBD54566975/golang-tools/go/callgraph"
-	"github.com/TBD54566975/golang-tools/go/callgraph/cha"
-	"github.com/TBD54566975/golang-tools/go/callgraph/rta"
-	"github.com/TBD54566975/golang-tools/go/callgraph/static"
-	"github.com/TBD54566975/golang-tools/go/callgraph/vta"
-	"github.com/TBD54566975/golang-tools/go/packages"
-	"github.com/TBD54566975/golang-tools/go/ssa"
-	"github.com/TBD54566975/golang-tools/go/ssa/ssautil"
+	"github.com/block/ftl-golang-tools/go/buildutil"
+	"github.com/block/ftl-golang-tools/go/callgraph"
+	"github.com/block/ftl-golang-tools/go/callgraph/cha"
+	"github.com/block/ftl-golang-tools/go/callgraph/rta"
+	"github.com/block/ftl-golang-tools/go/callgraph/static"
+	"github.com/block/ftl-golang-tools/go/callgraph/vta"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/go/ssa"
+	"github.com/block/ftl-golang-tools/go/ssa/ssautil"
 )
 
 // flags
@@ -84,7 +84,7 @@ Flags:
            One of:
 
             digraph     output suitable for input to
-                        github.com/TBD54566975/golang-tools/cmd/digraph.
+                        github.com/block/ftl-golang-tools/cmd/digraph.
             graphviz    output in AT&T GraphViz (.dot) format.
 
            All other values are interpreted using text/template syntax.
@@ -122,7 +122,7 @@ Flags:
              reduced to {{(posn .Caller).Filename}}.
 
            Consult the documentation for go/token, text/template, and
-           github.com/TBD54566975/golang-tools/go/ssa for more detail.
+           github.com/block/ftl-golang-tools/go/ssa for more detail.
 
 Examples:
 
@@ -144,8 +144,8 @@ Examples:
 
   Show all functions directly called by the callgraph tool's main function:
 
-    callgraph -format=digraph github.com/TBD54566975/golang-tools/cmd/callgraph |
-      digraph succs github.com/TBD54566975/golang-tools/cmd/callgraph.main
+    callgraph -format=digraph github.com/block/ftl-golang-tools/cmd/callgraph |
+      digraph succs github.com/block/ftl-golang-tools/cmd/callgraph.main
 `
 
 func init() {

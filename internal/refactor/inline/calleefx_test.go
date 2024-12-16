@@ -12,7 +12,7 @@ import (
 	"go/types"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/internal/refactor/inline"
+	"github.com/block/ftl-golang-tools/internal/refactor/inline"
 )
 
 // TestCalleeEffects is a unit test of the calleefx analysis.

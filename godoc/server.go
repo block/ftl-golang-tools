@@ -26,9 +26,9 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/TBD54566975/golang-tools/godoc/analysis"
-	"github.com/TBD54566975/golang-tools/godoc/util"
-	"github.com/TBD54566975/golang-tools/godoc/vfs"
+	"github.com/block/ftl-golang-tools/godoc/analysis"
+	"github.com/block/ftl-golang-tools/godoc/util"
+	"github.com/block/ftl-golang-tools/godoc/vfs"
 )
 
 // handlerServer is a migration from an old godoc http Handler type.

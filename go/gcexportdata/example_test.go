@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/go/gcexportdata"
+	"github.com/block/ftl-golang-tools/go/gcexportdata"
 )
 
 // ExampleRead uses gcexportdata.Read to load type information for the
