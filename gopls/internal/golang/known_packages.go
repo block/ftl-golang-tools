@@ -13,11 +13,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache"
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache/metadata"
-	"github.com/TBD54566975/golang-tools/gopls/internal/file"
-	"github.com/TBD54566975/golang-tools/internal/event"
-	"github.com/TBD54566975/golang-tools/internal/imports"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/internal/imports"
 )
 
 // KnownPackagePaths returns a new list of package paths of all known

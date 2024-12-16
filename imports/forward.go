@@ -4,14 +4,14 @@
 
 // Package imports implements a Go pretty-printer (like package "go/format")
 // that also adds or removes import statements as necessary.
-package imports // import "github.com/TBD54566975/golang-tools/imports"
+package imports // import "github.com/block/ftl-golang-tools/imports"
 
 import (
 	"log"
 	"os"
 
-	"github.com/TBD54566975/golang-tools/internal/gocommand"
-	intimp "github.com/TBD54566975/golang-tools/internal/imports"
+	"github.com/block/ftl-golang-tools/internal/gocommand"
+	intimp "github.com/block/ftl-golang-tools/internal/imports"
 )
 
 // Options specifies options for processing files.

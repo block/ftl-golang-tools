@@ -15,11 +15,11 @@ import (
 	"os"
 	"sync"
 
-	"github.com/TBD54566975/golang-tools/go/ast/astutil"
-	"github.com/TBD54566975/golang-tools/go/types/typeutil"
-	"github.com/TBD54566975/golang-tools/internal/aliases"
-	"github.com/TBD54566975/golang-tools/internal/typeparams"
-	"github.com/TBD54566975/golang-tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 //// Sanity checking utilities

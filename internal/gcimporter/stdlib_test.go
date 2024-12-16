@@ -13,9 +13,9 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/TBD54566975/golang-tools/go/gcexportdata"
-	"github.com/TBD54566975/golang-tools/go/packages"
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/go/gcexportdata"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 // TestStdlib ensures that all packages in std and x/tools can be
@@ -41,7 +41,7 @@ func TestStdlib(t *testing.T) {
 		// The go_.*_exec script for mobile builders only copies over the source tree
 		// for the package under test.
 	default:
-		patterns = append(patterns, "github.com/TBD54566975/golang-tools/...")
+		patterns = append(patterns, "github.com/block/ftl-golang-tools/...")
 		minPkgs += 160 // At the time of writing, 'GOOS=plan9 go list ./... | wc -l' reports 188.
 	}
 	pkgs, err := packages.Load(cfg, patterns...)

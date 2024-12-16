@@ -12,8 +12,8 @@ import (
 	"go/types"
 	"text/template"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol/command/commandmeta"
-	"github.com/TBD54566975/golang-tools/internal/imports"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command/commandmeta"
+	"github.com/block/ftl-golang-tools/internal/imports"
 )
 
 const src = `// Copyright 2024 The Go Authors. All rights reserved.
@@ -101,7 +101,7 @@ func Generate() ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("loading command data: %v", err)
 	}
-	const thispkg = "github.com/TBD54566975/golang-tools/gopls/internal/protocol/command"
+	const thispkg = "github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
 	qf := func(p *types.Package) string {
 		if p.Path() == thispkg {
 			return ""
@@ -121,7 +121,7 @@ func Generate() ([]byte, error) {
 		Imports: map[string]bool{
 			"context": true,
 			"fmt":     true,
-			"github.com/TBD54566975/golang-tools/gopls/internal/protocol": true,
+			"github.com/block/ftl-golang-tools/gopls/internal/protocol": true,
 		},
 	}
 	for _, c := range d.Commands {

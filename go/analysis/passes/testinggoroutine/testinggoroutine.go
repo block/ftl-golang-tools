@@ -11,13 +11,13 @@ import (
 	"go/token"
 	"go/types"
 
-	"github.com/TBD54566975/golang-tools/go/analysis"
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
-	"github.com/TBD54566975/golang-tools/go/ast/astutil"
-	"github.com/TBD54566975/golang-tools/go/ast/inspector"
-	"github.com/TBD54566975/golang-tools/go/types/typeutil"
-	"github.com/TBD54566975/golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/aliases"
 )
 
 //go:embed doc.go
@@ -32,7 +32,7 @@ func init() {
 var Analyzer = &analysis.Analyzer{
 	Name:     "testinggoroutine",
 	Doc:      analysisutil.MustExtractDoc(doc, "testinggoroutine"),
-	URL:      "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/testinggoroutine",
+	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/testinggoroutine",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

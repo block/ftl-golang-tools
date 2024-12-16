@@ -12,7 +12,7 @@
 // The wire format is JSON and is described by the Message type.
 //
 // This will not run on App Engine as WebSockets are not supported there.
-package socket // import "github.com/TBD54566975/golang-tools/playground/socket"
+package socket // import "github.com/block/ftl-golang-tools/playground/socket"
 
 import (
 	"bytes"
@@ -34,7 +34,7 @@ import (
 	"unicode/utf8"
 
 	"golang.org/x/net/websocket"
-	"github.com/TBD54566975/golang-tools/txtar"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 // RunScripts specifies whether the socket handler should execute shell scripts

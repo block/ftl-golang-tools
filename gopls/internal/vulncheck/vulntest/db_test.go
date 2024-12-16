@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/vulncheck/osv"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/osv"
 )
 
 var update = flag.Bool("update", false, "update golden files in testdata/")

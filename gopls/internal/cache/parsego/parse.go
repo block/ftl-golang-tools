@@ -14,12 +14,12 @@ import (
 	"go/token"
 	"reflect"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/label"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/astutil"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/safetoken"
-	"github.com/TBD54566975/golang-tools/internal/diff"
-	"github.com/TBD54566975/golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/gopls/internal/label"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/astutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
+	"github.com/block/ftl-golang-tools/internal/diff"
+	"github.com/block/ftl-golang-tools/internal/event"
 )
 
 // Common parse modes; these should be reused wherever possible to increase

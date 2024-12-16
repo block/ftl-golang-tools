@@ -8,12 +8,12 @@ import (
 	_ "embed"
 	"go/types"
 
-	"github.com/TBD54566975/golang-tools/go/analysis"
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/buildssa"
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
-	"github.com/TBD54566975/golang-tools/go/ssa"
-	"github.com/TBD54566975/golang-tools/internal/aliases"
-	"github.com/TBD54566975/golang-tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/buildssa"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/block/ftl-golang-tools/go/ssa"
+	"github.com/block/ftl-golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
 //go:embed doc.go
@@ -24,7 +24,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "unusedwrite",
 	Doc:      analysisutil.MustExtractDoc(doc, "unusedwrite"),
-	URL:      "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/unusedwrite",
+	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/unusedwrite",
 	Requires: []*analysis.Analyzer{buildssa.Analyzer},
 	Run:      run,
 }

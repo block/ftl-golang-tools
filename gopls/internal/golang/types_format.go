@@ -15,13 +15,13 @@ import (
 	"go/types"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/settings"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/bug"
-	"github.com/TBD54566975/golang-tools/internal/event"
-	"github.com/TBD54566975/golang-tools/internal/tokeninternal"
-	"github.com/TBD54566975/golang-tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/internal/tokeninternal"
+	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
 // FormatType returns the detail and kind for a types.Type.

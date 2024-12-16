@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"sync/atomic"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol/command"
-	"github.com/TBD54566975/golang-tools/internal/imports"
-	"github.com/TBD54566975/golang-tools/internal/memoize"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
+	"github.com/block/ftl-golang-tools/internal/imports"
+	"github.com/block/ftl-golang-tools/internal/memoize"
 )
 
 // New Creates a new cache for gopls operation results, using the given file

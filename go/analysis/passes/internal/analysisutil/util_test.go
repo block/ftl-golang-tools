@@ -11,7 +11,7 @@ import (
 	"go/types"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
 )
 
 func TestHasSideEffects(t *testing.T) {

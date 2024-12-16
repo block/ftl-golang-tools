@@ -13,10 +13,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/analysis"
-	"github.com/TBD54566975/golang-tools/go/analysis/analysistest"
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/findcall"
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/findcall"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 func init() {

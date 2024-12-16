@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache"
-	"github.com/TBD54566975/golang-tools/gopls/internal/file"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol/semtok"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/semtok"
 )
 
 // line number (1-based) and message

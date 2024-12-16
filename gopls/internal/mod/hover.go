@@ -11,14 +11,14 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache"
-	"github.com/TBD54566975/golang-tools/gopls/internal/file"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/settings"
-	"github.com/TBD54566975/golang-tools/gopls/internal/vulncheck"
-	"github.com/TBD54566975/golang-tools/gopls/internal/vulncheck/govulncheck"
-	"github.com/TBD54566975/golang-tools/gopls/internal/vulncheck/osv"
-	"github.com/TBD54566975/golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
+	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck"
+	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/govulncheck"
+	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/osv"
+	"github.com/block/ftl-golang-tools/internal/event"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/semver"
 )
@@ -355,9 +355,9 @@ func formatExplanation(text string, req *modfile.Require, options *settings.Opti
 	b.WriteString("This module is necessary because " + reference + " is imported in")
 
 	// If the explanation is 3 lines, then it is of the form:
-	// # github.com/TBD54566975/golang-tools
+	// # github.com/block/ftl-golang-tools
 	// modtest
-	// github.com/TBD54566975/golang-tools/go/packages
+	// github.com/block/ftl-golang-tools/go/packages
 	if length == 3 {
 		msg := fmt.Sprintf(" `%s`.", splt[1])
 		b.WriteString(msg)

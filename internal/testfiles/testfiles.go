@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/txtar"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 // CopyDirToTmp copies dir to a temporary test directory using

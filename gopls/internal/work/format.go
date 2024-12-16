@@ -8,11 +8,11 @@ import (
 	"context"
 
 	"golang.org/x/mod/modfile"
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache"
-	"github.com/TBD54566975/golang-tools/gopls/internal/file"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/internal/diff"
-	"github.com/TBD54566975/golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/internal/diff"
+	"github.com/block/ftl-golang-tools/internal/event"
 )
 
 func Format(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle) ([]protocol.TextEdit, error) {

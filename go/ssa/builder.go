@@ -82,9 +82,9 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/TBD54566975/golang-tools/internal/aliases"
-	"github.com/TBD54566975/golang-tools/internal/typeparams"
-	"github.com/TBD54566975/golang-tools/internal/versions"
+	"github.com/block/ftl-golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/internal/versions"
 )
 
 type opaqueType struct{ name string }

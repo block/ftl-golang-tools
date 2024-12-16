@@ -13,12 +13,12 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache"
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache/metadata"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/settings"
-	"github.com/TBD54566975/golang-tools/internal/event"
-	"github.com/TBD54566975/golang-tools/internal/fuzzy"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
+	"github.com/block/ftl-golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/internal/fuzzy"
 )
 
 // maxSymbols defines the maximum number of symbol results that should ever be

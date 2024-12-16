@@ -38,14 +38,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/cmd"
-	"github.com/TBD54566975/golang-tools/gopls/internal/debug"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/bug"
-	"github.com/TBD54566975/golang-tools/gopls/internal/version"
-	"github.com/TBD54566975/golang-tools/internal/testenv"
-	"github.com/TBD54566975/golang-tools/internal/tool"
-	"github.com/TBD54566975/golang-tools/txtar"
+	"github.com/block/ftl-golang-tools/gopls/internal/cmd"
+	"github.com/block/ftl-golang-tools/gopls/internal/debug"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/version"
+	"github.com/block/ftl-golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/internal/tool"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 // TestVersion tests the 'version' subcommand (../info.go).

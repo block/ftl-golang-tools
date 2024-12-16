@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/internal/tool"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/internal/tool"
 )
 
 // implementation implements the implementation verb for gopls

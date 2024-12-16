@@ -7,8 +7,8 @@ package undeclaredname_test
 import (
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/analysis/analysistest"
-	"github.com/TBD54566975/golang-tools/gopls/internal/analysis/undeclaredname"
+	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
+	"github.com/block/ftl-golang-tools/gopls/internal/analysis/undeclaredname"
 )
 
 func Test(t *testing.T) {

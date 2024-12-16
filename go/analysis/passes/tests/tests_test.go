@@ -7,8 +7,8 @@ package tests_test
 import (
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/analysis/analysistest"
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/tests"
+	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/tests"
 )
 
 func Test(t *testing.T) {

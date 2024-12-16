@@ -4,13 +4,13 @@
 
 // Package importgraph computes the forward and reverse import
 // dependency graphs for all packages in a Go workspace.
-package importgraph // import "github.com/TBD54566975/golang-tools/refactor/importgraph"
+package importgraph // import "github.com/block/ftl-golang-tools/refactor/importgraph"
 
 import (
 	"go/build"
 	"sync"
 
-	"github.com/TBD54566975/golang-tools/go/buildutil"
+	"github.com/block/ftl-golang-tools/go/buildutil"
 )
 
 // A Graph is an import dependency graph, either forward or reverse.

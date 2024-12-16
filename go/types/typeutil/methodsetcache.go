@@ -10,7 +10,7 @@ import (
 	"go/types"
 	"sync"
 
-	"github.com/TBD54566975/golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/internal/aliases"
 )
 
 // A MethodSetCache records the method set of each type T for which

@@ -17,8 +17,8 @@ package command
 import (
 	"context"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/vulncheck"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck"
 )
 
 // Interface defines the interface gopls exposes for the

@@ -12,9 +12,9 @@ import (
 	"go/token"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache"
-	"github.com/TBD54566975/golang-tools/gopls/internal/file"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 )
 
 // information needed for completion

@@ -21,17 +21,17 @@ import (
 	"sync"
 
 	"golang.org/x/telemetry/counter"
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache"
-	"github.com/TBD54566975/golang-tools/gopls/internal/debug"
-	debuglog "github.com/TBD54566975/golang-tools/gopls/internal/debug/log"
-	"github.com/TBD54566975/golang-tools/gopls/internal/file"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/settings"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/bug"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/goversion"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/maps"
-	"github.com/TBD54566975/golang-tools/internal/event"
-	"github.com/TBD54566975/golang-tools/internal/jsonrpc2"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/debug"
+	debuglog "github.com/block/ftl-golang-tools/gopls/internal/debug/log"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/goversion"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/maps"
+	"github.com/block/ftl-golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
 )
 
 func (s *server) Initialize(ctx context.Context, params *protocol.ParamInitialize) (*protocol.InitializeResult, error) {

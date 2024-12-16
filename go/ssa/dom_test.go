@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/packages"
-	"github.com/TBD54566975/golang-tools/go/ssa/ssautil"
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/go/ssa/ssautil"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 func TestDominatorOrder(t *testing.T) {

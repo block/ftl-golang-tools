@@ -18,11 +18,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/go/ast/astutil"
-	"github.com/TBD54566975/golang-tools/go/types/typeutil"
-	"github.com/TBD54566975/golang-tools/imports"
-	internalastutil "github.com/TBD54566975/golang-tools/internal/astutil"
-	"github.com/TBD54566975/golang-tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/imports"
+	internalastutil "github.com/block/ftl-golang-tools/internal/astutil"
+	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
 // A Caller describes the function call and its enclosing context.
@@ -303,7 +303,7 @@ func (st *state) inline() (*Result, error) {
 	// That will be faster, and also less prone to nondeterminism
 	// if there are bugs in our logic for import maintenance.
 	//
-	// However, github.com/TBD54566975/golang-tools/internal/imports.ApplyFixes is
+	// However, github.com/block/ftl-golang-tools/internal/imports.ApplyFixes is
 	// too simple as it requires the caller to have figured out
 	// all the logical edits. In our case, we know all the new
 	// imports that are needed (see newImports), each of which can

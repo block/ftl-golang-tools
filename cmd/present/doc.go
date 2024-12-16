@@ -45,6 +45,6 @@ the generated output. The supported formats are:
 	.article      // article format, such as a blog post
 
 The present file format is documented by the present package:
-https://pkg.go.dev/github.com/TBD54566975/golang-tools/present
+https://pkg.go.dev/github.com/block/ftl-golang-tools/present
 */
 package main

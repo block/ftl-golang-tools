@@ -11,8 +11,8 @@ import (
 	"go/types"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/internal/testenv"
-	"github.com/TBD54566975/golang-tools/internal/versions"
+	"github.com/block/ftl-golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/internal/versions"
 )
 
 func TestIsValid(t *testing.T) {

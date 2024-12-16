@@ -11,7 +11,7 @@ import (
 
 	"io"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/vulncheck/osv"
+	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/osv"
 )
 
 type jsonHandler struct {

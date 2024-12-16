@@ -13,12 +13,12 @@ import (
 	"go/types"
 	"sort"
 
-	"github.com/TBD54566975/golang-tools/go/types/objectpath"
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache/metadata"
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache/parsego"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/frob"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/typesutil"
+	"github.com/block/ftl-golang-tools/go/types/objectpath"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/frob"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/typesutil"
 )
 
 // Index constructs a serializable index of outbound cross-references

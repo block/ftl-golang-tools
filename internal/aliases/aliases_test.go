@@ -11,8 +11,8 @@ import (
 	"go/types"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/internal/aliases"
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 // Assert that Obj exists on Alias.

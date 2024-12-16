@@ -19,13 +19,13 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/printf"
-	"github.com/TBD54566975/golang-tools/go/analysis/unitchecker"
-	"github.com/TBD54566975/golang-tools/go/gcexportdata"
-	"github.com/TBD54566975/golang-tools/go/packages"
-	"github.com/TBD54566975/golang-tools/internal/testenv"
-	"github.com/TBD54566975/golang-tools/internal/testfiles"
-	"github.com/TBD54566975/golang-tools/txtar"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/printf"
+	"github.com/block/ftl-golang-tools/go/analysis/unitchecker"
+	"github.com/block/ftl-golang-tools/go/gcexportdata"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/internal/testfiles"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 // TestExampleSeparateAnalysis demonstrates the principle of separate

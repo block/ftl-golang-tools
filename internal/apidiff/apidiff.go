@@ -20,7 +20,7 @@ import (
 	"go/token"
 	"go/types"
 
-	"github.com/TBD54566975/golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/internal/aliases"
 )
 
 // Changes reports on the differences between the APIs of the old and new packages.

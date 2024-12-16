@@ -33,17 +33,17 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/TBD54566975/golang-tools/go/ast/astutil"
-	"github.com/TBD54566975/golang-tools/go/packages"
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache"
-	"github.com/TBD54566975/golang-tools/gopls/internal/doc"
-	"github.com/TBD54566975/golang-tools/gopls/internal/golang"
-	"github.com/TBD54566975/golang-tools/gopls/internal/mod"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol/command/commandmeta"
-	"github.com/TBD54566975/golang-tools/gopls/internal/settings"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/maps"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/safetoken"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/doc"
+	"github.com/block/ftl-golang-tools/gopls/internal/golang"
+	"github.com/block/ftl-golang-tools/gopls/internal/mod"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command/commandmeta"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/maps"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
 )
 
 func main() {
@@ -70,7 +70,7 @@ func doMain(write bool) (bool, error) {
 		return false, err
 	}
 
-	goplsDir, err := pkgDir("github.com/TBD54566975/golang-tools/gopls")
+	goplsDir, err := pkgDir("github.com/block/ftl-golang-tools/gopls")
 	if err != nil {
 		return false, err
 	}
@@ -136,8 +136,8 @@ func loadAPI() (*doc.API, error) {
 		&packages.Config{
 			Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedSyntax | packages.NeedDeps,
 		},
-		"github.com/TBD54566975/golang-tools/gopls/internal/settings", // for settings
-		"github.com/TBD54566975/golang-tools/gopls/internal/protocol", // for lenses
+		"github.com/block/ftl-golang-tools/gopls/internal/settings", // for settings
+		"github.com/block/ftl-golang-tools/gopls/internal/protocol", // for lenses
 	)
 	if err != nil {
 		return nil, err

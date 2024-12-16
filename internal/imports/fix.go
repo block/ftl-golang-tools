@@ -28,11 +28,11 @@ import (
 	"unicode/utf8"
 
 	"golang.org/x/sync/errgroup"
-	"github.com/TBD54566975/golang-tools/go/ast/astutil"
-	"github.com/TBD54566975/golang-tools/internal/event"
-	"github.com/TBD54566975/golang-tools/internal/gocommand"
-	"github.com/TBD54566975/golang-tools/internal/gopathwalk"
-	"github.com/TBD54566975/golang-tools/internal/stdlib"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/internal/gocommand"
+	"github.com/block/ftl-golang-tools/internal/gopathwalk"
+	"github.com/block/ftl-golang-tools/internal/stdlib"
 )
 
 // importToGroup is a list of functions which map from an import path to

@@ -842,12 +842,12 @@ import (
 type I int
 `)
 	// The AddImport order here matters.
-	AddImport(fset, file, "github.com/TBD54566975/golang-tools/go/ast/astutil")
+	AddImport(fset, file, "github.com/block/ftl-golang-tools/go/ast/astutil")
 	AddImport(fset, file, "os")
 	want := `package main
 
 import (
-	"github.com/TBD54566975/golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
 	"os"
 )
 

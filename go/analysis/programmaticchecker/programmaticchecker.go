@@ -2,9 +2,9 @@
 package programmaticchecker
 
 import (
-	"github.com/TBD54566975/golang-tools/go/analysis"
-	"github.com/TBD54566975/golang-tools/go/analysis/internal/checker"
-	"github.com/TBD54566975/golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/internal/checker"
+	"github.com/block/ftl-golang-tools/go/packages"
 )
 
 // Config specifies the configuration for the programmatic checker.

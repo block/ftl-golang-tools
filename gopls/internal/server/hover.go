@@ -7,15 +7,15 @@ package server
 import (
 	"context"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/file"
-	"github.com/TBD54566975/golang-tools/gopls/internal/golang"
-	"github.com/TBD54566975/golang-tools/gopls/internal/label"
-	"github.com/TBD54566975/golang-tools/gopls/internal/mod"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/telemetry"
-	"github.com/TBD54566975/golang-tools/gopls/internal/template"
-	"github.com/TBD54566975/golang-tools/gopls/internal/work"
-	"github.com/TBD54566975/golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/golang"
+	"github.com/block/ftl-golang-tools/gopls/internal/label"
+	"github.com/block/ftl-golang-tools/gopls/internal/mod"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/telemetry"
+	"github.com/block/ftl-golang-tools/gopls/internal/template"
+	"github.com/block/ftl-golang-tools/gopls/internal/work"
+	"github.com/block/ftl-golang-tools/internal/event"
 )
 
 func (s *server) Hover(ctx context.Context, params *protocol.HoverParams) (_ *protocol.Hover, rerr error) {

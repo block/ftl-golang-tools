@@ -18,15 +18,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TBD54566975/golang-tools/go/gcexportdata"
-	"github.com/TBD54566975/golang-tools/go/packages"
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache/metadata"
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache/parsego"
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache/typerefs"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/astutil"
-	"github.com/TBD54566975/golang-tools/internal/packagesinternal"
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/go/gcexportdata"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/typerefs"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/astutil"
+	"github.com/block/ftl-golang-tools/internal/packagesinternal"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 var (

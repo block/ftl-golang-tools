@@ -14,12 +14,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/go/analysis"
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/golang-tools/go/ast/inspector"
-	"github.com/TBD54566975/golang-tools/go/types/typeutil"
-	"github.com/TBD54566975/golang-tools/internal/diff"
-	"github.com/TBD54566975/golang-tools/internal/refactor/inline"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/diff"
+	"github.com/block/ftl-golang-tools/internal/refactor/inline"
 )
 
 const Doc = `inline calls to functions with "inlineme" doc comment`
@@ -27,7 +27,7 @@ const Doc = `inline calls to functions with "inlineme" doc comment`
 var Analyzer = &analysis.Analyzer{
 	Name:      "inline",
 	Doc:       Doc,
-	URL:       "https://pkg.go.dev/github.com/TBD54566975/golang-tools/internal/refactor/inline/analyzer",
+	URL:       "https://pkg.go.dev/github.com/block/ftl-golang-tools/internal/refactor/inline/analyzer",
 	Run:       run,
 	FactTypes: []analysis.Fact{new(inlineMeFact)},
 	Requires:  []*analysis.Analyzer{inspect.Analyzer},

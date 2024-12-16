@@ -22,9 +22,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TBD54566975/golang-tools/go/buildutil"
-	"github.com/TBD54566975/golang-tools/go/loader"
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/go/buildutil"
+	"github.com/block/ftl-golang-tools/go/loader"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 func TestStdlib(t *testing.T) {

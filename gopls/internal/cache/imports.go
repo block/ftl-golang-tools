@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/file"
-	"github.com/TBD54566975/golang-tools/gopls/internal/label"
-	"github.com/TBD54566975/golang-tools/internal/event"
-	"github.com/TBD54566975/golang-tools/internal/event/keys"
-	"github.com/TBD54566975/golang-tools/internal/imports"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/label"
+	"github.com/block/ftl-golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/internal/event/keys"
+	"github.com/block/ftl-golang-tools/internal/imports"
 )
 
 // refreshTimer implements delayed asynchronous refreshing of state.

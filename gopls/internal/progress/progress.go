@@ -16,10 +16,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/label"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/internal/event"
-	"github.com/TBD54566975/golang-tools/internal/xcontext"
+	"github.com/block/ftl-golang-tools/gopls/internal/label"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/internal/xcontext"
 )
 
 // NewTracker returns a new Tracker that reports progress to the

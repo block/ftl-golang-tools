@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // This file contains the implementation of the 'gomvpkg' command
-// whose main function is in github.com/TBD54566975/golang-tools/cmd/gomvpkg.
+// whose main function is in github.com/block/ftl-golang-tools/cmd/gomvpkg.
 
 package rename
 
@@ -29,9 +29,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/TBD54566975/golang-tools/go/buildutil"
-	"github.com/TBD54566975/golang-tools/go/loader"
-	"github.com/TBD54566975/golang-tools/refactor/importgraph"
+	"github.com/block/ftl-golang-tools/go/buildutil"
+	"github.com/block/ftl-golang-tools/go/loader"
+	"github.com/block/ftl-golang-tools/refactor/importgraph"
 )
 
 // Move, given a package path and a destination package path, will try

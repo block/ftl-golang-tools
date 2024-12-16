@@ -6,8 +6,8 @@
 package main
 
 import (
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/unmarshal"
-	"github.com/TBD54566975/golang-tools/go/analysis/singlechecker"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/unmarshal"
+	"github.com/block/ftl-golang-tools/go/analysis/singlechecker"
 )
 
 func main() { singlechecker.Main(unmarshal.Analyzer) }

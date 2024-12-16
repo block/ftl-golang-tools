@@ -8,8 +8,8 @@ import (
 	"go/ast"
 	"go/types"
 
-	"github.com/TBD54566975/golang-tools/go/ast/astutil"
-	"github.com/TBD54566975/golang-tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
 // AST and types utilities that not specific to testinggoroutines.

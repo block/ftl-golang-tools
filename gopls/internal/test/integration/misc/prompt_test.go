@@ -11,10 +11,10 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol/command"
-	"github.com/TBD54566975/golang-tools/gopls/internal/server"
-	. "github.com/TBD54566975/golang-tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
+	"github.com/block/ftl-golang-tools/gopls/internal/server"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 )
 
 // Test that gopls prompts for telemetry only when it is supposed to.

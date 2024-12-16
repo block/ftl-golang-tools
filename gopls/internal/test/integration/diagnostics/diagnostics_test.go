@@ -11,12 +11,12 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/server"
-	. "github.com/TBD54566975/golang-tools/gopls/internal/test/integration"
-	"github.com/TBD54566975/golang-tools/gopls/internal/test/integration/fake"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/bug"
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/server"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 func TestMain(m *testing.M) {

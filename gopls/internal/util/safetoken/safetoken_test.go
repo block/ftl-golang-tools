@@ -12,9 +12,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/packages"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/safetoken"
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 func TestWorkaroundIssue57490(t *testing.T) {
@@ -84,7 +84,7 @@ func TestGoplsSourceDoesNotCallTokenFileMethods(t *testing.T) {
 		"GOFLAGS=-mod=mod",
 	)
 
-	pkgs, err := packages.Load(cfg, "go/token", "github.com/TBD54566975/golang-tools/gopls/...")
+	pkgs, err := packages.Load(cfg, "go/token", "github.com/block/ftl-golang-tools/gopls/...")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,7 +116,7 @@ func TestGoplsSourceDoesNotCallTokenFileMethods(t *testing.T) {
 
 	for _, pkg := range pkgs {
 		switch pkg.PkgPath {
-		case "go/token", "github.com/TBD54566975/golang-tools/gopls/internal/util/safetoken":
+		case "go/token", "github.com/block/ftl-golang-tools/gopls/internal/util/safetoken":
 			continue // allow calls within these packages
 		}
 

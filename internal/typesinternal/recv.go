@@ -7,7 +7,7 @@ package typesinternal
 import (
 	"go/types"
 
-	"github.com/TBD54566975/golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/internal/aliases"
 )
 
 // ReceiverNamed returns the named type (if any) associated with the

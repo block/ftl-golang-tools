@@ -27,11 +27,11 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/TBD54566975/golang-tools/go/gcexportdata"
-	"github.com/TBD54566975/golang-tools/internal/gocommand"
-	"github.com/TBD54566975/golang-tools/internal/packagesinternal"
-	"github.com/TBD54566975/golang-tools/internal/typesinternal"
-	"github.com/TBD54566975/golang-tools/internal/versions"
+	"github.com/block/ftl-golang-tools/go/gcexportdata"
+	"github.com/block/ftl-golang-tools/internal/gocommand"
+	"github.com/block/ftl-golang-tools/internal/packagesinternal"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/internal/versions"
 )
 
 // A LoadMode controls the amount of detail to return when loading.
@@ -1485,7 +1485,7 @@ func (ld *loader) loadFromExportData(lpkg *loaderPackage) error {
 		viewLen++
 	}
 	if viewLen != len(view) {
-		log.Panicf("github.com/TBD54566975/golang-tools/go/packages: unexpected new packages during load of %s", lpkg.PkgPath)
+		log.Panicf("github.com/block/ftl-golang-tools/go/packages: unexpected new packages during load of %s", lpkg.PkgPath)
 	}
 
 	lpkg.Types = tpkg

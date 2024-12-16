@@ -98,7 +98,7 @@ is written to the driver's standard input. The driver must write a
 JSON-encoded [DriverResponse] message to its standard output. (This
 message differs from the JSON schema produced by 'go list'.)
 */
-package packages // import "github.com/TBD54566975/golang-tools/go/packages"
+package packages // import "github.com/block/ftl-golang-tools/go/packages"
 
 /*
 
@@ -106,7 +106,7 @@ Motivation and design considerations
 
 The new package's design solves problems addressed by two existing
 packages: go/build, which locates and describes packages, and
-github.com/TBD54566975/golang-tools/go/loader, which loads, parses and type-checks them.
+github.com/block/ftl-golang-tools/go/loader, which loads, parses and type-checks them.
 The go/build.Package structure encodes too much of the 'go build' way
 of organizing projects, leaving us in need of a data type that describes a
 package of Go source code independent of the underlying build system.

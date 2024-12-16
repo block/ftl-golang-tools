@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/TBD54566975/golang-tools/go/packages"
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 // This test loads the metadata for the standard library,

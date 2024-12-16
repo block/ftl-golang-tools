@@ -12,7 +12,7 @@ import (
 	"go/types"
 	"sort"
 
-	"github.com/TBD54566975/golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
 )
 
 func ExampleMap() {

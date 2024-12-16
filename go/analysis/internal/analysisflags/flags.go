@@ -19,7 +19,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis"
 )
 
 // flags common to all {single,multi,unit}checkers.

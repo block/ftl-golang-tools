@@ -8,11 +8,11 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/TBD54566975/golang-tools/gopls/internal/test/integration"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/bug"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/test/integration/fake"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake"
 )
 
 func TestMain(m *testing.M) {

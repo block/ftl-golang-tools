@@ -13,9 +13,9 @@ import (
 	"go/token"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/cfg"
-	"github.com/TBD54566975/golang-tools/go/packages"
-	"github.com/TBD54566975/golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/go/cfg"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 const src = `package main
@@ -182,7 +182,7 @@ func TestSmoke(t *testing.T) {
 	// The Mode API is just hateful.
 	// https://github.com/golang/go/issues/48226#issuecomment-1948792315
 	mode := packages.NeedDeps | packages.NeedImports | packages.NeedSyntax | packages.NeedTypes
-	pkgs, err := packages.Load(&packages.Config{Mode: mode}, "std", "github.com/TBD54566975/golang-tools/...")
+	pkgs, err := packages.Load(&packages.Config{Mode: mode}, "std", "github.com/block/ftl-golang-tools/...")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -3,8 +3,8 @@
 // license that can be found in the LICENSE file.
 
 // This program takes an HTML file and outputs a corresponding article file in
-// present format. See: github.com/TBD54566975/golang-tools/present
-package main // import "github.com/TBD54566975/golang-tools/cmd/html2article"
+// present format. See: github.com/block/ftl-golang-tools/present
+package main // import "github.com/block/ftl-golang-tools/cmd/html2article"
 
 import (
 	"bytes"

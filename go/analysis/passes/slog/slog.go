@@ -15,12 +15,12 @@ import (
 	"go/token"
 	"go/types"
 
-	"github.com/TBD54566975/golang-tools/go/analysis"
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/inspect"
-	"github.com/TBD54566975/golang-tools/go/analysis/passes/internal/analysisutil"
-	"github.com/TBD54566975/golang-tools/go/ast/inspector"
-	"github.com/TBD54566975/golang-tools/go/types/typeutil"
-	"github.com/TBD54566975/golang-tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 //go:embed doc.go
@@ -29,7 +29,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "slog",
 	Doc:      analysisutil.MustExtractDoc(doc, "slog"),
-	URL:      "https://pkg.go.dev/github.com/TBD54566975/golang-tools/go/analysis/passes/slog",
+	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/slog",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

@@ -11,7 +11,7 @@ import (
 	"go/types"
 	"testing"
 
-	. "github.com/TBD54566975/golang-tools/internal/typeparams"
+	. "github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
 func TestGetIndexExprData(t *testing.T) {

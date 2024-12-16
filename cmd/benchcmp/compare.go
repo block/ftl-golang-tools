@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/TBD54566975/golang-tools/benchmark/parse"
+	"github.com/block/ftl-golang-tools/benchmark/parse"
 )
 
 // BenchCmp is a pair of benchmarks.

@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol/command"
-	"github.com/TBD54566975/golang-tools/gopls/internal/test/compare"
-	. "github.com/TBD54566975/golang-tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
+	"github.com/block/ftl-golang-tools/gopls/internal/test/compare"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 )
 
 func TestAddImport(t *testing.T) {

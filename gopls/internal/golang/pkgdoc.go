@@ -42,14 +42,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/TBD54566975/golang-tools/gopls/internal/cache"
-	"github.com/TBD54566975/golang-tools/gopls/internal/protocol"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/astutil"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/bug"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/safetoken"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/slices"
-	"github.com/TBD54566975/golang-tools/gopls/internal/util/typesutil"
-	"github.com/TBD54566975/golang-tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/astutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/slices"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/typesutil"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 // Web is an abstraction of gopls' web server.

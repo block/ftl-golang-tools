@@ -12,7 +12,7 @@ import (
 	"go/token"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
 )
 
 type rewriteTest struct {

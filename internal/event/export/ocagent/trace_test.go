@@ -9,7 +9,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/TBD54566975/golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/internal/event"
 )
 
 func TestTrace(t *testing.T) {
