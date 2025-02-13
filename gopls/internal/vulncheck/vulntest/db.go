@@ -16,9 +16,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/osv"
-	"github.com/block/ftl-golang-tools/txtar"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/vulncheck/osv"
+	"golang.org/x/tools/txtar"
 )
 
 // NewDatabase returns a read-only DB containing the provided
@@ -51,7 +51,7 @@ func NewDatabase(ctx context.Context, txtarReports []byte) (*DB, error) {
 
 // DB is a read-only vulnerability database on disk.
 // Users can use this database with golang.org/x/vuln APIs
-// by setting the `VULNDB“ environment variable.
+// by setting the `VULNDB` environment variable.
 type DB struct {
 	disk string
 }

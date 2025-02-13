@@ -32,7 +32,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/block/ftl-golang-tools/present"
+	"golang.org/x/tools/present"
 )
 
 func usage() {

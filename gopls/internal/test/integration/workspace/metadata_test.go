@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 // TODO(rfindley): move workspace tests related to metadata bugs into this
@@ -217,9 +217,6 @@ module b.com/nested
 go 1.18
 
 require b.com/other v1.4.6
--- go.sum --
-b.com/other v1.4.6 h1:pHXSzGsk6DamYXp9uRdDB9A/ZQqAN9it+JudU0sBf94=
-b.com/other v1.4.6/go.mod h1:T0TYuGdAHw4p/l0+1P/yhhYHfZRia7PaadNVDu58OWM=
 -- nested.go --
 package nested
 
@@ -228,6 +225,7 @@ import "b.com/other/foo"
 const C = foo.Foo
 `
 	WithOptions(
+		WriteGoSum("."),
 		ProxyFiles(proxy),
 	).Run(t, files, func(t *testing.T, env *Env) {
 		env.OnceMet(

@@ -10,10 +10,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
+	"golang.org/x/tools/gopls/internal/cache"
+	"golang.org/x/tools/gopls/internal/protocol/command"
 
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 func TestAddAndRemoveGoWork(t *testing.T) {

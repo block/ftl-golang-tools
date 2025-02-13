@@ -9,7 +9,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/protocol"
 )
 
 // format implements the format verb for gopls.

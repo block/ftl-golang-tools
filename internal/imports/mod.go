@@ -18,10 +18,10 @@ import (
 	"strings"
 
 	"golang.org/x/mod/module"
-	"github.com/block/ftl-golang-tools/internal/event"
-	"github.com/block/ftl-golang-tools/internal/gocommand"
-	"github.com/block/ftl-golang-tools/internal/gopathwalk"
-	"github.com/block/ftl-golang-tools/internal/stdlib"
+	"golang.org/x/tools/internal/event"
+	"golang.org/x/tools/internal/gocommand"
+	"golang.org/x/tools/internal/gopathwalk"
+	"golang.org/x/tools/internal/stdlib"
 )
 
 // Notes(rfindley): ModuleResolver appears to be heavily optimized for scanning
@@ -245,7 +245,10 @@ func newModuleResolver(e *ProcessEnv, moduleCacheCache *DirInfoCache) (*ModuleRe
 //  2. Use this to separate module cache scanning from other scanning.
 func gomodcacheForEnv(goenv map[string]string) string {
 	if gmc := goenv["GOMODCACHE"]; gmc != "" {
-		return gmc
+		// golang/go#67156: ensure that the module cache is clean, since it is
+		// assumed as a prefix to directories scanned by gopathwalk, which are
+		// themselves clean.
+		return filepath.Clean(gmc)
 	}
 	gopaths := filepath.SplitList(goenv["GOPATH"])
 	if len(gopaths) == 0 {
@@ -740,8 +743,8 @@ func (r *ModuleResolver) loadExports(ctx context.Context, pkg *pkg, includeTest 
 
 func (r *ModuleResolver) scanDirForPackage(root gopathwalk.Root, dir string) directoryPackageInfo {
 	subdir := ""
-	if dir != root.Path {
-		subdir = dir[len(root.Path)+len("/"):]
+	if prefix := root.Path + string(filepath.Separator); strings.HasPrefix(dir, prefix) {
+		subdir = dir[len(prefix):]
 	}
 	importPath := filepath.ToSlash(subdir)
 	if strings.HasPrefix(importPath, "vendor/") {

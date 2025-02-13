@@ -20,16 +20,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/cache"
-	"github.com/block/ftl-golang-tools/gopls/internal/debug"
-	"github.com/block/ftl-golang-tools/gopls/internal/lsprpc"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake"
-	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
-	"github.com/block/ftl-golang-tools/internal/jsonrpc2/servertest"
-	"github.com/block/ftl-golang-tools/internal/memoize"
-	"github.com/block/ftl-golang-tools/internal/testenv"
-	"github.com/block/ftl-golang-tools/internal/xcontext"
+	"golang.org/x/tools/gopls/internal/cache"
+	"golang.org/x/tools/gopls/internal/debug"
+	"golang.org/x/tools/gopls/internal/lsprpc"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/test/integration/fake"
+	"golang.org/x/tools/internal/jsonrpc2"
+	"golang.org/x/tools/internal/jsonrpc2/servertest"
+	"golang.org/x/tools/internal/memoize"
+	"golang.org/x/tools/internal/testenv"
+	"golang.org/x/tools/internal/xcontext"
 )
 
 // Mode is a bitmask that defines for which execution modes a test should run.
@@ -203,7 +203,7 @@ func (r *Runner) Run(t *testing.T, files string, test TestFunc, opts ...RunOptio
 
 			// Write the go.sum file for the requested directories, before starting the server.
 			for _, dir := range config.writeGoSum {
-				if err := sandbox.RunGoCommand(context.Background(), dir, "list", []string{"-mod=mod", "./..."}, []string{"GOWORK=off"}, true); err != nil {
+				if _, err := sandbox.RunGoCommand(context.Background(), dir, "list", []string{"-mod=mod", "./..."}, []string{"GOWORK=off"}, true); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -215,19 +215,7 @@ func (r *Runner) Run(t *testing.T, files string, test TestFunc, opts ...RunOptio
 			framer = ls.framer(jsonrpc2.NewRawStream)
 			ts := servertest.NewPipeServer(ss, framer)
 
-			awaiter := NewAwaiter(sandbox.Workdir)
-			editor, err := fake.NewEditor(sandbox, config.editor).Connect(ctx, ts, awaiter.Hooks())
-			if err != nil {
-				t.Fatal(err)
-			}
-			env := &Env{
-				T:       t,
-				Ctx:     ctx,
-				Sandbox: sandbox,
-				Editor:  editor,
-				Server:  ts,
-				Awaiter: awaiter,
-			}
+			env := ConnectGoplsEnv(t, ctx, sandbox, config.editor, ts)
 			defer func() {
 				if t.Failed() && r.PrintGoroutinesOnFailure {
 					pprof.Lookup("goroutine").WriteTo(os.Stderr, 1)
@@ -242,7 +230,7 @@ func (r *Runner) Run(t *testing.T, files string, test TestFunc, opts ...RunOptio
 				// the editor: in general we want to clean up before proceeding to the
 				// next test, and if there is a deadlock preventing closing it will
 				// eventually be handled by the `go test` timeout.
-				if err := editor.Close(xcontext.Detach(ctx)); err != nil {
+				if err := env.Editor.Close(xcontext.Detach(ctx)); err != nil {
 					t.Errorf("closing editor: %v", err)
 				}
 			}()
@@ -251,6 +239,28 @@ func (r *Runner) Run(t *testing.T, files string, test TestFunc, opts ...RunOptio
 			test(t, env)
 		})
 	}
+}
+
+// ConnectGoplsEnv creates a new Gopls environment for the given sandbox,
+// editor config, and server connector.
+//
+// TODO(rfindley): significantly refactor the way testing environments are
+// constructed.
+func ConnectGoplsEnv(t testing.TB, ctx context.Context, sandbox *fake.Sandbox, config fake.EditorConfig, connector servertest.Connector) *Env {
+	awaiter := NewAwaiter(sandbox.Workdir)
+	editor, err := fake.NewEditor(sandbox, config).Connect(ctx, connector, awaiter.Hooks())
+	if err != nil {
+		t.Fatal(err)
+	}
+	env := &Env{
+		T:       t,
+		Ctx:     ctx,
+		Sandbox: sandbox,
+		Server:  connector,
+		Editor:  editor,
+		Awaiter: awaiter,
+	}
+	return env
 }
 
 // longBuilders maps builders that are skipped when -short is set to a

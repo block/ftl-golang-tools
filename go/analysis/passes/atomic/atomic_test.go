@@ -7,8 +7,8 @@ package atomic_test
 import (
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/atomic"
+	"golang.org/x/tools/go/analysis/analysistest"
+	"golang.org/x/tools/go/analysis/passes/atomic"
 )
 
 func Test(t *testing.T) {

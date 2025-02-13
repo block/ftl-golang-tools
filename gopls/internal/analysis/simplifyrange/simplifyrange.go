@@ -10,12 +10,11 @@ import (
 	"go/ast"
 	"go/printer"
 	"go/token"
-	"go/types"
 
-	"github.com/block/ftl-golang-tools/go/analysis"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
-	"github.com/block/ftl-golang-tools/go/ast/inspector"
-	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/passes/inspect"
+	"golang.org/x/tools/go/ast/inspector"
+	"golang.org/x/tools/internal/analysisinternal"
 )
 
 //go:embed doc.go
@@ -26,25 +25,33 @@ var Analyzer = &analysis.Analyzer{
 	Doc:      analysisinternal.MustExtractDoc(doc, "simplifyrange"),
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
-	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/simplifyrange",
+	URL:      "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/simplifyrange",
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
+	// Gather information whether file is generated or not
+	generated := make(map[*token.File]bool)
+	for _, file := range pass.Files {
+		if ast.IsGenerated(file) {
+			generated[pass.Fset.File(file.FileStart)] = true
+		}
+	}
+
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	nodeFilter := []ast.Node{
 		(*ast.RangeStmt)(nil),
 	}
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		stmt := n.(*ast.RangeStmt)
-
-		// go1.23's range-over-func requires all vars, blank if necessary.
-		// TODO(adonovan): this may change in go1.24; see #65236.
-		if _, ok := pass.TypesInfo.TypeOf(stmt.X).Underlying().(*types.Signature); ok {
-			return
+		if _, ok := generated[pass.Fset.File(n.Pos())]; ok {
+			return // skip checking if it's generated code
 		}
 
-		copy := *stmt
-		end := newlineIndex(pass.Fset, &copy)
+		var copy *ast.RangeStmt // shallow-copy the AST before modifying
+		{
+			x := *n.(*ast.RangeStmt)
+			copy = &x
+		}
+		end := newlineIndex(pass.Fset, copy)
 
 		// Range statements of the form: for i, _ := range x {}
 		var old ast.Expr
@@ -65,7 +72,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			Pos:            old.Pos(),
 			End:            old.End(),
 			Message:        "simplify range expression",
-			SuggestedFixes: suggestedFixes(pass.Fset, &copy, end),
+			SuggestedFixes: suggestedFixes(pass.Fset, copy, end),
 		})
 	})
 	return nil, nil

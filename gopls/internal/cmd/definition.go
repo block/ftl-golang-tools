@@ -12,9 +12,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/settings"
-	"github.com/block/ftl-golang-tools/internal/tool"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/settings"
+	"golang.org/x/tools/internal/tool"
 )
 
 // A Definition is the result of a 'definition' query.

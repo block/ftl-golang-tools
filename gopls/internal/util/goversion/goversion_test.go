@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/util/goversion"
+	"golang.org/x/tools/gopls/internal/util/goversion"
 )
 
 func TestMessage(t *testing.T) {

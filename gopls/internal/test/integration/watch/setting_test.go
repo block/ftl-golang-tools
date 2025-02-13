@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 func TestSubdirWatchPatterns(t *testing.T) {
@@ -60,7 +60,7 @@ package subdir
 // use (true|false) or some other truthy value.
 func TestSubdirWatchPatterns_BadValues(t *testing.T) {
 	tests := []struct {
-		badValue    interface{}
+		badValue    any
 		wantMessage string
 	}{
 		{true, "invalid type bool (want string)"},

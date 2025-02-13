@@ -11,7 +11,7 @@ import (
 	"go/types"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/internal/typeparams"
+	"golang.org/x/tools/internal/typeparams"
 )
 
 func TestCoreType(t *testing.T) {
@@ -95,7 +95,7 @@ func TestCoreType(t *testing.T) {
 			got = ct.String()
 		}
 		if got != test.want {
-			t.Errorf("coreType(%s) = %v, want %v", test.expr, got, test.want)
+			t.Errorf("CoreType(%s) = %v, want %v", test.expr, got, test.want)
 		}
 	}
 }

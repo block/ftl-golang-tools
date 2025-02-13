@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 // This file contains regression tests for the directoryFilters setting.

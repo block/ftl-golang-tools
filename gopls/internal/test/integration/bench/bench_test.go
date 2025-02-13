@@ -20,17 +20,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/cmd"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
-	"github.com/block/ftl-golang-tools/gopls/internal/test/integration"
-	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
-	"github.com/block/ftl-golang-tools/internal/event"
-	"github.com/block/ftl-golang-tools/internal/fakenet"
-	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
-	"github.com/block/ftl-golang-tools/internal/jsonrpc2/servertest"
-	"github.com/block/ftl-golang-tools/internal/pprof"
-	"github.com/block/ftl-golang-tools/internal/tool"
+	"golang.org/x/tools/gopls/internal/cmd"
+	"golang.org/x/tools/gopls/internal/protocol/command"
+	"golang.org/x/tools/gopls/internal/test/integration"
+	"golang.org/x/tools/gopls/internal/test/integration/fake"
+	"golang.org/x/tools/gopls/internal/util/bug"
+	"golang.org/x/tools/internal/event"
+	"golang.org/x/tools/internal/fakenet"
+	"golang.org/x/tools/internal/jsonrpc2"
+	"golang.org/x/tools/internal/jsonrpc2/servertest"
+	"golang.org/x/tools/internal/pprof"
+	"golang.org/x/tools/internal/tool"
 )
 
 var (
@@ -42,6 +42,7 @@ var (
 	cpuProfile   = flag.String("gopls_cpuprofile", "", "if set, the cpu profile file suffix; see \"Profiling\" in the package doc")
 	memProfile   = flag.String("gopls_memprofile", "", "if set, the mem profile file suffix; see \"Profiling\" in the package doc")
 	allocProfile = flag.String("gopls_allocprofile", "", "if set, the alloc profile file suffix; see \"Profiling\" in the package doc")
+	blockProfile = flag.String("gopls_blockprofile", "", "if set, the block profile file suffix; see \"Profiling\" in the package doc")
 	trace        = flag.String("gopls_trace", "", "if set, the trace file suffix; see \"Profiling\" in the package doc")
 
 	// If non-empty, tempDir is a temporary working dir that was created by this
@@ -177,6 +178,9 @@ func profileArgs(name string, wantCPU bool) []string {
 	if *allocProfile != "" {
 		args = append(args, fmt.Sprintf("-profile.alloc=%s", qualifiedName(name, *allocProfile)))
 	}
+	if *blockProfile != "" {
+		args = append(args, fmt.Sprintf("-profile.block=%s", qualifiedName(name, *blockProfile)))
+	}
 	if *trace != "" {
 		args = append(args, fmt.Sprintf("-profile.trace=%s", qualifiedName(name, *trace)))
 	}
@@ -302,18 +306,19 @@ func startProfileIfSupported(b *testing.B, env *integration.Env, name string) fu
 			b.Fatalf("reading profile: %v", err)
 		}
 		b.ReportMetric(totalCPU.Seconds()/float64(b.N), "cpu_seconds/op")
-		if *cpuProfile == "" {
-			// The user didn't request profiles, so delete it to clean up.
-			if err := os.Remove(profFile); err != nil {
-				b.Errorf("removing profile file: %v", err)
+		if *cpuProfile != "" {
+			// Read+write to avoid exdev errors.
+			data, err := os.ReadFile(profFile)
+			if err != nil {
+				b.Fatalf("reading profile: %v", err)
 			}
-		} else {
-			// NOTE: if this proves unreliable (due to e.g. EXDEV), we can fall back
-			// on Read+Write+Remove.
 			name := qualifiedName(name, *cpuProfile)
-			if err := os.Rename(profFile, name); err != nil {
-				b.Fatalf("renaming profile file: %v", err)
+			if err := os.WriteFile(name, data, 0666); err != nil {
+				b.Fatalf("writing profile: %v", err)
 			}
+		}
+		if err := os.Remove(profFile); err != nil {
+			b.Errorf("removing profile file: %v", err)
 		}
 	}
 }

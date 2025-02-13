@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"testing"
 
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
-	"github.com/block/ftl-golang-tools/gopls/internal/test/compare"
+	. "golang.org/x/tools/gopls/internal/test/integration"
+	"golang.org/x/tools/gopls/internal/test/compare"
 )
 
 // Test for golang/go#57081.

@@ -21,10 +21,10 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/internal/event"
-	"github.com/block/ftl-golang-tools/internal/event/core"
-	"github.com/block/ftl-golang-tools/internal/event/export"
-	"github.com/block/ftl-golang-tools/internal/event/label"
+	"golang.org/x/tools/internal/event"
+	"golang.org/x/tools/internal/event/core"
+	"golang.org/x/tools/internal/event/export"
+	"golang.org/x/tools/internal/event/label"
 )
 
 func init() {

@@ -11,10 +11,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/cache"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/settings"
-	"github.com/block/ftl-golang-tools/internal/event"
+	"golang.org/x/tools/gopls/internal/cache"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/settings"
+	"golang.org/x/tools/internal/event"
 )
 
 func (s *server) DidChangeWorkspaceFolders(ctx context.Context, params *protocol.DidChangeWorkspaceFoldersParams) error {

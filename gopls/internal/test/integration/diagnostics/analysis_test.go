@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/cache"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	"golang.org/x/tools/gopls/internal/cache"
+	"golang.org/x/tools/gopls/internal/protocol"
+	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 // Test for the timeformat analyzer, following golang/vscode-go#2406.
@@ -123,5 +123,34 @@ func main() {
 		if fixes := env.GetQuickFixes("main.go", d.Diagnostics); len(fixes) != 0 {
 			t.Errorf("got quick fixes %v, wanted none", fixes)
 		}
+	})
+}
+
+func TestAnalysisFiltering(t *testing.T) {
+	// This test checks that hint level diagnostics are only surfaced for open
+	// files.
+
+	const src = `
+-- go.mod --
+module mod.com
+
+go 1.20
+
+-- a.go --
+package p
+
+var x interface{}
+
+-- b.go --
+package p
+
+var y interface{}
+`
+	Run(t, src, func(t *testing.T, env *Env) {
+		env.OpenFile("a.go")
+		env.AfterChange(
+			Diagnostics(ForFile("a.go"), WithMessage("replaced by any")),
+			NoDiagnostics(ForFile("b.go")),
+		)
 	})
 }

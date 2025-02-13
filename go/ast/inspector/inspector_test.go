@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"golang.org/x/tools/go/ast/inspector"
 )
 
 var netFiles []*ast.File
@@ -160,7 +160,8 @@ func TestInspectPruning(t *testing.T) {
 	compare(t, nodesA, nodesB)
 }
 
-func compare(t *testing.T, nodesA, nodesB []ast.Node) {
+// compare calls t.Error if !slices.Equal(nodesA, nodesB).
+func compare[N comparable](t *testing.T, nodesA, nodesB []N) {
 	if len(nodesA) != len(nodesB) {
 		t.Errorf("inconsistent node lists: %d vs %d", len(nodesA), len(nodesB))
 	} else {

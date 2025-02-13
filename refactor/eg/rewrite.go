@@ -19,7 +19,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"golang.org/x/tools/go/ast/astutil"
 )
 
 // transformItem takes a reflect.Value representing a variable of type ast.Node
@@ -338,7 +338,7 @@ func (tr *Transformer) subst(env map[string]ast.Expr, pattern, pos reflect.Value
 		}
 		return v
 
-	case reflect.Ptr:
+	case reflect.Pointer:
 		v := reflect.New(p.Type()).Elem()
 		if elem := p.Elem(); elem.IsValid() {
 			v.Set(tr.subst(env, elem, pos).Addr())

@@ -7,7 +7,7 @@ package misc
 import (
 	"testing"
 
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 func TestMultipleAdHocPackages(t *testing.T) {

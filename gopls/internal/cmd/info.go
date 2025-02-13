@@ -16,13 +16,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/debug"
-	"github.com/block/ftl-golang-tools/gopls/internal/doc"
-	"github.com/block/ftl-golang-tools/gopls/internal/filecache"
-	licensespkg "github.com/block/ftl-golang-tools/gopls/internal/licenses"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/browser"
-	goplsbug "github.com/block/ftl-golang-tools/gopls/internal/util/bug"
-	"github.com/block/ftl-golang-tools/internal/tool"
+	"golang.org/x/tools/gopls/internal/debug"
+	"golang.org/x/tools/gopls/internal/doc"
+	"golang.org/x/tools/gopls/internal/filecache"
+	licensespkg "golang.org/x/tools/gopls/internal/licenses"
+	"golang.org/x/tools/gopls/internal/util/browser"
+	goplsbug "golang.org/x/tools/gopls/internal/util/bug"
+	"golang.org/x/tools/internal/tool"
 )
 
 // help implements the help command.
@@ -223,7 +223,7 @@ func (j *apiJSON) DetailedHelp(f *flag.FlagSet) {
 	fmt.Fprint(f.Output(), `
 The api-json command prints a JSON value that describes
 and documents all gopls' public interfaces.
-Its schema is defined by github.com/block/ftl-golang-tools/gopls/internal/doc.API.
+Its schema is defined by golang.org/x/tools/gopls/internal/doc.API.
 `)
 	printFlagDefaults(f)
 }

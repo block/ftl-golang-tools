@@ -13,14 +13,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/cache"
-	"github.com/block/ftl-golang-tools/gopls/internal/debug"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake"
-	"github.com/block/ftl-golang-tools/internal/event"
-	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
-	"github.com/block/ftl-golang-tools/internal/jsonrpc2/servertest"
-	"github.com/block/ftl-golang-tools/internal/testenv"
+	"golang.org/x/tools/gopls/internal/cache"
+	"golang.org/x/tools/gopls/internal/debug"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/test/integration/fake"
+	"golang.org/x/tools/internal/event"
+	"golang.org/x/tools/internal/jsonrpc2"
+	"golang.org/x/tools/internal/jsonrpc2/servertest"
+	"golang.org/x/tools/internal/testenv"
 )
 
 type FakeClient struct {

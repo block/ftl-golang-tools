@@ -13,8 +13,8 @@ import (
 	"sync"
 
 	"golang.org/x/mod/module"
-	"github.com/block/ftl-golang-tools/internal/gopathwalk"
-	"github.com/block/ftl-golang-tools/internal/stdlib"
+	"golang.org/x/tools/internal/gopathwalk"
+	"golang.org/x/tools/internal/stdlib"
 )
 
 // To find packages to import, the resolver needs to know about all of

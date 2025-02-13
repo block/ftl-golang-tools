@@ -7,8 +7,8 @@ package core
 import (
 	"context"
 
-	"github.com/block/ftl-golang-tools/internal/event/keys"
-	"github.com/block/ftl-golang-tools/internal/event/label"
+	"golang.org/x/tools/internal/event/keys"
+	"golang.org/x/tools/internal/event/label"
 )
 
 // Log1 takes a message and one label delivers a log event to the exporter.

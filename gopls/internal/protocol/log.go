@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
+	"golang.org/x/tools/internal/jsonrpc2"
 )
 
 type loggingStream struct {

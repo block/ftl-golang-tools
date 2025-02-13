@@ -21,12 +21,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/block/ftl-golang-tools/go/analysis"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
-	"github.com/block/ftl-golang-tools/go/ast/astutil"
-	"github.com/block/ftl-golang-tools/go/ast/inspector"
-	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/passes/inspect"
+	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
+	"golang.org/x/tools/go/ast/inspector"
+	"golang.org/x/tools/go/types/typeutil"
 )
 
 //go:embed doc.go
@@ -35,7 +34,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "unusedresult",
 	Doc:      analysisutil.MustExtractDoc(doc, "unusedresult"),
-	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/unusedresult",
+	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/unusedresult",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }
@@ -101,7 +100,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		(*ast.ExprStmt)(nil),
 	}
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		call, ok := astutil.Unparen(n.(*ast.ExprStmt).X).(*ast.CallExpr)
+		call, ok := ast.Unparen(n.(*ast.ExprStmt).X).(*ast.CallExpr)
 		if !ok {
 			return // not a call statement
 		}
@@ -131,9 +130,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 }
 
 // func() string
-var sigNoArgsStringResult = types.NewSignature(nil, nil,
-	types.NewTuple(types.NewVar(token.NoPos, nil, "", types.Typ[types.String])),
-	false)
+var sigNoArgsStringResult = types.NewSignatureType(nil, nil, nil, nil, types.NewTuple(types.NewParam(token.NoPos, nil, "", types.Typ[types.String])), false)
 
 type stringSetFlag map[string]bool
 

@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/protocol"
 )
 
 // TestURIFromPath tests the conversion between URIs and filenames. The test cases

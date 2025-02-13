@@ -39,7 +39,7 @@
 // ERRORS: for each locus of a frontend (scanner/parser/type) error, the
 // location is highlighted in red and hover text provides the compiler
 // error message.
-package analysis // import "github.com/block/ftl-golang-tools/godoc/analysis"
+package analysis // import "golang.org/x/tools/godoc/analysis"
 
 import (
 	"io"
@@ -62,15 +62,15 @@ type Link interface {
 // FileInfo holds analysis information for the source file view.
 // Clients must not mutate it.
 type FileInfo struct {
-	Data  []interface{} // JSON serializable values
-	Links []Link        // HTML link markup
+	Data  []any  // JSON serializable values
+	Links []Link // HTML link markup
 }
 
 // A fileInfo is the server's store of hyperlinks and JSON data for a
 // particular file.
 type fileInfo struct {
 	mu        sync.Mutex
-	data      []interface{} // JSON objects
+	data      []any // JSON objects
 	links     []Link
 	sorted    bool
 	hasErrors bool // TODO(adonovan): surface this in the UI

@@ -12,9 +12,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/packages"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/astutil"
-	"github.com/block/ftl-golang-tools/internal/testenv"
+	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/gopls/internal/util/astutil"
+	"golang.org/x/tools/internal/testenv"
 )
 
 // TestPurgeFuncBodies tests PurgeFuncBodies by comparing it against a
@@ -50,7 +50,7 @@ func TestPurgeFuncBodies(t *testing.T) {
 			fset := token.NewFileSet()
 
 			// Parse then purge (reference implementation).
-			f1, _ := parser.ParseFile(fset, filename, content, 0)
+			f1, _ := parser.ParseFile(fset, filename, content, parser.SkipObjectResolution)
 			ast.Inspect(f1, func(n ast.Node) bool {
 				switch n := n.(type) {
 				case *ast.FuncDecl:
@@ -66,7 +66,7 @@ func TestPurgeFuncBodies(t *testing.T) {
 			})
 
 			// Purge before parse (logic under test).
-			f2, _ := parser.ParseFile(fset, filename, astutil.PurgeFuncBodies(content), 0)
+			f2, _ := parser.ParseFile(fset, filename, astutil.PurgeFuncBodies(content), parser.SkipObjectResolution)
 
 			// Compare sequence of node types.
 			nodes1 := preorder(f1)

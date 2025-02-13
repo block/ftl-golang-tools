@@ -18,15 +18,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/block/ftl-golang-tools/go/gcexportdata"
-	"github.com/block/ftl-golang-tools/go/packages"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/typerefs"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/astutil"
-	"github.com/block/ftl-golang-tools/internal/packagesinternal"
-	"github.com/block/ftl-golang-tools/internal/testenv"
+	"golang.org/x/tools/go/gcexportdata"
+	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/gopls/internal/cache/metadata"
+	"golang.org/x/tools/gopls/internal/cache/parsego"
+	"golang.org/x/tools/gopls/internal/cache/typerefs"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/util/astutil"
+	"golang.org/x/tools/internal/packagesinternal"
+	"golang.org/x/tools/internal/testenv"
 )
 
 var (
@@ -342,7 +342,7 @@ func loadPackages(query string, needExport bool) (map[PackageID]string, Metadata
 			packages.NeedModule |
 			packages.NeedEmbedFiles |
 			packages.LoadMode(packagesinternal.DepsErrors) |
-			packages.LoadMode(packagesinternal.ForTest),
+			packages.NeedForTest,
 		Tests: true,
 	}
 	if needExport {
@@ -364,7 +364,7 @@ func loadPackages(query string, needExport bool) (map[PackageID]string, Metadata
 			ID:         id,
 			PkgPath:    PackagePath(pkg.PkgPath),
 			Name:       packageName(pkg.Name),
-			ForTest:    PackagePath(packagesinternal.GetForTest(pkg)),
+			ForTest:    PackagePath(pkg.ForTest),
 			TypesSizes: pkg.TypesSizes,
 			LoadDir:    cfg.Dir,
 			Module:     pkg.Module,

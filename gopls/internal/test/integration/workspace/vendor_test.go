@@ -7,7 +7,7 @@ package workspace
 import (
 	"testing"
 
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 func TestWorkspacePackagesExcludesVendor(t *testing.T) {
@@ -36,10 +36,6 @@ module example.com/a
 go 1.14
 require other.com/b v1.0.0
 
--- go.sum --
-other.com/b v1.0.0 h1:ct1+0RPozzMvA2rSYnVvIfr/GDHcd7oVnw147okdi3g=
-other.com/b v1.0.0/go.mod h1:bfTSZo/4ZtAQJWBYScopwW6n9Ctfsl2mi8nXsqjDXR8=
-
 -- a.go --
 package a
 
@@ -49,6 +45,7 @@ var _ b.B
 
 `
 	WithOptions(
+		WriteGoSum("."),
 		ProxyFiles(proxy),
 		Modes(Default),
 	).Run(t, src, func(t *testing.T, env *Env) {

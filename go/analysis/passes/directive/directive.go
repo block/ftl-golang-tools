@@ -13,8 +13,8 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/block/ftl-golang-tools/go/analysis"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
+	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
 )
 
 const Doc = `check Go toolchain directives such as //go:debug
@@ -36,7 +36,7 @@ buildtag analyzer.
 var Analyzer = &analysis.Analyzer{
 	Name: "directive",
 	Doc:  Doc,
-	URL:  "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/directive",
+	URL:  "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/directive",
 	Run:  runDirective,
 }
 

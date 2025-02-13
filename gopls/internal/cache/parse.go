@@ -11,8 +11,8 @@ import (
 	"go/token"
 	"path/filepath"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
-	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"golang.org/x/tools/gopls/internal/cache/parsego"
+	"golang.org/x/tools/gopls/internal/file"
 )
 
 // ParseGo parses the file whose contents are provided by fh.
@@ -40,6 +40,6 @@ func parseGoImpl(ctx context.Context, fset *token.FileSet, fh file.Handle, mode 
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
-	pgf, _ := parsego.Parse(ctx, fset, fh.URI(), content, mode, purgeFuncBodies)
+	pgf, _ := parsego.Parse(ctx, fset, fh.URI(), content, mode, purgeFuncBodies) // ignore 'fixes'
 	return pgf, nil
 }

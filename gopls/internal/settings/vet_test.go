@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/doc"
-	"github.com/block/ftl-golang-tools/internal/testenv"
+	"golang.org/x/tools/gopls/internal/doc"
+	"golang.org/x/tools/internal/testenv"
 )
 
 // TestVetSuite ensures that gopls's analyser suite is a superset of vet's.

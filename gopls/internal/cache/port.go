@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"golang.org/x/tools/gopls/internal/util/bug"
 )
 
 type port struct{ GOOS, GOARCH string }
@@ -141,6 +141,11 @@ var (
 func (p port) matches(path string, content []byte) bool {
 	ctxt := build.Default // make a copy
 	ctxt.UseAllFiles = false
+	path = filepath.Clean(path)
+	if !filepath.IsAbs(path) {
+		bug.Reportf("non-abs file path %q", path)
+		return false // fail closed
+	}
 	dir, name := filepath.Split(path)
 
 	// The only virtualized operation called by MatchFile is OpenFile.

@@ -26,7 +26,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/block/ftl-golang-tools/go/packages"
+	"golang.org/x/tools/go/packages"
 )
 
 func main() {

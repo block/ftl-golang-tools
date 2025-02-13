@@ -13,44 +13,38 @@ import (
 	"go/build/constraint"
 	"go/parser"
 	"go/token"
-	"go/types"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
-	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 
-	"golang.org/x/sync/errgroup"
-	"github.com/block/ftl-golang-tools/go/packages"
-	"github.com/block/ftl-golang-tools/go/types/objectpath"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/methodsets"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/typerefs"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/xrefs"
-	"github.com/block/ftl-golang-tools/gopls/internal/file"
-	"github.com/block/ftl-golang-tools/gopls/internal/filecache"
-	label1 "github.com/block/ftl-golang-tools/gopls/internal/label"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
-	"github.com/block/ftl-golang-tools/gopls/internal/settings"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/constraints"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/immutable"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/pathutil"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/persistent"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/slices"
-	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck"
-	"github.com/block/ftl-golang-tools/internal/event"
-	"github.com/block/ftl-golang-tools/internal/event/label"
-	"github.com/block/ftl-golang-tools/internal/gocommand"
-	"github.com/block/ftl-golang-tools/internal/memoize"
-	"github.com/block/ftl-golang-tools/internal/packagesinternal"
-	"github.com/block/ftl-golang-tools/internal/typesinternal"
+	"golang.org/x/tools/go/types/objectpath"
+	"golang.org/x/tools/gopls/internal/cache/metadata"
+	"golang.org/x/tools/gopls/internal/cache/methodsets"
+	"golang.org/x/tools/gopls/internal/cache/parsego"
+	"golang.org/x/tools/gopls/internal/cache/testfuncs"
+	"golang.org/x/tools/gopls/internal/cache/xrefs"
+	"golang.org/x/tools/gopls/internal/file"
+	"golang.org/x/tools/gopls/internal/filecache"
+	label1 "golang.org/x/tools/gopls/internal/label"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/protocol/command"
+	"golang.org/x/tools/gopls/internal/settings"
+	"golang.org/x/tools/gopls/internal/util/bug"
+	"golang.org/x/tools/gopls/internal/util/constraints"
+	"golang.org/x/tools/gopls/internal/util/immutable"
+	"golang.org/x/tools/gopls/internal/util/pathutil"
+	"golang.org/x/tools/gopls/internal/util/persistent"
+	"golang.org/x/tools/gopls/internal/vulncheck"
+	"golang.org/x/tools/internal/event"
+	"golang.org/x/tools/internal/event/label"
+	"golang.org/x/tools/internal/gocommand"
+	"golang.org/x/tools/internal/memoize"
 )
 
 // A Snapshot represents the current state for a given view.
@@ -131,10 +125,6 @@ type Snapshot struct {
 	// It may invalidated when a file's content changes.
 	files *fileMap
 
-	// symbolizeHandles maps each file URI to a handle for the future
-	// result of computing the symbols declared in that file.
-	symbolizeHandles *persistent.Map[protocol.DocumentURI, *memoize.Promise] // *memoize.Promise[symbolizeResult]
-
 	// packages maps a packageKey to a *packageHandle.
 	// It may be invalidated when a file's content changes.
 	//
@@ -144,11 +134,15 @@ type Snapshot struct {
 	//    be in packages, unless there is a missing import
 	packages *persistent.Map[PackageID, *packageHandle]
 
-	// activePackages maps a package ID to a memoized active package, or nil if
-	// the package is known not to be open.
+	// fullAnalysisKeys and factyAnalysisKeys hold memoized cache keys for
+	// analysis packages. "full" refers to the cache key including all enabled
+	// analyzers, whereas "facty" is the key including only the subset of enabled
+	// analyzers that produce facts, such as is required for transitively
+	// imported packages.
 	//
-	// IDs not contained in the map are not known to be open or not open.
-	activePackages *persistent.Map[PackageID, *Package]
+	// These keys are memoized because they can be quite expensive to compute.
+	fullAnalysisKeys  *persistent.Map[PackageID, file.Hash]
+	factyAnalysisKeys *persistent.Map[PackageID, file.Hash]
 
 	// workspacePackages contains the workspace's packages, which are loaded
 	// when the view is created. It does not contain intermediate test variants.
@@ -182,17 +176,6 @@ type Snapshot struct {
 	modWhyHandles  *persistent.Map[protocol.DocumentURI, *memoize.Promise] // *memoize.Promise[modWhyResult]
 	modVulnHandles *persistent.Map[protocol.DocumentURI, *memoize.Promise] // *memoize.Promise[modVulnResult]
 
-	// importGraph holds a shared import graph to use for type-checking. Adding
-	// more packages to this import graph can speed up type checking, at the
-	// expense of in-use memory.
-	//
-	// See getImportGraph for additional documentation.
-	importGraphDone chan struct{} // closed when importGraph is set; may be nil
-	importGraph     *importGraph  // copied from preceding snapshot and re-evaluated
-
-	// pkgIndex is an index of package IDs, for efficient storage of typerefs.
-	pkgIndex *typerefs.PackageIndex
-
 	// moduleUpgrades tracks known upgrades for module paths in each modfile.
 	// Each modfile has a map of module name to upgrade version.
 	moduleUpgrades *persistent.Map[protocol.DocumentURI, map[string]string]
@@ -200,14 +183,22 @@ type Snapshot struct {
 	// vulns maps each go.mod file's URI to its known vulnerabilities.
 	vulns *persistent.Map[protocol.DocumentURI, *vulncheck.Result]
 
-	// gcOptimizationDetails describes the packages for which we want
-	// optimization details to be included in the diagnostics.
-	gcOptimizationDetails map[metadata.PackageID]unit
+	// compilerOptDetails is the set of directories whose packages
+	// and tests need compiler optimization details in the diagnostics.
+	compilerOptDetails map[protocol.DocumentURI]unit
+
+	// Concurrent type checking:
+	// typeCheckMu guards the ongoing type checking batch, and reference count of
+	// ongoing type checking operations.
+	// When the batch is no longer needed (batchRef=0), it is discarded.
+	typeCheckMu sync.Mutex
+	batchRef    int
+	batch       *typeCheckBatch
 }
 
 var _ memoize.RefCounted = (*Snapshot)(nil) // snapshots are reference-counted
 
-func (s *Snapshot) awaitPromise(ctx context.Context, p *memoize.Promise) (interface{}, error) {
+func (s *Snapshot) awaitPromise(ctx context.Context, p *memoize.Promise) (any, error) {
 	return p.Get(ctx, s)
 }
 
@@ -240,9 +231,7 @@ func (s *Snapshot) decref() {
 	s.refcount--
 	if s.refcount == 0 {
 		s.packages.Destroy()
-		s.activePackages.Destroy()
 		s.files.destroy()
-		s.symbolizeHandles.Destroy()
 		s.parseModHandles.Destroy()
 		s.parseWorkHandles.Destroy()
 		s.modTidyHandles.Destroy()
@@ -355,56 +344,12 @@ func (s *Snapshot) Templates() map[protocol.DocumentURI]file.Handle {
 	defer s.mu.Unlock()
 
 	tmpls := map[protocol.DocumentURI]file.Handle{}
-	s.files.foreach(func(k protocol.DocumentURI, fh file.Handle) {
+	for k, fh := range s.files.all() {
 		if s.FileKind(fh) == file.Tmpl {
 			tmpls[k] = fh
 		}
-	})
+	}
 	return tmpls
-}
-
-// config returns the configuration used for the snapshot's interaction with
-// the go/packages API. It uses the given working directory.
-//
-// TODO(rstambler): go/packages requires that we do not provide overlays for
-// multiple modules in one config, so buildOverlay needs to filter overlays by
-// module.
-func (s *Snapshot) config(ctx context.Context, inv *gocommand.Invocation) *packages.Config {
-
-	cfg := &packages.Config{
-		Context:    ctx,
-		Dir:        inv.WorkingDir,
-		Env:        inv.Env,
-		BuildFlags: inv.BuildFlags,
-		Mode: packages.NeedName |
-			packages.NeedFiles |
-			packages.NeedCompiledGoFiles |
-			packages.NeedImports |
-			packages.NeedDeps |
-			packages.NeedTypesSizes |
-			packages.NeedModule |
-			packages.NeedEmbedFiles |
-			packages.LoadMode(packagesinternal.DepsErrors) |
-			packages.LoadMode(packagesinternal.ForTest),
-		Fset:    nil, // we do our own parsing
-		Overlay: s.buildOverlays(),
-		ParseFile: func(*token.FileSet, string, []byte) (*ast.File, error) {
-			panic("go/packages must not be used to parse files")
-		},
-		Logf: func(format string, args ...interface{}) {
-			if s.Options().VerboseOutput {
-				event.Log(ctx, fmt.Sprintf(format, args...))
-			}
-		},
-		Tests: true,
-	}
-	packagesinternal.SetModFile(cfg, inv.ModFile)
-	packagesinternal.SetModFlag(cfg, inv.ModFlag)
-	// We want to type check cgo code if go/types supports it.
-	if typesinternal.SetUsesCgo(&types.Config{}) {
-		cfg.Mode |= packages.LoadMode(packagesinternal.TypecheckCgo)
-	}
-	return cfg
 }
 
 // RunGoModUpdateCommands runs a series of `go` commands that updates the go.mod
@@ -423,16 +368,14 @@ func (s *Snapshot) RunGoModUpdateCommands(ctx context.Context, modURI protocol.D
 	// TODO(rfindley): we must use ModFlag and ModFile here (rather than simply
 	// setting Args), because without knowing the verb, we can't know whether
 	// ModFlag is appropriate. Refactor so that args can be set by the caller.
-	inv, cleanupInvocation, err := s.GoCommandInvocation(true, &gocommand.Invocation{
-		WorkingDir: modURI.Dir().Path(),
-		ModFlag:    "mod",
-		ModFile:    filepath.Join(tempDir, "go.mod"),
-		Env:        []string{"GOWORK=off"},
-	})
+	inv, cleanupInvocation, err := s.GoCommandInvocation(NetworkOK, modURI.DirPath(), "", nil, "GOWORK=off")
 	if err != nil {
 		return nil, nil, err
 	}
 	defer cleanupInvocation()
+
+	inv.ModFlag = "mod"
+	inv.ModFile = filepath.Join(tempDir, "go.mod")
 	invoke := func(args ...string) (*bytes.Buffer, error) {
 		inv.Verb = args[0]
 		inv.Args = args[1:]
@@ -499,6 +442,15 @@ func TempModDir(ctx context.Context, fs file.Source, modURI protocol.DocumentURI
 	return dir, cleanup, nil
 }
 
+// AllowNetwork determines whether Go commands are permitted to use the
+// network. (Controlled via GOPROXY=off.)
+type AllowNetwork bool
+
+const (
+	NoNetwork AllowNetwork = false
+	NetworkOK AllowNetwork = true
+)
+
 // GoCommandInvocation populates inv with configuration for running go commands
 // on the snapshot.
 //
@@ -509,24 +461,16 @@ func TempModDir(ctx context.Context, fs file.Source, modURI protocol.DocumentURI
 // additional refactoring is still required: the responsibility for Env and
 // BuildFlags should be more clearly expressed in the API.
 //
-// If allowNetwork is set, do not set GOPROXY=off.
-func (s *Snapshot) GoCommandInvocation(allowNetwork bool, inv *gocommand.Invocation) (_ *gocommand.Invocation, cleanup func(), _ error) {
-	// TODO(rfindley): it's not clear that this is doing the right thing.
-	// Should inv.Env really overwrite view.options? Should s.view.envOverlay
-	// overwrite inv.Env? (Do we ever invoke this with a non-empty inv.Env?)
-	//
-	// We should survey existing uses and write down rules for how env is
-	// applied.
-	inv.Env = slices.Concat(
-		os.Environ(),
-		s.Options().EnvSlice(),
-		inv.Env,
-		[]string{"GO111MODULE=" + s.view.adjustedGO111MODULE()},
-		s.view.EnvOverlay(),
-	)
-	inv.BuildFlags = slices.Clone(s.Options().BuildFlags)
-
-	if !allowNetwork && !s.Options().AllowImplicitNetworkAccess {
+// If allowNetwork is NoNetwork, set GOPROXY=off.
+func (s *Snapshot) GoCommandInvocation(allowNetwork AllowNetwork, dir, verb string, args []string, env ...string) (_ *gocommand.Invocation, cleanup func(), _ error) {
+	inv := &gocommand.Invocation{
+		Verb:       verb,
+		Args:       args,
+		WorkingDir: dir,
+		Env:        append(s.view.Env(), env...),
+		BuildFlags: slices.Clone(s.Options().BuildFlags),
+	}
+	if !allowNetwork {
 		inv.Env = append(inv.Env, "GOPROXY=off")
 	}
 
@@ -572,9 +516,11 @@ func (s *Snapshot) Overlays() []*overlay {
 const (
 	xrefsKind       = "xrefs"
 	methodSetsKind  = "methodsets"
+	testsKind       = "tests"
 	exportDataKind  = "export"
 	diagnosticsKind = "diagnostics"
 	typerefsKind    = "typerefs"
+	symbolsKind     = "symbols"
 )
 
 // PackageDiagnostics returns diagnostics for files contained in specified
@@ -673,6 +619,32 @@ func (s *Snapshot) MethodSets(ctx context.Context, ids ...PackageID) ([]*methods
 	return indexes, s.forEachPackage(ctx, ids, pre, post)
 }
 
+// Tests returns test-set indexes for the specified packages. There is a
+// one-to-one correspondence between ID and Index.
+//
+// If these indexes cannot be loaded from cache, the requested packages may be
+// type-checked.
+func (s *Snapshot) Tests(ctx context.Context, ids ...PackageID) ([]*testfuncs.Index, error) {
+	ctx, done := event.Start(ctx, "cache.snapshot.Tests")
+	defer done()
+
+	indexes := make([]*testfuncs.Index, len(ids))
+	pre := func(i int, ph *packageHandle) bool {
+		data, err := filecache.Get(testsKind, ph.key)
+		if err == nil { // hit
+			indexes[i] = testfuncs.Decode(data)
+			return false
+		} else if err != filecache.ErrNotFound {
+			event.Error(ctx, "reading tests from filecache", err)
+		}
+		return true
+	}
+	post := func(i int, pkg *Package) {
+		indexes[i] = pkg.pkg.tests()
+	}
+	return indexes, s.forEachPackage(ctx, ids, pre, post)
+}
+
 // MetadataForFile returns a new slice containing metadata for each
 // package containing the Go file identified by uri, ordered by the
 // number of CompiledGoFiles (i.e. "narrowest" to "widest" package),
@@ -716,7 +688,7 @@ func (s *Snapshot) MetadataForFile(ctx context.Context, uri protocol.DocumentURI
 	//  - ...but uri is not unloadable
 	if (shouldLoad || len(ids) == 0) && !unloadable {
 		scope := fileLoadScope(uri)
-		err := s.load(ctx, false, scope)
+		err := s.load(ctx, NoNetwork, scope)
 
 		//
 		// Return the context error here as the current operation is no longer
@@ -812,50 +784,6 @@ func (s *Snapshot) ReverseDependencies(ctx context.Context, id PackageID, transi
 	return rdeps, nil
 }
 
-// -- Active package tracking --
-//
-// We say a package is "active" if any of its files are open.
-// This is an optimization: the "active" concept is an
-// implementation detail of the cache and is not exposed
-// in the source or Snapshot API.
-// After type-checking we keep active packages in memory.
-// The activePackages persistent map does bookkeeping for
-// the set of active packages.
-
-// getActivePackage returns a the memoized active package for id, if it exists.
-// If id is not active or has not yet been type-checked, it returns nil.
-func (s *Snapshot) getActivePackage(id PackageID) *Package {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if value, ok := s.activePackages.Get(id); ok {
-		return value
-	}
-	return nil
-}
-
-// setActivePackage checks if pkg is active, and if so either records it in
-// the active packages map or returns the existing memoized active package for id.
-func (s *Snapshot) setActivePackage(id PackageID, pkg *Package) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if _, ok := s.activePackages.Get(id); ok {
-		return // already memoized
-	}
-
-	if containsOpenFileLocked(s, pkg.Metadata()) {
-		s.activePackages.Set(id, pkg, nil)
-	} else {
-		s.activePackages.Set(id, (*Package)(nil), nil) // remember that pkg is not open
-	}
-}
-
-func (s *Snapshot) resetActivePackagesLocked() {
-	s.activePackages.Destroy()
-	s.activePackages = new(persistent.Map[PackageID, *Package])
-}
-
 // See Session.FileWatchingGlobPatterns for a description of gopls' file
 // watching heuristic.
 func (s *Snapshot) fileWatchingGlobPatterns() map[protocol.RelativePattern]unit {
@@ -871,6 +799,10 @@ func (s *Snapshot) fileWatchingGlobPatterns() map[protocol.RelativePattern]unit 
 		patterns[workPattern] = unit{}
 	}
 
+	for _, glob := range s.Options().WorkspaceFiles {
+		patterns[protocol.RelativePattern{Pattern: glob}] = unit{}
+	}
+
 	extensions := "go,mod,sum,work"
 	for _, ext := range s.Options().TemplateExtensions {
 		extensions += "," + ext
@@ -880,7 +812,7 @@ func (s *Snapshot) fileWatchingGlobPatterns() map[protocol.RelativePattern]unit 
 	var dirs []string
 	if s.view.typ.usesModules() {
 		if s.view.typ == GoWorkView {
-			workVendorDir := filepath.Join(s.view.gowork.Dir().Path(), "vendor")
+			workVendorDir := filepath.Join(s.view.gowork.DirPath(), "vendor")
 			workVendorURI := protocol.URIFromPath(workVendorDir)
 			patterns[protocol.RelativePattern{BaseURI: workVendorURI, Pattern: watchGoFiles}] = unit{}
 		}
@@ -891,8 +823,7 @@ func (s *Snapshot) fileWatchingGlobPatterns() map[protocol.RelativePattern]unit 
 		// The assumption is that the user is not actively editing non-workspace
 		// modules, so don't pay the price of file watching.
 		for modFile := range s.view.workspaceModFiles {
-			dir := filepath.Dir(modFile.Path())
-			dirs = append(dirs, dir)
+			dirs = append(dirs, modFile.DirPath())
 
 			// TODO(golang/go#64724): thoroughly test these patterns, particularly on
 			// on Windows.
@@ -937,13 +868,13 @@ func (s *Snapshot) addKnownSubdirs(patterns map[protocol.RelativePattern]unit, w
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.files.getDirs().Range(func(dir string) {
+	for dir := range s.files.getDirs().All() {
 		for _, wsDir := range wsDirs {
 			if pathutil.InDir(wsDir, dir) {
 				patterns[protocol.RelativePattern{Pattern: filepath.ToSlash(dir)}] = unit{}
 			}
 		}
-	})
+	}
 }
 
 // watchSubdirs reports whether gopls should request separate file watchers for
@@ -964,7 +895,7 @@ func (s *Snapshot) watchSubdirs() bool {
 		// requirements that client names do not change. We should update the VS
 		// Code extension to set a default value of "subdirWatchPatterns" to "on",
 		// so that this workaround is only temporary.
-		if s.Options().ClientInfo != nil && s.Options().ClientInfo.Name == "Visual Studio Code" {
+		if s.Options().ClientInfo.Name == "Visual Studio Code" {
 			return true
 		}
 		return false
@@ -985,11 +916,11 @@ func (s *Snapshot) filesInDir(uri protocol.DocumentURI) []protocol.DocumentURI {
 		return nil
 	}
 	var files []protocol.DocumentURI
-	s.files.foreach(func(uri protocol.DocumentURI, _ file.Handle) {
+	for uri := range s.files.all() {
 		if pathutil.InDir(dir, uri.Path()) {
 			files = append(files, uri)
 		}
-	})
+	}
 	return files
 }
 
@@ -1019,73 +950,24 @@ func (s *Snapshot) WorkspaceMetadata(ctx context.Context) ([]*metadata.Package, 
 	return meta, nil
 }
 
-// isWorkspacePackage reports whether the given package ID refers to a
-// workspace package for the snapshot.
-func (s *Snapshot) isWorkspacePackage(id PackageID) bool {
+// WorkspacePackages returns the map of workspace package to package path.
+//
+// The set of workspace packages is updated after every load. A package is a
+// workspace package if and only if it is present in this map.
+func (s *Snapshot) WorkspacePackages() immutable.Map[PackageID, PackagePath] {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.workspacePackages
+}
+
+// IsWorkspacePackage reports whether the given package ID refers to a
+// workspace package for the Snapshot. It is equivalent to looking up the
+// package in [Snapshot.WorkspacePackages].
+func (s *Snapshot) IsWorkspacePackage(id PackageID) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	_, ok := s.workspacePackages.Value(id)
 	return ok
-}
-
-// Symbols extracts and returns symbol information for every file contained in
-// a loaded package. It awaits snapshot loading.
-//
-// If workspaceOnly is set, this only includes symbols from files in a
-// workspace package. Otherwise, it returns symbols from all loaded packages.
-//
-// TODO(rfindley): move to symbols.go.
-func (s *Snapshot) Symbols(ctx context.Context, workspaceOnly bool) (map[protocol.DocumentURI][]Symbol, error) {
-	var (
-		meta []*metadata.Package
-		err  error
-	)
-	if workspaceOnly {
-		meta, err = s.WorkspaceMetadata(ctx)
-	} else {
-		meta, err = s.AllMetadata(ctx)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("loading metadata: %v", err)
-	}
-
-	goFiles := make(map[protocol.DocumentURI]struct{})
-	for _, mp := range meta {
-		for _, uri := range mp.GoFiles {
-			goFiles[uri] = struct{}{}
-		}
-		for _, uri := range mp.CompiledGoFiles {
-			goFiles[uri] = struct{}{}
-		}
-	}
-
-	// Symbolize them in parallel.
-	var (
-		group    errgroup.Group
-		nprocs   = 2 * runtime.GOMAXPROCS(-1) // symbolize is a mix of I/O and CPU
-		resultMu sync.Mutex
-		result   = make(map[protocol.DocumentURI][]Symbol)
-	)
-	group.SetLimit(nprocs)
-	for uri := range goFiles {
-		uri := uri
-		group.Go(func() error {
-			symbols, err := s.symbolize(ctx, uri)
-			if err != nil {
-				return err
-			}
-			resultMu.Lock()
-			result[uri] = symbols
-			resultMu.Unlock()
-			return nil
-		})
-	}
-	// Keep going on errors, but log the first failure.
-	// Partial results are better than no symbol results.
-	if err := group.Wait(); err != nil {
-		event.Error(ctx, "getting snapshot symbols", err)
-	}
-	return result, nil
 }
 
 // AllMetadata returns a new unordered array of metadata for
@@ -1132,15 +1014,6 @@ func moduleForURI(modFiles map[protocol.DocumentURI]struct{}, uri protocol.Docum
 	return match
 }
 
-// nearestModFile finds the nearest go.mod file contained in the directory
-// containing uri, or a parent of that directory.
-//
-// The given uri must be a file, not a directory.
-func nearestModFile(ctx context.Context, uri protocol.DocumentURI, fs file.Source) (protocol.DocumentURI, error) {
-	dir := filepath.Dir(uri.Path())
-	return findRootPattern(ctx, protocol.URIFromPath(dir), "go.mod", fs)
-}
-
 // Metadata returns the metadata for the specified package,
 // or nil if it was not found.
 func (s *Snapshot) Metadata(id PackageID) *metadata.Package {
@@ -1160,13 +1033,11 @@ func (s *Snapshot) clearShouldLoad(scopes ...loadScope) {
 		case packageLoadScope:
 			scopePath := PackagePath(scope)
 			var toDelete []PackageID
-			s.shouldLoad.Range(func(id PackageID, pkgPaths []PackagePath) {
-				for _, pkgPath := range pkgPaths {
-					if pkgPath == scopePath {
-						toDelete = append(toDelete, id)
-					}
+			for id, pkgPaths := range s.shouldLoad.All() {
+				if slices.Contains(pkgPaths, scopePath) {
+					toDelete = append(toDelete, id)
 				}
-			})
+			}
 			for _, id := range toDelete {
 				s.shouldLoad.Delete(id)
 			}
@@ -1314,7 +1185,7 @@ func (s *Snapshot) reloadWorkspace(ctx context.Context) {
 	var scopes []loadScope
 	var seen map[PackagePath]bool
 	s.mu.Lock()
-	s.shouldLoad.Range(func(_ PackageID, pkgPaths []PackagePath) {
+	for _, pkgPaths := range s.shouldLoad.All() {
 		for _, pkgPath := range pkgPaths {
 			if seen == nil {
 				seen = make(map[PackagePath]bool)
@@ -1325,7 +1196,7 @@ func (s *Snapshot) reloadWorkspace(ctx context.Context) {
 			seen[pkgPath] = true
 			scopes = append(scopes, packageLoadScope(pkgPath))
 		}
-	})
+	}
 	s.mu.Unlock()
 
 	if len(scopes) == 0 {
@@ -1337,7 +1208,7 @@ func (s *Snapshot) reloadWorkspace(ctx context.Context) {
 		scopes = []loadScope{viewLoadScope{}}
 	}
 
-	err := s.load(ctx, false, scopes...)
+	err := s.load(ctx, NoNetwork, scopes...)
 
 	// Unless the context was canceled, set "shouldLoad" to false for all
 	// of the metadata we attempted to load.
@@ -1423,7 +1294,7 @@ searchOverlays:
 		)
 		if initialErr != nil {
 			msg = fmt.Sprintf("initialization failed: %v", initialErr.MainError)
-		} else if goMod, err := nearestModFile(ctx, fh.URI(), s); err == nil && goMod != "" {
+		} else if goMod, err := findRootPattern(ctx, fh.URI().Dir(), "go.mod", file.Source(s)); err == nil && goMod != "" {
 			// Check if the file's module should be loadable by considering both
 			// loaded modules and workspace modules. The former covers cases where
 			// the file is outside of a workspace folder. The latter covers cases
@@ -1436,7 +1307,7 @@ searchOverlays:
 			// prescriptive diagnostic in the case that there is no go.mod file, but
 			// it is harder to be precise in that case, and less important.
 			if !(loadedMod || workspaceMod) {
-				modDir := filepath.Dir(goMod.Path())
+				modDir := goMod.DirPath()
 				viewDir := s.view.folder.Dir.Path()
 
 				// When the module is underneath the view dir, we offer
@@ -1451,58 +1322,54 @@ searchOverlays:
 				if s.view.folder.Env.GoVersion >= 18 {
 					if s.view.gowork != "" {
 						fix = fmt.Sprintf("To fix this problem, you can add this module to your go.work file (%s)", s.view.gowork)
-						if cmd, err := command.NewRunGoWorkCommandCommand("Run `go work use`", command.RunGoWorkArgs{
+						cmd := command.NewRunGoWorkCommandCommand("Run `go work use`", command.RunGoWorkArgs{
 							ViewID: s.view.ID(),
 							Args:   []string{"use", modDir},
-						}); err == nil {
-							suggestedFixes = append(suggestedFixes, SuggestedFix{
-								Title:      "Use this module in your go.work file",
-								Command:    &cmd,
-								ActionKind: protocol.QuickFix,
-							})
-						}
+						})
+						suggestedFixes = append(suggestedFixes, SuggestedFix{
+							Title:      "Use this module in your go.work file",
+							Command:    cmd,
+							ActionKind: protocol.QuickFix,
+						})
 
 						if inDir {
-							if cmd, err := command.NewRunGoWorkCommandCommand("Run `go work use -r`", command.RunGoWorkArgs{
+							cmd := command.NewRunGoWorkCommandCommand("Run `go work use -r`", command.RunGoWorkArgs{
 								ViewID: s.view.ID(),
 								Args:   []string{"use", "-r", "."},
-							}); err == nil {
-								suggestedFixes = append(suggestedFixes, SuggestedFix{
-									Title:      "Use all modules in your workspace",
-									Command:    &cmd,
-									ActionKind: protocol.QuickFix,
-								})
-							}
+							})
+							suggestedFixes = append(suggestedFixes, SuggestedFix{
+								Title:      "Use all modules in your workspace",
+								Command:    cmd,
+								ActionKind: protocol.QuickFix,
+							})
 						}
 					} else {
 						fix = "To fix this problem, you can add a go.work file that uses this directory."
 
-						if cmd, err := command.NewRunGoWorkCommandCommand("Run `go work init && go work use`", command.RunGoWorkArgs{
+						cmd := command.NewRunGoWorkCommandCommand("Run `go work init && go work use`", command.RunGoWorkArgs{
 							ViewID:    s.view.ID(),
 							InitFirst: true,
 							Args:      []string{"use", modDir},
-						}); err == nil {
-							suggestedFixes = []SuggestedFix{
-								{
-									Title:      "Add a go.work file using this module",
-									Command:    &cmd,
-									ActionKind: protocol.QuickFix,
-								},
-							}
+						})
+						suggestedFixes = []SuggestedFix{
+							{
+								Title:      "Add a go.work file using this module",
+								Command:    cmd,
+								ActionKind: protocol.QuickFix,
+							},
 						}
 
 						if inDir {
-							if cmd, err := command.NewRunGoWorkCommandCommand("Run `go work init && go work use -r`", command.RunGoWorkArgs{
+							cmd := command.NewRunGoWorkCommandCommand("Run `go work init && go work use -r`", command.RunGoWorkArgs{
 								ViewID:    s.view.ID(),
 								InitFirst: true,
 								Args:      []string{"use", "-r", "."},
-							}); err == nil {
-								suggestedFixes = append(suggestedFixes, SuggestedFix{
-									Title:      "Add a go.work file using all modules in your workspace",
-									Command:    &cmd,
-									ActionKind: protocol.QuickFix,
-								})
-							}
+							})
+							suggestedFixes = append(suggestedFixes, SuggestedFix{
+								Title:      "Add a go.work file using all modules in your workspace",
+								Command:    cmd,
+								ActionKind: protocol.QuickFix,
+							})
 						}
 					}
 				} else {
@@ -1627,7 +1494,7 @@ func (s *Snapshot) clone(ctx, bgCtx context.Context, changed StateChange, done f
 
 	// TODO(rfindley): reorganize this function to make the derivation of
 	// needsDiagnosis clearer.
-	needsDiagnosis := len(changed.GCDetails) > 0 || len(changed.ModuleUpgrades) > 0 || len(changed.Vulns) > 0
+	needsDiagnosis := len(changed.CompilerOptDetails) > 0 || len(changed.ModuleUpgrades) > 0 || len(changed.Vulns) > 0
 
 	bgCtx, cancel := context.WithCancel(bgCtx)
 	result := &Snapshot{
@@ -1642,9 +1509,9 @@ func (s *Snapshot) clone(ctx, bgCtx context.Context, changed StateChange, done f
 		initialized:       s.initialized,
 		initialErr:        s.initialErr,
 		packages:          s.packages.Clone(),
-		activePackages:    s.activePackages.Clone(),
+		fullAnalysisKeys:  s.fullAnalysisKeys.Clone(),
+		factyAnalysisKeys: s.factyAnalysisKeys.Clone(),
 		files:             s.files.clone(changedFiles),
-		symbolizeHandles:  cloneWithout(s.symbolizeHandles, changedFiles, nil),
 		workspacePackages: s.workspacePackages,
 		shouldLoad:        s.shouldLoad.Clone(),      // not cloneWithout: shouldLoad is cleared on loads
 		unloadableFiles:   s.unloadableFiles.Clone(), // not cloneWithout: typing in a file doesn't necessarily make it loadable
@@ -1653,47 +1520,52 @@ func (s *Snapshot) clone(ctx, bgCtx context.Context, changed StateChange, done f
 		modTidyHandles:    cloneWithout(s.modTidyHandles, changedFiles, &needsDiagnosis),
 		modWhyHandles:     cloneWithout(s.modWhyHandles, changedFiles, &needsDiagnosis),
 		modVulnHandles:    cloneWithout(s.modVulnHandles, changedFiles, &needsDiagnosis),
-		importGraph:       s.importGraph,
-		pkgIndex:          s.pkgIndex,
 		moduleUpgrades:    cloneWith(s.moduleUpgrades, changed.ModuleUpgrades),
 		vulns:             cloneWith(s.vulns, changed.Vulns),
 	}
 
-	// Compute the new set of packages for which we want gc details, after
-	// applying changed.GCDetails.
-	if len(s.gcOptimizationDetails) > 0 || len(changed.GCDetails) > 0 {
-		newGCDetails := make(map[metadata.PackageID]unit)
-		for id := range s.gcOptimizationDetails {
-			if _, ok := changed.GCDetails[id]; !ok {
-				newGCDetails[id] = unit{} // no change
+	// Compute the new set of packages for which we want compiler
+	// optimization details, after applying changed.CompilerOptDetails.
+	if len(s.compilerOptDetails) > 0 || len(changed.CompilerOptDetails) > 0 {
+		newCompilerOptDetails := make(map[protocol.DocumentURI]unit)
+		for dir := range s.compilerOptDetails {
+			if _, ok := changed.CompilerOptDetails[dir]; !ok {
+				newCompilerOptDetails[dir] = unit{} // no change
 			}
 		}
-		for id, want := range changed.GCDetails {
+		for dir, want := range changed.CompilerOptDetails {
 			if want {
-				newGCDetails[id] = unit{}
+				newCompilerOptDetails[dir] = unit{}
 			}
 		}
-		if len(newGCDetails) > 0 {
-			result.gcOptimizationDetails = newGCDetails
+		if len(newCompilerOptDetails) > 0 {
+			result.compilerOptDetails = newCompilerOptDetails
 		}
 	}
 
 	reinit := false
-
-	// Changes to vendor tree may require reinitialization,
-	// either because of an initialization error
-	// (e.g. "inconsistent vendoring detected"), or because
-	// one or more modules may have moved into or out of the
-	// vendor tree after 'go mod vendor' or 'rm -fr vendor/'.
-	//
-	// In this case, we consider the actual modification to see if was a creation
-	// or deletion.
-	//
-	// TODO(rfindley): revisit the location of this check.
 	for _, mod := range changed.Modifications {
+		// Changes to vendor tree may require reinitialization,
+		// either because of an initialization error
+		// (e.g. "inconsistent vendoring detected"), or because
+		// one or more modules may have moved into or out of the
+		// vendor tree after 'go mod vendor' or 'rm -fr vendor/'.
+		//
+		// In this case, we consider the actual modification to see if was a creation
+		// or deletion.
+		//
+		// TODO(rfindley): revisit the location of this check.
 		if inVendor(mod.URI) && (mod.Action == file.Create || mod.Action == file.Delete) ||
 			strings.HasSuffix(string(mod.URI), "/vendor/modules.txt") {
 
+			reinit = true
+			break
+		}
+
+		// Changes to workspace files, as a rule of thumb, should require reinitialization. Since their behavior
+		// is generally user-defined, we want to do something sensible by re-triggering a query to the active GOPACKAGESDRIVER,
+		// and reloading the state of the workspace.
+		if isWorkspaceFile(mod.URI, s.view.folder.Options.WorkspaceFiles) && (mod.Action == file.Save || mod.OnDisk) {
 			reinit = true
 			break
 		}
@@ -1742,7 +1614,7 @@ func (s *Snapshot) clone(ctx, bgCtx context.Context, changed StateChange, done f
 			continue // like with go.mod files, we only reinit when things change on disk
 		}
 		dir, base := filepath.Split(uri.Path())
-		if base == "go.work.sum" && s.view.typ == GoWorkView && dir == filepath.Dir(s.view.gowork.Path()) {
+		if base == "go.work.sum" && s.view.typ == GoWorkView && dir == s.view.gowork.DirPath() {
 			reinit = true
 		}
 		if base == "go.sum" {
@@ -1918,19 +1790,29 @@ func (s *Snapshot) clone(ctx, bgCtx context.Context, changed StateChange, done f
 
 	// Invalidated package information.
 	for id, invalidateMetadata := range idsToInvalidate {
-		if _, ok := directIDs[id]; ok || invalidateMetadata {
-			if result.packages.Delete(id) {
-				needsDiagnosis = true
-			}
-		} else {
-			if entry, hit := result.packages.Get(id); hit {
-				needsDiagnosis = true
-				ph := entry.clone(false)
+		// See the [packageHandle] documentation for more details about this
+		// invalidation.
+		if ph, ok := result.packages.Get(id); ok {
+			needsDiagnosis = true
+
+			// Always invalidate analysis keys, as we do not implement fine-grained
+			// invalidation for analysis.
+			result.fullAnalysisKeys.Delete(id)
+			result.factyAnalysisKeys.Delete(id)
+
+			if invalidateMetadata {
+				result.packages.Delete(id)
+			} else {
+				// If the package was just invalidated by a dependency, its local
+				// inputs are still valid.
+				ph = ph.clone()
+				if _, ok := directIDs[id]; ok {
+					ph.state = validMetadata // local inputs changed
+				} else {
+					ph.state = min(ph.state, validLocalData) // a dependency changed
+				}
 				result.packages.Set(id, ph, nil)
 			}
-		}
-		if result.activePackages.Delete(id) {
-			needsDiagnosis = true
 		}
 	}
 
@@ -1972,7 +1854,6 @@ func (s *Snapshot) clone(ctx, bgCtx context.Context, changed StateChange, done f
 	if result.meta != s.meta || anyFileOpenedOrClosed {
 		needsDiagnosis = true
 		result.workspacePackages = computeWorkspacePackagesLocked(ctx, result, result.meta)
-		result.resetActivePackagesLocked()
 	} else {
 		result.workspacePackages = s.workspacePackages
 	}
@@ -2014,13 +1895,13 @@ func deleteMostRelevantModFile(m *persistent.Map[protocol.DocumentURI, *memoize.
 	var mostRelevant protocol.DocumentURI
 	changedFile := changed.Path()
 
-	m.Range(func(modURI protocol.DocumentURI, _ *memoize.Promise) {
+	for modURI := range m.All() {
 		if len(modURI) > len(mostRelevant) {
-			if pathutil.InDir(filepath.Dir(modURI.Path()), changedFile) {
+			if pathutil.InDir(modURI.DirPath(), changedFile) {
 				mostRelevant = modURI
 			}
 		}
-	})
+	}
 	if mostRelevant != "" {
 		m.Delete(mostRelevant)
 	}
@@ -2068,12 +1949,12 @@ func invalidatedPackageIDs(uri protocol.DocumentURI, known map[protocol.Document
 		}{fi, err}
 		return fi, err
 	}
-	dir := filepath.Dir(uri.Path())
+	dir := uri.DirPath()
 	fi, err := getInfo(dir)
 	if err == nil {
 		// Aggregate all possibly relevant package IDs.
 		for knownURI, ids := range known {
-			knownDir := filepath.Dir(knownURI.Path())
+			knownDir := knownURI.DirPath()
 			knownFI, err := getInfo(knownDir)
 			if err != nil {
 				continue
@@ -2156,8 +2037,8 @@ func metadataChanges(ctx context.Context, lockedSnapshot *Snapshot, oldFH, newFH
 
 	// Check whether package imports have changed. Only consider potentially
 	// valid imports paths.
-	oldImports := validImports(oldHead.File.Imports)
-	newImports := validImports(newHead.File.Imports)
+	oldImports := validImportPaths(oldHead.File.Imports)
+	newImports := validImportPaths(newHead.File.Imports)
 
 	for path := range newImports {
 		if _, ok := oldImports[path]; ok {
@@ -2206,8 +2087,8 @@ func magicCommentsChanged(original *ast.File, current *ast.File) bool {
 	return false
 }
 
-// validImports extracts the set of valid import paths from imports.
-func validImports(imports []*ast.ImportSpec) map[string]struct{} {
+// validImportPaths extracts the set of valid import paths from imports.
+func validImportPaths(imports []*ast.ImportSpec) map[string]struct{} {
 	m := make(map[string]struct{})
 	for _, spec := range imports {
 		if path := spec.Path.Value; validImportPath(path) {
@@ -2246,7 +2127,8 @@ func extractMagicComments(f *ast.File) []string {
 	return results
 }
 
-// BuiltinFile returns information about the special builtin package.
+// BuiltinFile returns the pseudo-source file builtins.go,
+// parsed with legacy ast.Object resolution.
 func (s *Snapshot) BuiltinFile(ctx context.Context) (*parsego.File, error) {
 	s.AwaitInitialized(ctx)
 
@@ -2288,10 +2170,10 @@ func (s *Snapshot) setBuiltin(path string) {
 	s.builtin = protocol.URIFromPath(path)
 }
 
-// WantGCDetails reports whether to compute GC optimization details for the
-// specified package.
-func (s *Snapshot) WantGCDetails(id metadata.PackageID) bool {
-	_, ok := s.gcOptimizationDetails[id]
+// WantCompilerOptDetails reports whether to compute compiler
+// optimization details for packages and tests in the given directory.
+func (s *Snapshot) WantCompilerOptDetails(dir protocol.DocumentURI) bool {
+	_, ok := s.compilerOptDetails[dir]
 	return ok
 }
 

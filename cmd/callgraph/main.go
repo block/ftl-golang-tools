@@ -4,7 +4,7 @@
 
 // callgraph: a tool for reporting the call graph of a Go program.
 // See Usage for details, or run with -help.
-package main // import "github.com/block/ftl-golang-tools/cmd/callgraph"
+package main // import "golang.org/x/tools/cmd/callgraph"
 
 // TODO(adonovan):
 //
@@ -23,22 +23,20 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"go/build"
 	"go/token"
 	"io"
 	"os"
 	"runtime"
 	"text/template"
 
-	"github.com/block/ftl-golang-tools/go/buildutil"
-	"github.com/block/ftl-golang-tools/go/callgraph"
-	"github.com/block/ftl-golang-tools/go/callgraph/cha"
-	"github.com/block/ftl-golang-tools/go/callgraph/rta"
-	"github.com/block/ftl-golang-tools/go/callgraph/static"
-	"github.com/block/ftl-golang-tools/go/callgraph/vta"
-	"github.com/block/ftl-golang-tools/go/packages"
-	"github.com/block/ftl-golang-tools/go/ssa"
-	"github.com/block/ftl-golang-tools/go/ssa/ssautil"
+	"golang.org/x/tools/go/callgraph"
+	"golang.org/x/tools/go/callgraph/cha"
+	"golang.org/x/tools/go/callgraph/rta"
+	"golang.org/x/tools/go/callgraph/static"
+	"golang.org/x/tools/go/callgraph/vta"
+	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/go/ssa"
+	"golang.org/x/tools/go/ssa/ssautil"
 )
 
 // flags
@@ -52,11 +50,9 @@ var (
 	formatFlag = flag.String("format",
 		"{{.Caller}}\t--{{.Dynamic}}-{{.Line}}:{{.Column}}-->\t{{.Callee}}",
 		"A template expression specifying how to format an edge")
-)
 
-func init() {
-	flag.Var((*buildutil.TagsFlag)(&build.Default.BuildTags), "tags", buildutil.TagsFlagDoc)
-}
+	tagsFlag = flag.String("tags", "", "comma-separated list of extra build tags (see: go help buildconstraint)")
+)
 
 const Usage = `callgraph: display the call graph of a Go program.
 
@@ -84,7 +80,7 @@ Flags:
            One of:
 
             digraph     output suitable for input to
-                        github.com/block/ftl-golang-tools/cmd/digraph.
+                        golang.org/x/tools/cmd/digraph.
             graphviz    output in AT&T GraphViz (.dot) format.
 
            All other values are interpreted using text/template syntax.
@@ -122,7 +118,7 @@ Flags:
              reduced to {{(posn .Caller).Filename}}.
 
            Consult the documentation for go/token, text/template, and
-           github.com/block/ftl-golang-tools/go/ssa for more detail.
+           golang.org/x/tools/go/ssa for more detail.
 
 Examples:
 
@@ -144,8 +140,8 @@ Examples:
 
   Show all functions directly called by the callgraph tool's main function:
 
-    callgraph -format=digraph github.com/block/ftl-golang-tools/cmd/callgraph |
-      digraph succs github.com/block/ftl-golang-tools/cmd/callgraph.main
+    callgraph -format=digraph golang.org/x/tools/cmd/callgraph |
+      digraph succs golang.org/x/tools/cmd/callgraph.main
 `
 
 func init() {
@@ -177,9 +173,10 @@ func doCallgraph(dir, gopath, algo, format string, tests bool, args []string) er
 	}
 
 	cfg := &packages.Config{
-		Mode:  packages.LoadAllSyntax,
-		Tests: tests,
-		Dir:   dir,
+		Mode:       packages.LoadAllSyntax,
+		BuildFlags: []string{"-tags=" + *tagsFlag},
+		Tests:      tests,
+		Dir:        dir,
 	}
 	if gopath != "" {
 		cfg.Env = append(os.Environ(), "GOPATH="+gopath) // to enable testing
@@ -226,7 +223,7 @@ func doCallgraph(dir, gopath, algo, format string, tests bool, args []string) er
 		// NB: RTA gives us Reachable and RuntimeTypes too.
 
 	case "vta":
-		cg = vta.CallGraph(ssautil.AllFunctions(prog), cha.CallGraph(prog))
+		cg = vta.CallGraph(ssautil.AllFunctions(prog), nil)
 
 	default:
 		return fmt.Errorf("unknown algorithm: %s", algo)

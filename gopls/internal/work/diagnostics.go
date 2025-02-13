@@ -10,11 +10,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/cache"
-	"github.com/block/ftl-golang-tools/gopls/internal/file"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/internal/event"
 	"golang.org/x/mod/modfile"
+	"golang.org/x/tools/gopls/internal/cache"
+	"golang.org/x/tools/gopls/internal/file"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/internal/event"
 )
 
 func Diagnostics(ctx context.Context, snapshot *cache.Snapshot) (map[protocol.DocumentURI][]*cache.Diagnostic, error) {
@@ -81,7 +81,7 @@ func diagnoseOne(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle) 
 }
 
 func modFileURI(pw *cache.ParsedWorkFile, use *modfile.Use) protocol.DocumentURI {
-	workdir := filepath.Dir(pw.URI.Path())
+	workdir := pw.URI.DirPath()
 
 	modroot := filepath.FromSlash(use.Path)
 	if !filepath.IsAbs(modroot) {

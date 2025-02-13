@@ -16,6 +16,7 @@ import (
 	"strings"
 )
 
+// (used only by tests)
 func checkCopyright(dir string) ([]string, error) {
 	var files []string
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
@@ -24,7 +25,7 @@ func checkCopyright(dir string) ([]string, error) {
 		}
 		if d.IsDir() {
 			// Skip directories like ".git".
-			if strings.HasPrefix(d.Name(), ".") {
+			if strings.HasPrefix(d.Name(), ".") && d.Name() != "." && d.Name() != ".." {
 				return filepath.SkipDir
 			}
 			// Skip any directory that starts with an underscore, as the go
@@ -52,7 +53,7 @@ license that can be found in the LICENSE file.`)
 
 func checkFile(toolsDir, filename string) (bool, error) {
 	// Only check Go files.
-	if !strings.HasSuffix(filename, "go") {
+	if !strings.HasSuffix(filename, ".go") {
 		return false, nil
 	}
 	// Don't check testdata files.
@@ -91,7 +92,7 @@ func checkFile(toolsDir, filename string) (bool, error) {
 	return shouldAddCopyright, nil
 }
 
-// Copied from github.com/block/ftl-golang-tools/gopls/internal/golang/util.go.
+// Copied from golang.org/x/tools/gopls/internal/golang/util.go.
 // Matches cgo generated comment as well as the proposed standard:
 //
 //	https://golang.org/s/generatedcode

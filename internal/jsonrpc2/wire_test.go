@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
+	"golang.org/x/tools/internal/jsonrpc2"
 )
 
 var wireIDTestData = []struct {

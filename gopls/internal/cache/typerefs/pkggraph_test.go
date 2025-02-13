@@ -17,10 +17,10 @@ import (
 	"sync"
 
 	"golang.org/x/sync/errgroup"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/typerefs"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/cache/metadata"
+	"golang.org/x/tools/gopls/internal/cache/parsego"
+	"golang.org/x/tools/gopls/internal/cache/typerefs"
+	"golang.org/x/tools/gopls/internal/protocol"
 )
 
 const (
@@ -40,7 +40,7 @@ type Package struct {
 	// transitively reachable through references, starting with the given decl.
 	transitiveRefs map[string]*typerefs.PackageSet
 
-	// ReachesViaDeps records the set of packages in the containing graph whose
+	// ReachesByDeps records the set of packages in the containing graph whose
 	// syntax may affect the current package's types. See the package
 	// documentation for more details of what this means.
 	ReachesByDeps *typerefs.PackageSet

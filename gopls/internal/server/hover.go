@@ -7,15 +7,16 @@ package server
 import (
 	"context"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/file"
-	"github.com/block/ftl-golang-tools/gopls/internal/golang"
-	"github.com/block/ftl-golang-tools/gopls/internal/label"
-	"github.com/block/ftl-golang-tools/gopls/internal/mod"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/telemetry"
-	"github.com/block/ftl-golang-tools/gopls/internal/template"
-	"github.com/block/ftl-golang-tools/gopls/internal/work"
-	"github.com/block/ftl-golang-tools/internal/event"
+	"golang.org/x/tools/gopls/internal/file"
+	"golang.org/x/tools/gopls/internal/golang"
+	"golang.org/x/tools/gopls/internal/label"
+	"golang.org/x/tools/gopls/internal/mod"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/settings"
+	"golang.org/x/tools/gopls/internal/telemetry"
+	"golang.org/x/tools/gopls/internal/template"
+	"golang.org/x/tools/gopls/internal/work"
+	"golang.org/x/tools/internal/event"
 )
 
 func (s *server) Hover(ctx context.Context, params *protocol.HoverParams) (_ *protocol.Hover, rerr error) {
@@ -37,7 +38,18 @@ func (s *server) Hover(ctx context.Context, params *protocol.HoverParams) (_ *pr
 	case file.Mod:
 		return mod.Hover(ctx, snapshot, fh, params.Position)
 	case file.Go:
-		return golang.Hover(ctx, snapshot, fh, params.Position)
+		var pkgURL func(path golang.PackagePath, fragment string) protocol.URI
+		if snapshot.Options().LinksInHover == settings.LinksInHover_Gopls {
+			web, err := s.getWeb()
+			if err != nil {
+				event.Error(ctx, "failed to start web server", err)
+			} else {
+				pkgURL = func(path golang.PackagePath, fragment string) protocol.URI {
+					return web.PkgURL(snapshot.View().ID(), path, fragment)
+				}
+			}
+		}
+		return golang.Hover(ctx, snapshot, fh, params.Position, pkgURL)
 	case file.Tmpl:
 		return template.Hover(ctx, snapshot, fh, params.Position)
 	case file.Work:

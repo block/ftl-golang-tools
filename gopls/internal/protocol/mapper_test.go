@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/protocol"
 )
 
 // This file tests Mapper's logic for converting between offsets,
@@ -318,9 +318,9 @@ func getPrePost(content []byte, offset int) (string, string) {
 // -- these are the historical lsppos tests --
 
 type testCase struct {
-	content            string      // input text
-	substrOrOffset     interface{} // explicit integer offset, or a substring
-	wantLine, wantChar int         // expected LSP position information
+	content            string // input text
+	substrOrOffset     any    // explicit integer offset, or a substring
+	wantLine, wantChar int    // expected LSP position information
 }
 
 // offset returns the test case byte offset

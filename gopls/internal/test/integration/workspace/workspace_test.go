@@ -14,16 +14,16 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
-	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/goversion"
-	"github.com/block/ftl-golang-tools/internal/gocommand"
-	"github.com/block/ftl-golang-tools/internal/testenv"
+	"golang.org/x/tools/gopls/internal/cache"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/protocol/command"
+	"golang.org/x/tools/gopls/internal/test/integration/fake"
+	"golang.org/x/tools/gopls/internal/util/bug"
+	"golang.org/x/tools/gopls/internal/util/goversion"
+	"golang.org/x/tools/internal/gocommand"
+	"golang.org/x/tools/internal/testenv"
 
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 func TestMain(m *testing.M) {
@@ -255,7 +255,7 @@ func TestAutomaticWorkspaceModule_Interdependent(t *testing.T) {
 }
 
 func TestWorkspaceVendoring(t *testing.T) {
-	testenv.NeedsGo1Point(t, 22)
+	testenv.NeedsGoCommand1Point(t, 22)
 	WithOptions(
 		ProxyFiles(workspaceModuleProxy),
 	).Run(t, multiModule, func(t *testing.T, env *Env) {
@@ -309,9 +309,6 @@ module a.com
 require c.com v1.2.3
 
 exclude b.com v1.2.3
--- go.sum --
-c.com v1.2.3 h1:n07Dz9fYmpNqvZMwZi5NEqFcSHbvLa9lacMX+/g25tw=
-c.com v1.2.3/go.mod h1:/4TyYgU9Nu5tA4NymP5xyqE8R2VMzGD3TbJCwCOvHAg=
 -- main.go --
 package a
 
@@ -320,6 +317,7 @@ func main() {
 }
 `
 	WithOptions(
+		WriteGoSum("."),
 		ProxyFiles(proxy),
 	).Run(t, files, func(t *testing.T, env *Env) {
 		env.OnceMet(

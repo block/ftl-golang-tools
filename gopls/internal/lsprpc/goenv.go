@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/block/ftl-golang-tools/internal/gocommand"
+	"golang.org/x/tools/internal/gocommand"
 )
 
 func getGoEnv(ctx context.Context, env map[string]interface{}) (map[string]string, error) {

@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"sync/atomic"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake/glob"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/test/integration/fake/glob"
 )
 
 // ClientHooks are a set of optional hooks called during handling of
@@ -72,6 +72,10 @@ func (c *Client) InlineValueRefresh(context.Context) error { return nil }
 func (c *Client) SemanticTokensRefresh(context.Context) error { return nil }
 
 func (c *Client) LogTrace(context.Context, *protocol.LogTraceParams) error { return nil }
+
+func (c *Client) TextDocumentContentRefresh(context.Context, *protocol.TextDocumentContentRefreshParams) error {
+	return nil
+}
 
 func (c *Client) ShowMessage(ctx context.Context, params *protocol.ShowMessageParams) error {
 	if c.hooks.OnShowMessage != nil {

@@ -35,17 +35,16 @@
 // reachable, the code of that function is analyzed for more call sites,
 // address-taken functions, and runtime types.  The process continues
 // until a fixed point is reached.
-package rta // import "github.com/block/ftl-golang-tools/go/callgraph/rta"
+package rta // import "golang.org/x/tools/go/callgraph/rta"
 
 import (
 	"fmt"
 	"go/types"
 	"hash/crc32"
 
-	"github.com/block/ftl-golang-tools/go/callgraph"
-	"github.com/block/ftl-golang-tools/go/ssa"
-	"github.com/block/ftl-golang-tools/go/types/typeutil"
-	"github.com/block/ftl-golang-tools/internal/aliases"
+	"golang.org/x/tools/go/callgraph"
+	"golang.org/x/tools/go/ssa"
+	"golang.org/x/tools/go/types/typeutil"
 )
 
 // A Result holds the results of Rapid Type Analysis, which includes the
@@ -374,7 +373,7 @@ func (r *rta) interfaces(C types.Type) []*types.Interface {
 		// and update the 'implements' relation.
 		r.interfaceTypes.Iterate(func(I types.Type, v interface{}) {
 			iinfo := v.(*interfaceTypeInfo)
-			if I := aliases.Unalias(I).(*types.Interface); implements(cinfo, iinfo) {
+			if I := types.Unalias(I).(*types.Interface); implements(cinfo, iinfo) {
 				iinfo.implementations = append(iinfo.implementations, C)
 				cinfo.implements = append(cinfo.implements, I)
 			}
@@ -417,7 +416,7 @@ func (r *rta) implementations(I *types.Interface) []types.Type {
 // Adapted from needMethods in go/ssa/builder.go
 func (r *rta) addRuntimeType(T types.Type, skip bool) {
 	// Never record aliases.
-	T = aliases.Unalias(T)
+	T = types.Unalias(T)
 
 	if prev, ok := r.result.RuntimeTypes.At(T).(bool); ok {
 		if skip && !prev {
@@ -456,11 +455,11 @@ func (r *rta) addRuntimeType(T types.Type, skip bool) {
 	// Each package maintains its own set of types it has visited.
 
 	var n *types.Named
-	switch T := aliases.Unalias(T).(type) {
+	switch T := types.Unalias(T).(type) {
 	case *types.Named:
 		n = T
 	case *types.Pointer:
-		n, _ = aliases.Unalias(T.Elem()).(*types.Named)
+		n, _ = types.Unalias(T.Elem()).(*types.Named)
 	}
 	if n != nil {
 		owner := n.Obj().Pkg()
@@ -479,7 +478,7 @@ func (r *rta) addRuntimeType(T types.Type, skip bool) {
 	}
 
 	switch t := T.(type) {
-	case *aliases.Alias:
+	case *types.Alias:
 		panic("unreachable")
 
 	case *types.Basic:

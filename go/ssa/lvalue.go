@@ -12,7 +12,7 @@ import (
 	"go/token"
 	"go/types"
 
-	"github.com/block/ftl-golang-tools/internal/typeparams"
+	"golang.org/x/tools/internal/typeparams"
 )
 
 // An lvalue represents an assignable location that may appear on the

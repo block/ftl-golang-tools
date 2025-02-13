@@ -7,13 +7,13 @@ package completion
 import (
 	"go/ast"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/golang/completion/snippet"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
+	"golang.org/x/tools/gopls/internal/golang/completion/snippet"
+	"golang.org/x/tools/gopls/internal/util/safetoken"
 )
 
 // structFieldSnippet calculates the snippet for struct literal field names.
 func (c *completer) structFieldSnippet(cand candidate, detail string, snip *snippet.Builder) {
-	if !c.wantStructFieldCompletions() {
+	if !wantStructFieldCompletions(c.enclosingCompositeLiteral) {
 		return
 	}
 

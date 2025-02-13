@@ -28,8 +28,8 @@
 //		"fmt"
 //		"testing"
 //
-//		"github.com/block/ftl-golang-tools/gopls/internal/hooks"
-//		. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+//		"golang.org/x/tools/gopls/internal/hooks"
+//		. "golang.org/x/tools/gopls/internal/test/integration"
 //	)
 //
 //	func TestMain(m *testing.M) {

@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/test/compare"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/test/compare"
 
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 func TestQuickFix_UseModule(t *testing.T) {
@@ -341,7 +341,7 @@ func main() {}
 }
 
 func TestStubMethods64087(t *testing.T) {
-	// We can't use the @fix or @suggestedfixerr or @codeactionerr
+	// We can't use the @fix or @quickfixerr or @codeaction
 	// because the error now reported by the corrected logic
 	// is internal and silently causes no fix to be offered.
 	//
@@ -404,7 +404,7 @@ type myerror struct{any}
 }
 
 func TestStubMethods64545(t *testing.T) {
-	// We can't use the @fix or @suggestedfixerr or @codeactionerr
+	// We can't use the @fix or @quickfixerr or @codeaction
 	// because the error now reported by the corrected logic
 	// is internal and silently causes no fix to be offered.
 	//

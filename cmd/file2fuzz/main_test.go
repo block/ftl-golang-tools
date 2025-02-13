@@ -12,7 +12,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/internal/testenv"
+	"golang.org/x/tools/internal/testenv"
 )
 
 func TestMain(m *testing.M) {

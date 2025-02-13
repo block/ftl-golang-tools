@@ -14,7 +14,7 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/block/ftl-golang-tools/godoc/vfs/mapfs"
+	"golang.org/x/tools/godoc/vfs/mapfs"
 )
 
 // TestIgnoredGoFiles tests the scenario where a folder has no .go or .c files,

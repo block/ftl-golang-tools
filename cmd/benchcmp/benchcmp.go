@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"text/tabwriter"
 
-	"github.com/block/ftl-golang-tools/benchmark/parse"
+	"golang.org/x/tools/benchmark/parse"
 )
 
 var (
@@ -133,7 +133,7 @@ func main() {
 	}
 }
 
-func fatal(msg interface{}) {
+func fatal(msg any) {
 	fmt.Fprintln(os.Stderr, msg)
 	os.Exit(1)
 }

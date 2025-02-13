@@ -10,12 +10,11 @@ import (
 	"go/token"
 	"go/types"
 
-	"github.com/block/ftl-golang-tools/go/analysis"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/buildssa"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
-	"github.com/block/ftl-golang-tools/go/ssa"
-	"github.com/block/ftl-golang-tools/internal/aliases"
-	"github.com/block/ftl-golang-tools/internal/typeparams"
+	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/passes/buildssa"
+	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
+	"golang.org/x/tools/go/ssa"
+	"golang.org/x/tools/internal/typeparams"
 )
 
 //go:embed doc.go
@@ -24,7 +23,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "nilness",
 	Doc:      analysisutil.MustExtractDoc(doc, "nilness"),
-	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/nilness",
+	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/nilness",
 	Run:      run,
 	Requires: []*analysis.Analyzer{buildssa.Analyzer},
 }
@@ -187,7 +186,7 @@ func runFunc(pass *analysis.Pass, fn *ssa.Function) {
 					// t successor learns y is nil.
 					newFacts = expandFacts(fact{binop.Y, isnil})
 				} else {
-					// x is nil, y is unknown:
+					// y is nil, x is unknown:
 					// t successor learns x is nil.
 					newFacts = expandFacts(fact{binop.X, isnil})
 				}
@@ -300,7 +299,7 @@ func nilnessOf(stack []fact, v ssa.Value) nilness {
 		}
 	case *ssa.MakeInterface:
 		// A MakeInterface is non-nil unless its operand is a type parameter.
-		tparam, ok := aliases.Unalias(v.X.Type()).(*types.TypeParam)
+		tparam, ok := types.Unalias(v.X.Type()).(*types.TypeParam)
 		if !ok {
 			return isnonnil
 		}

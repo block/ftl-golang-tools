@@ -7,9 +7,9 @@ package metadata
 import (
 	"sort"
 
-	"github.com/block/ftl-golang-tools/go/packages"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/util/bug"
 )
 
 // A Graph is an immutable and transitively closed graph of [Package] data.
@@ -25,6 +25,11 @@ type Graph struct {
 	//
 	// Invariant: all IDs present in the IDs map exist in the metadata map.
 	IDs map[protocol.DocumentURI][]PackageID
+}
+
+// Metadata implements the [Source] interface
+func (g *Graph) Metadata(id PackageID) *Package {
+	return g.Packages[id]
 }
 
 // Update creates a new Graph containing the result of applying the given

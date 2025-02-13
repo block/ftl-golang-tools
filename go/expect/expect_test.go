@@ -10,7 +10,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/expect"
+	"golang.org/x/tools/go/expect"
 )
 
 func TestMarker(t *testing.T) {

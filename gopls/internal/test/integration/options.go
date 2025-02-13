@@ -7,10 +7,11 @@ package integration
 import (
 	"strings"
 	"testing"
+	"time"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake"
-	"github.com/block/ftl-golang-tools/internal/drivertest"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/test/integration/fake"
+	"golang.org/x/tools/internal/drivertest"
 )
 
 type runConfig struct {
@@ -190,5 +191,16 @@ func InGOPATH() RunOption {
 func MessageResponder(f func(*protocol.ShowMessageRequestParams) (*protocol.MessageActionItem, error)) RunOption {
 	return optionSetter(func(opts *runConfig) {
 		opts.editor.MessageResponder = f
+	})
+}
+
+// DelayMessages can be used to fuzz message delivery delays for the purpose of
+// reproducing test flakes.
+//
+// (Even though this option may be unused, keep it around to aid in debugging
+// future flakes.)
+func DelayMessages(upto time.Duration) RunOption {
+	return optionSetter(func(opts *runConfig) {
+		opts.editor.MaxMessageDelay = upto
 	})
 }

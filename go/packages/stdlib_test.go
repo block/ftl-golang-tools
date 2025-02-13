@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/block/ftl-golang-tools/go/packages"
-	"github.com/block/ftl-golang-tools/internal/testenv"
+	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/internal/testenv"
 )
 
 // This test loads the metadata for the standard library,
@@ -49,4 +49,34 @@ func TestStdlibMetadata(t *testing.T) {
 	t.Log("GOMAXPROCS: ", runtime.GOMAXPROCS(0))
 	t.Log("Metadata:   ", t1.Sub(t0))                          // ~800ms on 12 threads
 	t.Log("#MB:        ", int64(memstats.Alloc-alloc)/1000000) // ~1MB
+}
+
+// BenchmarkNetHTTP measures the time to load/parse/typecheck the
+// net/http package and all dependencies.
+func BenchmarkNetHTTP(b *testing.B) {
+	testenv.NeedsGoPackages(b)
+	b.ReportAllocs()
+
+	var bytes int64
+
+	for i := range b.N {
+		cfg := &packages.Config{Mode: packages.LoadAllSyntax}
+		pkgs, err := packages.Load(cfg, "net/http")
+		if err != nil {
+			b.Fatalf("failed to load metadata: %v", err)
+		}
+		if packages.PrintErrors(pkgs) > 0 {
+			b.Fatal("there were errors loading net/http")
+		}
+
+		if i == 0 {
+			packages.Visit(pkgs, nil, func(pkg *packages.Package) {
+				for _, f := range pkg.Syntax {
+					bytes += int64(f.FileEnd - f.FileStart)
+				}
+			})
+		}
+	}
+
+	b.SetBytes(bytes) // total source bytes
 }

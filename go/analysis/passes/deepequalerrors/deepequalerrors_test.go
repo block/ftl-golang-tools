@@ -7,8 +7,8 @@ package deepequalerrors_test
 import (
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/deepequalerrors"
+	"golang.org/x/tools/go/analysis/analysistest"
+	"golang.org/x/tools/go/analysis/passes/deepequalerrors"
 )
 
 func Test(t *testing.T) {

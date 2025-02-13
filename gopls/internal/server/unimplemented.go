@@ -10,8 +10,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/internal/jsonrpc2"
 )
 
 func (s *server) ColorPresentation(context.Context, *protocol.ColorPresentationParams) ([]protocol.ColorPresentation, error) {
@@ -20,10 +20,6 @@ func (s *server) ColorPresentation(context.Context, *protocol.ColorPresentationP
 
 func (s *server) Declaration(context.Context, *protocol.DeclarationParams) (*protocol.Or_textDocument_declaration, error) {
 	return nil, notImplemented("Declaration")
-}
-
-func (s *server) Diagnostic(context.Context, *string) (*string, error) {
-	return nil, notImplemented("Diagnostic")
 }
 
 func (s *server) DiagnosticWorkspace(context.Context, *protocol.WorkspaceDiagnosticParams) (*protocol.WorkspaceDiagnosticReport, error) {
@@ -152,6 +148,10 @@ func (s *server) WillSave(context.Context, *protocol.WillSaveTextDocumentParams)
 
 func (s *server) WillSaveWaitUntil(context.Context, *protocol.WillSaveTextDocumentParams) ([]protocol.TextEdit, error) {
 	return nil, notImplemented("WillSaveWaitUntil")
+}
+
+func (s *server) TextDocumentContent(context.Context, *protocol.TextDocumentContentParams) (*string, error) {
+	return nil, notImplemented("TextDocumentContent")
 }
 
 func notImplemented(method string) error {

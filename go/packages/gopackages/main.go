@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // The gopackages command is a diagnostic tool that demonstrates
-// how to use github.com/block/ftl-golang-tools/go/packages to load, parse,
+// how to use golang.org/x/tools/go/packages to load, parse,
 // type-check, and print one or more Go packages.
 // Its precise output is unspecified and may change.
 package main
@@ -19,10 +19,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/block/ftl-golang-tools/go/packages"
-	"github.com/block/ftl-golang-tools/go/types/typeutil"
-	"github.com/block/ftl-golang-tools/internal/drivertest"
-	"github.com/block/ftl-golang-tools/internal/tool"
+	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/go/types/typeutil"
+	"golang.org/x/tools/internal/drivertest"
+	"golang.org/x/tools/internal/tool"
 )
 
 func main() {
@@ -37,6 +37,7 @@ type application struct {
 	Deps       bool            `flag:"deps" help:"show dependencies too"`
 	Test       bool            `flag:"test" help:"include any tests implied by the patterns"`
 	Mode       string          `flag:"mode" help:"mode (one of files, imports, types, syntax, allsyntax)"`
+	Tags       string          `flag:"tags" help:"comma-separated list of extra build tags (see: go help buildconstraint)"`
 	Private    bool            `flag:"private" help:"show non-exported declarations too (if -mode=syntax)"`
 	PrintJSON  bool            `flag:"json" help:"print package in JSON form"`
 	BuildFlags stringListValue `flag:"buildflag" help:"pass argument to underlying build system (may be repeated)"`
@@ -95,7 +96,7 @@ func (app *application) Run(ctx context.Context, args ...string) error {
 	cfg := &packages.Config{
 		Mode:       packages.LoadSyntax,
 		Tests:      app.Test,
-		BuildFlags: app.BuildFlags,
+		BuildFlags: append([]string{"-tags=" + app.Tags}, app.BuildFlags...),
 		Env:        env,
 	}
 
@@ -246,11 +247,6 @@ func (app *application) print(lpkg *packages.Package) {
 // stringListValue is a flag.Value that accumulates strings.
 // e.g. --flag=one --flag=two would produce []string{"one", "two"}.
 type stringListValue []string
-
-func newStringListValue(val []string, p *[]string) *stringListValue {
-	*p = val
-	return (*stringListValue)(p)
-}
 
 func (ss *stringListValue) Get() interface{} { return []string(*ss) }
 

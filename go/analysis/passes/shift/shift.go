@@ -17,12 +17,11 @@ import (
 	"go/types"
 	"math"
 
-	"github.com/block/ftl-golang-tools/go/analysis"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
-	"github.com/block/ftl-golang-tools/go/ast/inspector"
-	"github.com/block/ftl-golang-tools/internal/aliases"
-	"github.com/block/ftl-golang-tools/internal/typeparams"
+	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/passes/inspect"
+	"golang.org/x/tools/go/ast/inspector"
+	"golang.org/x/tools/internal/analysisinternal"
+	"golang.org/x/tools/internal/typeparams"
 )
 
 const Doc = "check for shifts that equal or exceed the width of the integer"
@@ -30,7 +29,7 @@ const Doc = "check for shifts that equal or exceed the width of the integer"
 var Analyzer = &analysis.Analyzer{
 	Name:     "shift",
 	Doc:      Doc,
-	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/shift",
+	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/shift",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }
@@ -100,7 +99,7 @@ func checkLongShift(pass *analysis.Pass, node ast.Node, x, y ast.Expr) {
 		return
 	}
 	var structuralTypes []types.Type
-	switch t := aliases.Unalias(t).(type) {
+	switch t := types.Unalias(t).(type) {
 	case *types.TypeParam:
 		terms, err := typeparams.StructuralTerms(t)
 		if err != nil {
@@ -124,7 +123,7 @@ func checkLongShift(pass *analysis.Pass, node ast.Node, x, y ast.Expr) {
 		}
 	}
 	if amt >= minSize {
-		ident := analysisutil.Format(pass.Fset, x)
+		ident := analysisinternal.Format(pass.Fset, x)
 		qualifier := ""
 		if len(sizes) > 1 {
 			qualifier = "may be "

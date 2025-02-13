@@ -14,9 +14,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/test/integration"
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/test/integration"
+	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 func TestStdlibReferences(t *testing.T) {
@@ -376,10 +376,6 @@ module example.com/a
 go 1.14
 require other.com/b v1.0.0
 
--- go.sum --
-other.com/b v1.0.0 h1:9WyCKS+BLAMRQM0CegP6zqP2beP+ShTbPaARpNY31II=
-other.com/b v1.0.0/go.mod h1:TgHQFucl04oGT+vrUm/liAzukYHNxCwKNkQZEyn3m9g=
-
 -- a.go --
 package a
 import "other.com/b"
@@ -388,6 +384,7 @@ var _ b.B
 
 `
 	WithOptions(
+		WriteGoSum("."),
 		ProxyFiles(proxy),
 		Modes(Default), // fails in 'experimental' mode
 	).Run(t, src, func(t *testing.T, env *Env) {

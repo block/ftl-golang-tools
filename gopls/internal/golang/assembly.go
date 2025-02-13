@@ -16,13 +16,12 @@ import (
 	"context"
 	"fmt"
 	"html"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/internal/gocommand"
+	"golang.org/x/tools/gopls/internal/util/morestrings"
 )
 
 // AssemblyHTML returns an HTML document containing an assembly listing of the selected function.
@@ -32,11 +31,7 @@ import (
 // - cross-link jumps and block labels, like github.com/aclements/objbrowse.
 func AssemblyHTML(ctx context.Context, snapshot *cache.Snapshot, pkg *cache.Package, symbol string, web Web) ([]byte, error) {
 	// Compile the package with -S, and capture its stderr stream.
-	inv, cleanupInvocation, err := snapshot.GoCommandInvocation(false, &gocommand.Invocation{
-		Verb:       "build",
-		Args:       []string{"-gcflags=-S", "."},
-		WorkingDir: filepath.Dir(pkg.Metadata().CompiledGoFiles[0].Path()),
-	})
+	inv, cleanupInvocation, err := snapshot.GoCommandInvocation(cache.NoNetwork, pkg.Metadata().CompiledGoFiles[0].DirPath(), "build", []string{"-gcflags=-S", "."})
 	if err != nil {
 		return nil, err // e.g. failed to write overlays (rare)
 	}
@@ -109,7 +104,7 @@ func AssemblyHTML(ctx context.Context, snapshot *cache.Snapshot, pkg *cache.Pack
 		// Skip filenames of the form "<foo>".
 		if parts := insnRx.FindStringSubmatch(line); parts != nil {
 			link := "     " // if unknown
-			if file, linenum, ok := cutLast(parts[2], ":"); ok && !strings.HasPrefix(file, "<") {
+			if file, linenum, ok := morestrings.CutLast(parts[2], ":"); ok && !strings.HasPrefix(file, "<") {
 				if linenum, err := strconv.Atoi(linenum); err == nil {
 					text := fmt.Sprintf("L%04d", linenum)
 					link = sourceLink(text, web.SrcURL(file, linenum, 1))
@@ -122,12 +117,4 @@ func AssemblyHTML(ctx context.Context, snapshot *cache.Snapshot, pkg *cache.Pack
 		buf.WriteByte('\n')
 	}
 	return buf.Bytes(), nil
-}
-
-// cutLast is the "last" analogue of [strings.Cut].
-func cutLast(s, sep string) (before, after string, ok bool) {
-	if i := strings.LastIndex(s, sep); i >= 0 {
-		return s[:i], s[i+len(sep):], true
-	}
-	return s, "", false
 }

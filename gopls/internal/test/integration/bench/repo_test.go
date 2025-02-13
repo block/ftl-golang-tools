@@ -17,8 +17,8 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
-	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake"
+	. "golang.org/x/tools/gopls/internal/test/integration"
+	"golang.org/x/tools/gopls/internal/test/integration/fake"
 )
 
 // repos holds shared repositories for use in benchmarks.
@@ -147,7 +147,7 @@ type repo struct {
 // reusableDir return a reusable directory for benchmarking, or "".
 //
 // If the user specifies a directory, the test will create and populate it
-// on the first run an re-use it on subsequent runs. Otherwise it will
+// on the first run and re-use it on subsequent runs. Otherwise it will
 // create, populate, and delete a temporary directory.
 func (r *repo) reusableDir() string {
 	if r.inDir == nil {

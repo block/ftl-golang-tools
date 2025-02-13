@@ -15,9 +15,9 @@ import (
 	"testing"
 
 	"golang.org/x/sync/errgroup"
-	"github.com/block/ftl-golang-tools/go/packages"
-	"github.com/block/ftl-golang-tools/internal/gcimporter"
-	"github.com/block/ftl-golang-tools/internal/testenv"
+	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/internal/gcimporter"
+	"golang.org/x/tools/internal/testenv"
 )
 
 // TestShallowStd type-checks the standard library using shallow export data.
@@ -27,6 +27,9 @@ func TestShallowStd(t *testing.T) {
 	}
 	testenv.NeedsTool(t, "go")
 
+	testAliases(t, testShallowStd)
+}
+func testShallowStd(t *testing.T) {
 	// Load import graph of the standard library.
 	// (No parsing or type-checking.)
 	cfg := &packages.Config{

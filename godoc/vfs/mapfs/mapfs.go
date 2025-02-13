@@ -4,7 +4,7 @@
 
 // Package mapfs file provides an implementation of the FileSystem
 // interface based on the contents of a map[string]string.
-package mapfs // import "github.com/block/ftl-golang-tools/godoc/vfs/mapfs"
+package mapfs // import "golang.org/x/tools/godoc/vfs/mapfs"
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/block/ftl-golang-tools/godoc/vfs"
+	"golang.org/x/tools/godoc/vfs"
 )
 
 // New returns a new FileSystem from the provided map.
@@ -158,9 +158,9 @@ func (fi mapFI) Mode() os.FileMode {
 	}
 	return 0444
 }
-func (fi mapFI) Name() string     { return pathpkg.Base(fi.name) }
-func (fi mapFI) Size() int64      { return int64(fi.size) }
-func (fi mapFI) Sys() interface{} { return nil }
+func (fi mapFI) Name() string { return pathpkg.Base(fi.name) }
+func (fi mapFI) Size() int64  { return int64(fi.size) }
+func (fi mapFI) Sys() any     { return nil }
 
 type nopCloser struct {
 	io.ReadSeeker

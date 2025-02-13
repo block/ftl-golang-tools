@@ -13,8 +13,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/lsprpc"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
+	"golang.org/x/tools/gopls/internal/lsprpc"
+	"golang.org/x/tools/gopls/internal/protocol/command"
 )
 
 type remote struct {

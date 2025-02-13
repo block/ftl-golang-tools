@@ -10,7 +10,7 @@
 // space-efficient than equivalent operations on sets based on the Go
 // map type.  The IsEmpty, Min, Max, Clear and TakeMin operations
 // require constant time.
-package intsets // import "github.com/block/ftl-golang-tools/container/intsets"
+package intsets // import "golang.org/x/tools/container/intsets"
 
 // TODO(adonovan):
 // - Add InsertAll(...int), RemoveAll(...int)
@@ -285,14 +285,6 @@ func (s *Sparse) next(b *block) *block {
 		return &none
 	}
 	return b.next
-}
-
-// prev returns the previous block in the list, or end if b is the first block.
-func (s *Sparse) prev(b *block) *block {
-	if b.prev == &s.root {
-		return &none
-	}
-	return b.prev
 }
 
 // IsEmpty reports whether the set s is empty.
@@ -1077,6 +1069,7 @@ func (s *Sparse) AppendTo(slice []int) []int {
 // -- Testing/debugging ------------------------------------------------
 
 // check returns an error if the representation invariants of s are violated.
+// (unused; retained for debugging)
 func (s *Sparse) check() error {
 	s.init()
 	if s.root.empty() {

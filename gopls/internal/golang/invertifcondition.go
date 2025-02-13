@@ -11,9 +11,9 @@ import (
 	"go/types"
 	"strings"
 
-	"github.com/block/ftl-golang-tools/go/analysis"
-	"github.com/block/ftl-golang-tools/go/ast/astutil"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
+	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/ast/astutil"
+	"golang.org/x/tools/gopls/internal/util/safetoken"
 )
 
 // invertIfCondition is a singleFileFixFunc that inverts an if/else statement
@@ -240,7 +240,7 @@ func invertAndOr(fset *token.FileSet, expr *ast.BinaryExpr, src []byte) ([]byte,
 }
 
 // canInvertIfCondition reports whether we can do invert-if-condition on the
-// code in the given range
+// code in the given range.
 func canInvertIfCondition(file *ast.File, start, end token.Pos) (*ast.IfStmt, bool, error) {
 	path, _ := astutil.PathEnclosingInterval(file, start, end)
 	for _, node := range path {

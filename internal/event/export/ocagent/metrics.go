@@ -7,9 +7,9 @@ package ocagent
 import (
 	"time"
 
-	"github.com/block/ftl-golang-tools/internal/event/export/metric"
-	"github.com/block/ftl-golang-tools/internal/event/export/ocagent/wire"
-	"github.com/block/ftl-golang-tools/internal/event/label"
+	"golang.org/x/tools/internal/event/export/metric"
+	"golang.org/x/tools/internal/event/export/ocagent/wire"
+	"golang.org/x/tools/internal/event/label"
 )
 
 // dataToMetricDescriptor return a *wire.MetricDescriptor based on data.

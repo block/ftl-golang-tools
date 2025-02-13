@@ -7,8 +7,8 @@ package unusedresult_test
 import (
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/unusedresult"
+	"golang.org/x/tools/go/analysis/analysistest"
+	"golang.org/x/tools/go/analysis/passes/unusedresult"
 )
 
 func Test(t *testing.T) {

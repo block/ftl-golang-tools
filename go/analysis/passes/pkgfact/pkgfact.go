@@ -32,20 +32,20 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/block/ftl-golang-tools/go/analysis"
+	"golang.org/x/tools/go/analysis"
 )
 
 var Analyzer = &analysis.Analyzer{
 	Name:       "pkgfact",
 	Doc:        "gather name/value pairs from constant declarations",
-	URL:        "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/pkgfact",
+	URL:        "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/pkgfact",
 	Run:        run,
 	FactTypes:  []analysis.Fact{new(pairsFact)},
 	ResultType: reflect.TypeOf(map[string]string{}),
 }
 
 // A pairsFact is a package-level fact that records
-// an set of key=value strings accumulated from constant
+// a set of key=value strings accumulated from constant
 // declarations in this package and its dependencies.
 // Elements are ordered by keys, which are unique.
 type pairsFact []string

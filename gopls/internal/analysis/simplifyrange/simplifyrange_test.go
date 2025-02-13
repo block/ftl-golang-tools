@@ -6,17 +6,17 @@ package simplifyrange_test
 
 import (
 	"go/build"
+	"slices"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
-	"github.com/block/ftl-golang-tools/gopls/internal/analysis/simplifyrange"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/slices"
+	"golang.org/x/tools/go/analysis/analysistest"
+	"golang.org/x/tools/gopls/internal/analysis/simplifyrange"
 )
 
 func Test(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, simplifyrange.Analyzer, "a")
-	if slices.Contains(build.Default.ReleaseTags, "go1.23") {
+	analysistest.RunWithSuggestedFixes(t, testdata, simplifyrange.Analyzer, "a", "generatedcode")
+	if slices.Contains(build.Default.ReleaseTags, "go1.23") { // uses iter.Seq
 		analysistest.RunWithSuggestedFixes(t, testdata, simplifyrange.Analyzer, "rangeoverfunc")
 	}
 }

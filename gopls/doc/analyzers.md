@@ -1,9 +1,9 @@
-# Analyzers
+# Gopls: Analyzers
 
 <!-- No Table of Contents: GitHub's Markdown renderer synthesizes it. -->
 
 Gopls contains a driver for pluggable, modular static
-[analyzers](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis#hdr-Analyzer),
+[analyzers](https://pkg.go.dev/golang.org/x/tools/go/analysis#hdr-Analyzer),
 such as those used by [go vet](https://pkg.go.dev/cmd/vet).
 
 Most analyzers report mistakes in your code;
@@ -15,18 +15,19 @@ before you run your tests, or even before you save your files.
 This document describes the suite of analyzers available in gopls,
 which aggregates analyzers from a variety of sources:
 
-- all the usual bug-finding analyzers from the `go vet` suite;
-- a number of analyzers with more substantial dependencies that prevent them from being used in `go vet`;
-- analyzers that augment compilation errors by suggesting quick fixes to common mistakes; and
-- a handful of analyzers that suggest possible style improvements.
+- all the usual bug-finding analyzers from the `go vet` suite (e.g. `printf`; see [`go tool vet help`](https://pkg.go.dev/cmd/vet) for the complete list);
+- a number of analyzers with more substantial dependencies that prevent them from being used in `go vet` (e.g. `nilness`);
+- analyzers that augment compilation errors by suggesting quick fixes to common mistakes (e.g. `fillreturns`); and
+- a handful of analyzers that suggest possible style improvements (e.g. `simplifyrange`).
 
-More details about how to enable and disable analyzers can be found
-[here](settings.md#analyses).
+To enable or disable analyzers, use the [analyses](settings.md#analyses) setting.
 
 In addition, gopls includes the [`staticcheck` suite](https://staticcheck.dev/docs/checks),
 though these analyzers are off by default.
 Use the [`staticcheck`](settings.md#staticcheck`) setting to enable them,
 and consult staticcheck's documentation for analyzer details.
+
+<!-- When staticcheck=true, we currently use the {S SA ST QF} suites, sans {SA5009, SA5011} -->
 
 
 <!-- BEGIN Analyzers: DO NOT MANUALLY EDIT THIS SECTION -->
@@ -45,7 +46,7 @@ underlying mistake.
 
 Default: on.
 
-Package documentation: [appends](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/appends)
+Package documentation: [appends](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/appends)
 
 <a id='asmdecl'></a>
 ## `asmdecl`: report mismatches between assembly files and Go declarations
@@ -54,7 +55,7 @@ Package documentation: [appends](https://pkg.go.dev/github.com/block/ftl-golang-
 
 Default: on.
 
-Package documentation: [asmdecl](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/asmdecl)
+Package documentation: [asmdecl](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/asmdecl)
 
 <a id='assign'></a>
 ## `assign`: check for useless assignments
@@ -66,7 +67,7 @@ usually a mistake.
 
 Default: on.
 
-Package documentation: [assign](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/assign)
+Package documentation: [assign](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/assign)
 
 <a id='atomic'></a>
 ## `atomic`: check for common mistakes using the sync/atomic package
@@ -80,7 +81,7 @@ which are not atomic.
 
 Default: on.
 
-Package documentation: [atomic](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/atomic)
+Package documentation: [atomic](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/atomic)
 
 <a id='atomicalign'></a>
 ## `atomicalign`: check for non-64-bits-aligned arguments to sync/atomic functions
@@ -89,7 +90,7 @@ Package documentation: [atomic](https://pkg.go.dev/github.com/block/ftl-golang-t
 
 Default: on.
 
-Package documentation: [atomicalign](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/atomicalign)
+Package documentation: [atomicalign](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/atomicalign)
 
 <a id='bools'></a>
 ## `bools`: check for common mistakes involving boolean operators
@@ -98,7 +99,7 @@ Package documentation: [atomicalign](https://pkg.go.dev/github.com/block/ftl-gol
 
 Default: on.
 
-Package documentation: [bools](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/bools)
+Package documentation: [bools](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/bools)
 
 <a id='buildtag'></a>
 ## `buildtag`: check //go:build and // +build directives
@@ -107,7 +108,7 @@ Package documentation: [bools](https://pkg.go.dev/github.com/block/ftl-golang-to
 
 Default: on.
 
-Package documentation: [buildtag](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/buildtag)
+Package documentation: [buildtag](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/buildtag)
 
 <a id='cgocall'></a>
 ## `cgocall`: detect some violations of the cgo pointer passing rules
@@ -122,7 +123,7 @@ or slice to C, either directly, or via a pointer, array, or struct.
 
 Default: on.
 
-Package documentation: [cgocall](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/cgocall)
+Package documentation: [cgocall](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/cgocall)
 
 <a id='composites'></a>
 ## `composites`: check for unkeyed composite literals
@@ -144,7 +145,7 @@ should be replaced by:
 
 Default: on.
 
-Package documentation: [composites](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/composite)
+Package documentation: [composites](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/composite)
 
 <a id='copylocks'></a>
 ## `copylocks`: check for locks erroneously passed by value
@@ -156,7 +157,7 @@ values should be referred to through a pointer.
 
 Default: on.
 
-Package documentation: [copylocks](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/copylock)
+Package documentation: [copylocks](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/copylock)
 
 <a id='deepequalerrors'></a>
 ## `deepequalerrors`: check for calls of reflect.DeepEqual on error values
@@ -171,7 +172,7 @@ errors is discouraged.
 
 Default: on.
 
-Package documentation: [deepequalerrors](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/deepequalerrors)
+Package documentation: [deepequalerrors](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/deepequalerrors)
 
 <a id='defers'></a>
 ## `defers`: report common mistakes in defer statements
@@ -193,7 +194,7 @@ The correct code is:
 
 Default: on.
 
-Package documentation: [defers](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/defers)
+Package documentation: [defers](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/defers)
 
 <a id='deprecated'></a>
 ## `deprecated`: check for use of deprecated identifiers
@@ -207,7 +208,7 @@ for documenting and signaling deprecated identifiers.
 
 Default: on.
 
-Package documentation: [deprecated](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/deprecated)
+Package documentation: [deprecated](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/deprecated)
 
 <a id='directive'></a>
 ## `directive`: check Go toolchain directives such as //go:debug
@@ -229,7 +230,7 @@ buildtag analyzer.
 
 Default: on.
 
-Package documentation: [directive](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/directive)
+Package documentation: [directive](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/directive)
 
 <a id='embed'></a>
 ## `embed`: check //go:embed directive usage
@@ -244,7 +245,7 @@ declaration of a single variable.
 
 Default: on.
 
-Package documentation: [embed](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/embeddirective)
+Package documentation: [embed](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/embeddirective)
 
 <a id='errorsas'></a>
 ## `errorsas`: report passing non-pointer or non-error values to errors.As
@@ -255,41 +256,7 @@ of the second argument is not a pointer to a type implementing error.
 
 Default: on.
 
-Package documentation: [errorsas](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/errorsas)
-
-<a id='fieldalignment'></a>
-## `fieldalignment`: find structs that would use less memory if their fields were sorted
-
-
-This analyzer find structs that can be rearranged to use less memory, and provides
-a suggested edit with the most compact order.
-
-Note that there are two different diagnostics reported. One checks struct size,
-and the other reports "pointer bytes" used. Pointer bytes is how many bytes of the
-object that the garbage collector has to potentially scan for pointers, for example:
-
-	struct { uint32; string }
-
-have 16 pointer bytes because the garbage collector has to scan up through the string's
-inner pointer.
-
-	struct { string; *uint32 }
-
-has 24 pointer bytes because it has to scan further through the *uint32.
-
-	struct { string; uint32 }
-
-has 8 because it can stop immediately after the string pointer.
-
-Be aware that the most compact order is not always the most efficient.
-In rare cases it may cause two variables each updated by its own goroutine
-to occupy the same CPU cache line, inducing a form of memory contention
-known as "false sharing" that slows down both goroutines.
-
-
-Default: off. Enable by setting `"analyses": {"fieldalignment": true}`.
-
-Package documentation: [fieldalignment](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/fieldalignment)
+Package documentation: [errorsas](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/errorsas)
 
 <a id='fillreturns'></a>
 ## `fillreturns`: suggest fixes for errors due to an incorrect number of return values
@@ -312,7 +279,7 @@ This functionality is similar to https://github.com/sqs/goreturns.
 
 Default: on.
 
-Package documentation: [fillreturns](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/fillreturns)
+Package documentation: [fillreturns](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/fillreturns)
 
 <a id='framepointer'></a>
 ## `framepointer`: report assembly that clobbers the frame pointer before saving it
@@ -321,7 +288,42 @@ Package documentation: [fillreturns](https://pkg.go.dev/github.com/block/ftl-gol
 
 Default: on.
 
-Package documentation: [framepointer](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/framepointer)
+Package documentation: [framepointer](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/framepointer)
+
+<a id='gofix'></a>
+## `gofix`: apply fixes based on go:fix comment directives
+
+
+The gofix analyzer inlines functions and constants that are marked for inlining.
+
+Default: on.
+
+Package documentation: [gofix](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/gofix)
+
+<a id='hostport'></a>
+## `hostport`: check format of addresses passed to net.Dial
+
+
+This analyzer flags code that produce network address strings using
+fmt.Sprintf, as in this example:
+
+    addr := fmt.Sprintf("%s:%d", host, 12345) // "will not work with IPv6"
+    ...
+    conn, err := net.Dial("tcp", addr)       // "when passed to dial here"
+
+The analyzer suggests a fix to use the correct approach, a call to
+net.JoinHostPort:
+
+    addr := net.JoinHostPort(host, "12345")
+    ...
+    conn, err := net.Dial("tcp", addr)
+
+A similar diagnostic and fix are produced for a format string of "%s:%s".
+
+
+Default: on.
+
+Package documentation: [hostport](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/hostport)
 
 <a id='httpresponse'></a>
 ## `httpresponse`: check for mistakes using HTTP responses
@@ -343,7 +345,7 @@ diagnostic for such mistakes.
 
 Default: on.
 
-Package documentation: [httpresponse](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/httpresponse)
+Package documentation: [httpresponse](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/httpresponse)
 
 <a id='ifaceassert'></a>
 ## `ifaceassert`: detect impossible interface-to-interface type assertions
@@ -364,7 +366,7 @@ io.Reader, so this assertion cannot succeed.
 
 Default: on.
 
-Package documentation: [ifaceassert](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/ifaceassert)
+Package documentation: [ifaceassert](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/ifaceassert)
 
 <a id='infertypeargs'></a>
 ## `infertypeargs`: check for unnecessary type arguments in call expressions
@@ -382,7 +384,7 @@ inferred from function arguments, or from other type arguments:
 
 Default: on.
 
-Package documentation: [infertypeargs](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/infertypeargs)
+Package documentation: [infertypeargs](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/infertypeargs)
 
 <a id='loopclosure'></a>
 ## `loopclosure`: check references to loop variables from within nested functions
@@ -454,20 +456,53 @@ See: https://golang.org/doc/go_faq.html#closures_and_goroutines
 
 Default: on.
 
-Package documentation: [loopclosure](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/loopclosure)
+Package documentation: [loopclosure](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/loopclosure)
 
 <a id='lostcancel'></a>
 ## `lostcancel`: check cancel func returned by context.WithCancel is called
 
 
 The cancellation function returned by context.WithCancel, WithTimeout,
-and WithDeadline must be called or the new context will remain live
-until its parent context is cancelled.
+WithDeadline and variants such as WithCancelCause must be called,
+or the new context will remain live until its parent context is cancelled.
 (The background context is never cancelled.)
 
 Default: on.
 
-Package documentation: [lostcancel](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/lostcancel)
+Package documentation: [lostcancel](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/lostcancel)
+
+<a id='modernize'></a>
+## `modernize`: simplify code by using modern constructs
+
+
+This analyzer reports opportunities for simplifying and clarifying
+existing code by using more modern features of Go, such as:
+
+  - replacing an if/else conditional assignment by a call to the
+    built-in min or max functions added in go1.21;
+  - replacing sort.Slice(x, func(i, j int) bool) { return s[i] < s[j] }
+    by a call to slices.Sort(s), added in go1.21;
+  - replacing interface{} by the 'any' type added in go1.18;
+  - replacing append([]T(nil), s...) by slices.Clone(s) or
+    slices.Concat(s), added in go1.21;
+  - replacing a loop around an m[k]=v map update by a call
+    to one of the Collect, Copy, Clone, or Insert functions
+    from the maps package, added in go1.21;
+  - replacing []byte(fmt.Sprintf...) by fmt.Appendf(nil, ...),
+    added in go1.19;
+  - replacing uses of context.WithCancel in tests with t.Context, added in
+    go1.24;
+  - replacing omitempty by omitzero on structs, added in go1.24;
+  - replacing append(s[:i], s[i+1]...) by slices.Delete(s, i, i+1),
+    added in go1.21
+  - replacing a 3-clause for i := 0; i < n; i++ {} loop by
+    for i := range n {}, added in go1.22;
+  - replacing Split in "for range strings.Split(...)" by go1.24's
+    more efficient SplitSeq;
+
+Default: on.
+
+Package documentation: [modernize](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/modernize)
 
 <a id='nilfunc'></a>
 ## `nilfunc`: check for useless comparisons between functions and nil
@@ -477,7 +512,7 @@ A useless comparison is one like f == nil as opposed to f() == nil.
 
 Default: on.
 
-Package documentation: [nilfunc](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/nilfunc)
+Package documentation: [nilfunc](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/nilfunc)
 
 <a id='nilness'></a>
 ## `nilness`: check for redundant or impossible nil comparisons
@@ -545,7 +580,7 @@ nil. The intervening loop is just a distraction.
 
 Default: on.
 
-Package documentation: [nilness](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/nilness)
+Package documentation: [nilness](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/nilness)
 
 <a id='nonewvars'></a>
 ## `nonewvars`: suggested fixes for "no new vars on left side of :="
@@ -564,7 +599,7 @@ will turn into
 
 Default: on.
 
-Package documentation: [nonewvars](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/nonewvars)
+Package documentation: [nonewvars](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/nonewvars)
 
 <a id='noresultvalues'></a>
 ## `noresultvalues`: suggested fixes for unexpected return values
@@ -582,7 +617,7 @@ will turn into
 
 Default: on.
 
-Package documentation: [noresultvalues](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/noresultvalues)
+Package documentation: [noresultvalues](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/noresultvalues)
 
 <a id='printf'></a>
 ## `printf`: check consistency of Printf format strings and arguments
@@ -599,7 +634,7 @@ format operators and their operand types.
 
 Default: on.
 
-Package documentation: [printf](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/printf)
+Package documentation: [printf](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/printf)
 
 <a id='shadow'></a>
 ## `shadow`: check for possible unintended shadowing of variables
@@ -630,7 +665,7 @@ For example:
 
 Default: off. Enable by setting `"analyses": {"shadow": true}`.
 
-Package documentation: [shadow](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/shadow)
+Package documentation: [shadow](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/shadow)
 
 <a id='shift'></a>
 ## `shift`: check for shifts that equal or exceed the width of the integer
@@ -639,7 +674,7 @@ Package documentation: [shadow](https://pkg.go.dev/github.com/block/ftl-golang-t
 
 Default: on.
 
-Package documentation: [shift](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/shift)
+Package documentation: [shift](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/shift)
 
 <a id='sigchanyzer'></a>
 ## `sigchanyzer`: check for unbuffered channel of os.Signal
@@ -653,7 +688,7 @@ where c is an unbuffered channel, which can be at risk of missing the signal.
 
 Default: on.
 
-Package documentation: [sigchanyzer](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/sigchanyzer)
+Package documentation: [sigchanyzer](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/sigchanyzer)
 
 <a id='simplifycompositelit'></a>
 ## `simplifycompositelit`: check for composite literal simplifications
@@ -669,9 +704,11 @@ will be simplified to:
 
 This is one of the simplifications that "gofmt -s" applies.
 
+This analyzer ignores generated code.
+
 Default: on.
 
-Package documentation: [simplifycompositelit](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/simplifycompositelit)
+Package documentation: [simplifycompositelit](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/simplifycompositelit)
 
 <a id='simplifyrange'></a>
 ## `simplifyrange`: check for range statement simplifications
@@ -695,9 +732,11 @@ will be simplified to:
 
 This is one of the simplifications that "gofmt -s" applies.
 
+This analyzer ignores generated code.
+
 Default: on.
 
-Package documentation: [simplifyrange](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/simplifyrange)
+Package documentation: [simplifyrange](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/simplifyrange)
 
 <a id='simplifyslice'></a>
 ## `simplifyslice`: check for slice simplifications
@@ -713,9 +752,11 @@ will be simplified to:
 
 This is one of the simplifications that "gofmt -s" applies.
 
+This analyzer ignores generated code.
+
 Default: on.
 
-Package documentation: [simplifyslice](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/simplifyslice)
+Package documentation: [simplifyslice](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/simplifyslice)
 
 <a id='slog'></a>
 ## `slog`: check for invalid structured logging calls
@@ -735,7 +776,7 @@ and
 
 Default: on.
 
-Package documentation: [slog](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/slog)
+Package documentation: [slog](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/slog)
 
 <a id='sortslice'></a>
 ## `sortslice`: check the argument type of sort.Slice
@@ -746,7 +787,7 @@ the interface{} value passed to sort.Slice is actually a slice.
 
 Default: on.
 
-Package documentation: [sortslice](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/sortslice)
+Package documentation: [sortslice](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/sortslice)
 
 <a id='stdmethods'></a>
 ## `stdmethods`: check signature of methods of well-known interfaces
@@ -773,7 +814,7 @@ Checked method names include:
 
 Default: on.
 
-Package documentation: [stdmethods](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/stdmethods)
+Package documentation: [stdmethods](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/stdmethods)
 
 <a id='stdversion'></a>
 ## `stdversion`: report uses of too-new standard library symbols
@@ -793,7 +834,7 @@ through a type alias that is guarded by a Go version constraint.
 
 Default: on.
 
-Package documentation: [stdversion](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/stdversion)
+Package documentation: [stdversion](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/stdversion)
 
 <a id='stringintconv'></a>
 ## `stringintconv`: check for string(int) conversions
@@ -811,7 +852,7 @@ string representation of the value in the desired base.
 
 Default: on.
 
-Package documentation: [stringintconv](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/stringintconv)
+Package documentation: [stringintconv](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/stringintconv)
 
 <a id='structtag'></a>
 ## `structtag`: check that struct field tags conform to reflect.StructTag.Get
@@ -821,43 +862,7 @@ Also report certain struct tags (json, xml) used with unexported fields.
 
 Default: on.
 
-Package documentation: [structtag](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/structtag)
-
-<a id='stubmethods'></a>
-## `stubmethods`: detect missing methods and fix with stub implementations
-
-
-This analyzer detects type-checking errors due to missing methods
-in assignments from concrete types to interface types, and offers
-a suggested fix that will create a set of stub methods so that
-the concrete type satisfies the interface.
-
-For example, this function will not compile because the value
-NegativeErr{} does not implement the "error" interface:
-
-	func sqrt(x float64) (float64, error) {
-		if x < 0 {
-			return 0, NegativeErr{} // error: missing method
-		}
-		...
-	}
-
-	type NegativeErr struct{}
-
-This analyzer will suggest a fix to declare this method:
-
-	// Error implements error.Error.
-	func (NegativeErr) Error() string {
-		panic("unimplemented")
-	}
-
-(At least, it appears to behave that way, but technically it
-doesn't use the SuggestedFix mechanism and the stub is created by
-logic in gopls's golang.stub function.)
-
-Default: on.
-
-Package documentation: [stubmethods](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/stubmethods)
+Package documentation: [structtag](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/structtag)
 
 <a id='testinggoroutine'></a>
 ## `testinggoroutine`: report calls to (*testing.T).Fatal from goroutines started by a test
@@ -876,7 +881,7 @@ started by the test. For example:
 
 Default: on.
 
-Package documentation: [testinggoroutine](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/testinggoroutine)
+Package documentation: [testinggoroutine](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/testinggoroutine)
 
 <a id='tests'></a>
 ## `tests`: check for common mistaken usages of tests and examples
@@ -891,7 +896,7 @@ for the conventions that are enforced for Tests, Benchmarks, and Examples.
 
 Default: on.
 
-Package documentation: [tests](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/tests)
+Package documentation: [tests](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/tests)
 
 <a id='timeformat'></a>
 ## `timeformat`: check for calls of (time.Time).Format or time.Parse with 2006-02-01
@@ -903,27 +908,7 @@ standards, and so it is more likely that 2006-01-02 (yyyy-mm-dd) was intended.
 
 Default: on.
 
-Package documentation: [timeformat](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/timeformat)
-
-<a id='undeclaredname'></a>
-## `undeclaredname`: suggested fixes for "undeclared name: <>"
-
-
-This checker provides suggested fixes for type errors of the
-type "undeclared name: <>". It will either insert a new statement,
-such as:
-
-	<> :=
-
-or a new function declaration, such as:
-
-	func <>(inferred parameters) {
-		panic("implement me!")
-	}
-
-Default: on.
-
-Package documentation: [undeclaredname](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/undeclaredname)
+Package documentation: [timeformat](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/timeformat)
 
 <a id='unmarshal'></a>
 ## `unmarshal`: report passing non-pointer or non-interface values to unmarshal
@@ -934,19 +919,19 @@ in which the argument type is not a pointer or an interface.
 
 Default: on.
 
-Package documentation: [unmarshal](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/unmarshal)
+Package documentation: [unmarshal](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/unmarshal)
 
 <a id='unreachable'></a>
 ## `unreachable`: check for unreachable code
 
 
 The unreachable analyzer finds statements that execution can never reach
-because they are preceded by an return statement, a call to panic, an
+because they are preceded by a return statement, a call to panic, an
 infinite loop, or similar constructs.
 
 Default: on.
 
-Package documentation: [unreachable](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/unreachable)
+Package documentation: [unreachable](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/unreachable)
 
 <a id='unsafeptr'></a>
 ## `unsafeptr`: check for invalid conversions of uintptr to unsafe.Pointer
@@ -960,7 +945,38 @@ invisible to stack copying and to the garbage collector.
 
 Default: on.
 
-Package documentation: [unsafeptr](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/unsafeptr)
+Package documentation: [unsafeptr](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/unsafeptr)
+
+<a id='unusedfunc'></a>
+## `unusedfunc`: check for unused functions and methods
+
+
+The unusedfunc analyzer reports functions and methods that are
+never referenced outside of their own declaration.
+
+A function is considered unused if it is unexported and not
+referenced (except within its own declaration).
+
+A method is considered unused if it is unexported, not referenced
+(except within its own declaration), and its name does not match
+that of any method of an interface type declared within the same
+package.
+
+The tool may report a false positive for a declaration of an
+unexported function that is referenced from another package using
+the go:linkname mechanism, if the declaration's doc comment does
+not also have a go:linkname comment. (Such code is in any case
+strongly discouraged: linkname annotations, if they must be used at
+all, should be used on both the declaration and the alias.)
+
+The unusedfunc algorithm is not as precise as the
+golang.org/x/tools/cmd/deadcode tool, but it has the advantage that
+it runs within the modular analysis framework, enabling near
+real-time feedback within gopls.
+
+Default: on.
+
+Package documentation: [unusedfunc](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/unusedfunc)
 
 <a id='unusedparams'></a>
 ## `unusedparams`: check for unused parameters of functions
@@ -989,9 +1005,11 @@ arguments at call sites, while taking care to preserve any side
 effects in the argument expressions; see
 https://github.com/golang/tools/releases/tag/gopls%2Fv0.14.
 
+This analyzer ignores generated code.
+
 Default: on.
 
-Package documentation: [unusedparams](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/unusedparams)
+Package documentation: [unusedparams](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/unusedparams)
 
 <a id='unusedresult'></a>
 ## `unusedresult`: check for unused results of calls to some functions
@@ -1007,16 +1025,16 @@ The set of functions may be controlled using flags.
 
 Default: on.
 
-Package documentation: [unusedresult](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/unusedresult)
+Package documentation: [unusedresult](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/unusedresult)
 
 <a id='unusedvariable'></a>
 ## `unusedvariable`: check for unused variables and suggest fixes
 
 
 
-Default: off. Enable by setting `"analyses": {"unusedvariable": true}`.
+Default: on.
 
-Package documentation: [unusedvariable](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/unusedvariable)
+Package documentation: [unusedvariable](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/unusedvariable)
 
 <a id='unusedwrite'></a>
 ## `unusedwrite`: checks for unused writes
@@ -1048,15 +1066,72 @@ Another example is about non-pointer receiver:
 
 Default: on.
 
-Package documentation: [unusedwrite](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/unusedwrite)
+Package documentation: [unusedwrite](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/unusedwrite)
 
-<a id='useany'></a>
-## `useany`: check for constraints that could be simplified to "any"
+<a id='waitgroup'></a>
+## `waitgroup`: check for misuses of sync.WaitGroup
 
 
+This analyzer detects mistaken calls to the (*sync.WaitGroup).Add
+method from inside a new goroutine, causing Add to race with Wait:
 
-Default: off. Enable by setting `"analyses": {"useany": true}`.
+	// WRONG
+	var wg sync.WaitGroup
+	go func() {
+	        wg.Add(1) // "WaitGroup.Add called from inside new goroutine"
+	        defer wg.Done()
+	        ...
+	}()
+	wg.Wait() // (may return prematurely before new goroutine starts)
 
-Package documentation: [useany](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/useany)
+The correct code calls Add before starting the goroutine:
+
+	// RIGHT
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		...
+	}()
+	wg.Wait()
+
+Default: on.
+
+Package documentation: [waitgroup](https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/waitgroup)
+
+<a id='yield'></a>
+## `yield`: report calls to yield where the result is ignored
+
+
+After a yield function returns false, the caller should not call
+the yield function again; generally the iterator should return
+promptly.
+
+This example fails to check the result of the call to yield,
+causing this analyzer to report a diagnostic:
+
+	yield(1) // yield may be called again (on L2) after returning false
+	yield(2)
+
+The corrected code is either this:
+
+	if yield(1) { yield(2) }
+
+or simply:
+
+	_ = yield(1) && yield(2)
+
+It is not always a mistake to ignore the result of yield.
+For example, this is a valid single-element iterator:
+
+	yield(1) // ok to ignore result
+	return
+
+It is only a mistake when the yield call that returned false may be
+followed by another call.
+
+Default: on.
+
+Package documentation: [yield](https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/yield)
 
 <!-- END Analyzers: DO NOT MANUALLY EDIT THIS SECTION -->

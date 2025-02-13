@@ -23,17 +23,17 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/block/ftl-golang-tools/go/types/objectpath"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/methodsets"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
-	"github.com/block/ftl-golang-tools/gopls/internal/file"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
-	"github.com/block/ftl-golang-tools/internal/event"
 	"golang.org/x/sync/errgroup"
+	"golang.org/x/tools/go/types/objectpath"
+	"golang.org/x/tools/go/types/typeutil"
+	"golang.org/x/tools/gopls/internal/cache"
+	"golang.org/x/tools/gopls/internal/cache/metadata"
+	"golang.org/x/tools/gopls/internal/cache/methodsets"
+	"golang.org/x/tools/gopls/internal/cache/parsego"
+	"golang.org/x/tools/gopls/internal/file"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/util/safetoken"
+	"golang.org/x/tools/internal/event"
 )
 
 // References returns a list of all references (sorted with
@@ -508,7 +508,10 @@ func expandMethodSearch(ctx context.Context, snapshot *cache.Snapshot, workspace
 	// Compute the method-set fingerprint used as a key to the global search.
 	key, hasMethods := methodsets.KeyOf(recv)
 	if !hasMethods {
-		return bug.Errorf("KeyOf(%s)={} yet %s is a method", recv, method)
+		// The query object was method T.m, but methodset(T)={}:
+		// this indicates that ill-typed T has conflicting fields and methods.
+		// Rather than bug-report (#67978), treat the empty method set at face value.
+		return nil
 	}
 	// Search the methodset index of each package in the workspace.
 	indexes, err := snapshot.MethodSets(ctx, workspaceIDs...)
@@ -522,7 +525,7 @@ func expandMethodSearch(ctx context.Context, snapshot *cache.Snapshot, workspace
 		index := index
 		group.Go(func() error {
 			// Consult index for matching methods.
-			results := index.Search(key, method.Name())
+			results := index.Search(key, method)
 			if len(results) == 0 {
 				return nil
 			}
@@ -577,6 +580,8 @@ func localReferences(pkg *cache.Package, targets map[types.Object]bool, correspo
 		}
 	}
 
+	var msets typeutil.MethodSetCache
+
 	// matches reports whether obj either is or corresponds to a target.
 	// (Correspondence is defined as usual for interface methods.)
 	matches := func(obj types.Object) bool {
@@ -586,7 +591,7 @@ func localReferences(pkg *cache.Package, targets map[types.Object]bool, correspo
 		if methodRecvs != nil && obj.Name() == methodName {
 			if orecv := effectiveReceiver(obj); orecv != nil {
 				for _, mrecv := range methodRecvs {
-					if concreteImplementsIntf(orecv, mrecv) {
+					if concreteImplementsIntf(&msets, orecv, mrecv) {
 						return true
 					}
 				}
@@ -613,7 +618,7 @@ func localReferences(pkg *cache.Package, targets map[types.Object]bool, correspo
 // comparisons for obj, if it is a method, or nil otherwise.
 func effectiveReceiver(obj types.Object) types.Type {
 	if fn, ok := obj.(*types.Func); ok {
-		if recv := fn.Type().(*types.Signature).Recv(); recv != nil {
+		if recv := fn.Signature().Recv(); recv != nil {
 			return methodsets.EnsurePointer(recv.Type())
 		}
 	}
@@ -651,12 +656,6 @@ func objectsAt(info *types.Info, file *ast.File, pos token.Pos) (map[types.Objec
 				targets[obj] = leaf
 			}
 		} else {
-			// Note: prior to go1.21, go/types issue #60372 causes the position
-			// a field Var T created for struct{*p.T} to be recorded at the
-			// start of the field type ("*") not the location of the T.
-			// This affects references and other gopls operations (issue #60369).
-			// TODO(adonovan): delete this comment when we drop support for go1.20.
-
 			// For struct{T}, we prefer the defined field Var over the used TypeName.
 			obj := info.ObjectOf(leaf)
 			if obj == nil {

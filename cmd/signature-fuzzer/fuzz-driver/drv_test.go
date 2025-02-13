@@ -11,7 +11,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/internal/testenv"
+	"golang.org/x/tools/internal/testenv"
 )
 
 // buildDriver builds the fuzz-driver executable, returning its path.

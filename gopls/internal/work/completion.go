@@ -14,10 +14,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/cache"
-	"github.com/block/ftl-golang-tools/gopls/internal/file"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/internal/event"
+	"golang.org/x/tools/gopls/internal/cache"
+	"golang.org/x/tools/gopls/internal/file"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/internal/event"
 )
 
 func Completion(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, position protocol.Position) (*protocol.CompletionList, error) {
@@ -54,7 +54,7 @@ func Completion(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, p
 	pathPrefixSlash := completingFrom
 	pathPrefixAbs := filepath.FromSlash(pathPrefixSlash)
 	if !filepath.IsAbs(pathPrefixAbs) {
-		pathPrefixAbs = filepath.Join(filepath.Dir(pw.URI.Path()), pathPrefixAbs)
+		pathPrefixAbs = filepath.Join(pw.URI.DirPath(), pathPrefixAbs)
 	}
 
 	// pathPrefixDir is the directory that will be walked to find matches.

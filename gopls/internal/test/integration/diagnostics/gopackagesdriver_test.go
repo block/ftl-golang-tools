@@ -7,7 +7,7 @@ package diagnostics
 import (
 	"testing"
 
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 // Test that the import error does not mention GOPATH when building with
@@ -25,9 +25,6 @@ go 1.12
 package foo
 
 import "mod.com/hello"
-
-func f() {
-}
 `
 	WithOptions(
 		FakeGoPackagesDriver(t),

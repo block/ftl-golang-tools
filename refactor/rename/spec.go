@@ -23,9 +23,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/block/ftl-golang-tools/go/buildutil"
-	"github.com/block/ftl-golang-tools/go/loader"
-	"github.com/block/ftl-golang-tools/internal/typesinternal"
+	"golang.org/x/tools/go/buildutil"
+	"golang.org/x/tools/go/loader"
+	"golang.org/x/tools/internal/typesinternal"
 )
 
 // A spec specifies an entity to rename.
@@ -155,7 +155,7 @@ func parseObjectSpec(spec *spec, main string) error {
 	}
 
 	if e, ok := e.(*ast.SelectorExpr); ok {
-		x := unparen(e.X)
+		x := ast.Unparen(e.X)
 
 		// Strip off star constructor, if any.
 		if star, ok := x.(*ast.StarExpr); ok {
@@ -172,7 +172,7 @@ func parseObjectSpec(spec *spec, main string) error {
 
 		if x, ok := x.(*ast.SelectorExpr); ok {
 			// field/method of type e.g. ("encoding/json".Decoder).Decode
-			y := unparen(x.X)
+			y := ast.Unparen(x.X)
 			if pkg := parseImportPath(y); pkg != "" {
 				spec.pkg = pkg               // e.g. "encoding/json"
 				spec.pkgMember = x.Sel.Name  // e.g. "Decoder"
@@ -313,7 +313,7 @@ func findFromObjectsInFile(iprog *loader.Program, spec *spec) ([]types.Object, e
 		// NB: under certain proprietary build systems, a given
 		// filename may appear in multiple packages.
 		for _, f := range info.Files {
-			thisFile := iprog.Fset.File(f.Pos())
+			thisFile := iprog.Fset.File(f.FileStart)
 			if !sameFile(thisFile.Name(), spec.filename) {
 				continue
 			}

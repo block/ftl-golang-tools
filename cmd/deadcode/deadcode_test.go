@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build go1.20
-
 package main_test
 
 import (
@@ -17,8 +15,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/internal/testenv"
-	"github.com/block/ftl-golang-tools/txtar"
+	"golang.org/x/tools/internal/testenv"
+	"golang.org/x/tools/txtar"
 )
 
 // Test runs the deadcode command on each scenario

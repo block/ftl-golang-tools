@@ -1,4 +1,4 @@
-# Setting up your workspace
+# Gopls: Setting up your workspace
 
 In the language server protocol, a "workspace" consists of a folder along with
 per-folder configuration. Some LSP clients such as VS Code allow configuring
@@ -101,7 +101,7 @@ and [`x/mod`](https://pkg.go.dev/golang.org/x/mod) is checked out into
 `$WORK/mod`, and you are working on a new `x/mod` API for editing `go.mod`
 files that you want to simultaneously integrate into gopls.
 
-You can work on both `github.com/block/ftl-golang-tools/gopls` and `golang.org/x/mod`
+You can work on both `golang.org/x/tools/gopls` and `golang.org/x/mod`
 simultaneously by creating a `go.work` file:
 
 ```sh

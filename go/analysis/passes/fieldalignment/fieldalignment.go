@@ -15,9 +15,9 @@ import (
 	"go/types"
 	"sort"
 
-	"github.com/block/ftl-golang-tools/go/analysis"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
-	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/passes/inspect"
+	"golang.org/x/tools/go/ast/inspector"
 )
 
 const Doc = `find structs that would use less memory if their fields were sorted
@@ -46,12 +46,21 @@ Be aware that the most compact order is not always the most efficient.
 In rare cases it may cause two variables each updated by its own goroutine
 to occupy the same CPU cache line, inducing a form of memory contention
 known as "false sharing" that slows down both goroutines.
+
+Unlike most analyzers, which report likely mistakes, the diagnostics
+produced by fieldanalyzer very rarely indicate a significant problem,
+so the analyzer is not included in typical suites such as vet or
+gopls. Use this standalone command to run it on your code:
+
+   $ go install golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest
+   $ fieldalignment [packages]
+
 `
 
 var Analyzer = &analysis.Analyzer{
 	Name:     "fieldalignment",
 	Doc:      Doc,
-	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/fieldalignment",
+	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/fieldalignment",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

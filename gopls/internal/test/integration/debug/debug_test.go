@@ -13,10 +13,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/protocol/command"
+	. "golang.org/x/tools/gopls/internal/test/integration"
+	"golang.org/x/tools/gopls/internal/util/bug"
 )
 
 func TestMain(m *testing.M) {

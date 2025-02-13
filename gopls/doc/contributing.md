@@ -1,11 +1,54 @@
-# Documentation for contributors
+# Gopls: Documentation for contributors
 
 This documentation augments the general documentation for contributing to the
 x/tools repository, described at the [repository root](../../CONTRIBUTING.md).
 
-Contributions are welcome, but since development is so active, we request that
-you file an issue and claim it before starting to work on something. Otherwise,
-it is likely that we might already be working on a fix for your issue.
+Contributions are welcome! However, development is fast moving,
+and we are limited in our capacity to review contributions.
+So, before sending a CL, please please please:
+
+- **file an issue** for a bug or feature request, if one does not
+  exist already. This allows us to identify redundant requests, or to
+  merge a specific problem into a more general one, and to assess the
+  importance of the problem.
+
+- **claim it for yourself** by commenting on the issue or, if you are
+  able, by assigning the issue to yourself. This helps us avoid two
+  people working on the same problem.
+
+- **propose an implementation plan** in the issue tracker for CLs of
+  any complexity. It is much more efficient to discuss the plan at a
+  high level before we start getting bogged down in the details of
+  a code review.
+
+When you send a CL, it should include:
+
+- a **CL description** that summarizes the change,
+  motivates why it is necessary,
+  explains it at a high level,
+  contrasts it with more obvious or simpler approaches, and
+  links to relevant issues;
+- **tests** (integration tests or marker tests);
+- **documentation**, for new or modified features; and
+- **release notes**, for new features or significant changes.
+
+During code review, please address all reviewer comments.
+Some comments result in straightforward code changes;
+others demand a more complex response.
+When a reviewer asks a question, the best response is
+often not to respond to it directly, but to change the
+code to avoid raising the question,
+for example by making the code self-explanatory.
+It's fine to disagree with a comment,
+point out a reviewer's mistake,
+or offer to address a comment in a follow-up change,
+leaving a TODO comment in the current CL.
+But please don't dismiss or quietly ignore a comment without action,
+as it may lead reviewers to repeat themselves,
+or to serious problems being neglected.
+
+For more detail, see the Go project's
+[contribution guidelines](https://golang.org/doc/contribute.html).
 
 ## Finding issues
 
@@ -18,8 +61,8 @@ claiming it.
 
 ## Getting started
 
-Most of the `gopls` logic is in the `github.com/block/ftl-golang-tools/gopls/internal`
-directory. See [design/implementation.md] for an overview of the code organization.
+Most of the `gopls` logic is in the `golang.org/x/tools/gopls/internal`
+directory. See [design/implementation.md](./design/implementation.md) for an overview of the code organization.
 
 ## Build
 
@@ -35,8 +78,8 @@ your `gopls` version looks like this:
 
 ```bash
 $ gopls version
-github.com/block/ftl-golang-tools/gopls master
-    github.com/block/ftl-golang-tools/gopls@(devel)
+golang.org/x/tools/gopls master
+    golang.org/x/tools/gopls@(devel)
 ```
 
 ## Getting help
@@ -137,7 +180,7 @@ need help.
 When you mail your CL and you or a fellow contributor assigns the
 `Run-TryBot=1` label in Gerrit, the
 [TryBots](https://golang.org/doc/contribute.html#trybots) will run tests in
-both the `github.com/block/ftl-golang-tools` and `github.com/block/ftl-golang-tools/gopls` modules, as
+both the `golang.org/x/tools` and `golang.org/x/tools/gopls` modules, as
 described above.
 
 Furthermore, an additional "gopls-CI" pass will be run by _Kokoro_, which is a
@@ -165,3 +208,17 @@ telemetry.-->
 
 [issue-gopls]: https://github.com/golang/go/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+label%3Agopls "gopls issues"
 [issue-wanted]: https://github.com/golang/go/issues?utf8=✓&q=is%3Aissue+is%3Aopen+label%3Agopls+label%3A"help+wanted" "help wanted"
+
+## Documentation
+
+Each CL that adds or changes a feature should include, in addition to
+a test that exercises the new behavior:
+
+- a **release note** that briefly explains the change, and
+- **comprehensive documentation** in the [index of features](features/README.md).
+
+The release note should go in the file named for the forthcoming
+release, for example [release/v0.16.0.md](release/v0.16.0.md). (Create
+the file if your feature is the first to be added after a release.)
+
+

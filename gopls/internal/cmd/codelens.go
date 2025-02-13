@@ -9,9 +9,9 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/settings"
-	"github.com/block/ftl-golang-tools/internal/tool"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/settings"
+	"golang.org/x/tools/internal/tool"
 )
 
 // codelens implements the codelens verb for gopls.
@@ -42,10 +42,10 @@ is executed, and its output is printed to stdout.
 
 Example:
 
-	$ gopls codelens a_test.go                    # list code lenses in a file
-	$ gopls codelens a_test.go:10                 # list code lenses on line 10
-	$ gopls codelens a_test.go gopls.test         # list gopls.test commands
-	$ gopls codelens -run a_test.go:10 gopls.test # run a specific test
+	$ gopls codelens a_test.go                     # list code lenses in a file
+	$ gopls codelens a_test.go:10                  # list code lenses on line 10
+	$ gopls codelens a_test.go "run test"          # list gopls.run_tests commands
+	$ gopls codelens -exec a_test.go:10 "run test" # run a specific test
 
 codelens-flags:
 `)
@@ -78,9 +78,9 @@ func (r *codelens) Run(ctx context.Context, args ...string) error {
 			origOptions(opts)
 		}
 		if opts.Codelenses == nil {
-			opts.Codelenses = make(map[protocol.CodeLensSource]bool)
+			opts.Codelenses = make(map[settings.CodeLensSource]bool)
 		}
-		opts.Codelenses[protocol.CodeLensTest] = true
+		opts.Codelenses[settings.CodeLensTest] = true
 	}
 
 	conn, err := r.app.connect(ctx)

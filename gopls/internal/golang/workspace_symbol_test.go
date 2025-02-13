@@ -7,7 +7,7 @@ package golang
 import (
 	"testing"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"golang.org/x/tools/gopls/internal/cache"
 )
 
 func TestParseQuery(t *testing.T) {

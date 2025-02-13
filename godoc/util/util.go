@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // Package util contains utility types and functions for godoc.
-package util // import "github.com/block/ftl-golang-tools/godoc/util"
+package util // import "golang.org/x/tools/godoc/util"
 
 import (
 	pathpkg "path"
@@ -11,25 +11,25 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/block/ftl-golang-tools/godoc/vfs"
+	"golang.org/x/tools/godoc/vfs"
 )
 
 // An RWValue wraps a value and permits mutually exclusive
 // access to it and records the time the value was last set.
 type RWValue struct {
 	mutex     sync.RWMutex
-	value     interface{}
+	value     any
 	timestamp time.Time // time of last set()
 }
 
-func (v *RWValue) Set(value interface{}) {
+func (v *RWValue) Set(value any) {
 	v.mutex.Lock()
 	v.value = value
 	v.timestamp = time.Now()
 	v.mutex.Unlock()
 }
 
-func (v *RWValue) Get() (interface{}, time.Time) {
+func (v *RWValue) Get() (any, time.Time) {
 	v.mutex.RLock()
 	defer v.mutex.RUnlock()
 	return v.value, v.timestamp

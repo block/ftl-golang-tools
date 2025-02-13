@@ -44,7 +44,7 @@ import (
 	"math/big"
 	"os"
 
-	"github.com/block/ftl-golang-tools/internal/typeparams"
+	"golang.org/x/tools/internal/typeparams"
 )
 
 // If true, show diagnostic information at each step of lifting.

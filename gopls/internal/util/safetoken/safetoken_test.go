@@ -12,9 +12,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/packages"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
-	"github.com/block/ftl-golang-tools/internal/testenv"
+	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/gopls/internal/util/safetoken"
+	"golang.org/x/tools/internal/testenv"
 )
 
 func TestWorkaroundIssue57490(t *testing.T) {
@@ -23,11 +23,11 @@ func TestWorkaroundIssue57490(t *testing.T) {
 	// syntax nodes, computed as Rbrace+len("}"), to be beyond EOF.
 	src := `package p; func f() { var x struct`
 	fset := token.NewFileSet()
-	file, _ := parser.ParseFile(fset, "a.go", src, 0)
-	tf := fset.File(file.Pos())
+	file, _ := parser.ParseFile(fset, "a.go", src, parser.SkipObjectResolution)
+	tf := fset.File(file.FileStart)
 
 	// Add another file to the FileSet.
-	file2, _ := parser.ParseFile(fset, "b.go", "package q", 0)
+	file2, _ := parser.ParseFile(fset, "b.go", "package q", parser.SkipObjectResolution)
 
 	// This is the ambiguity of #57490...
 	if file.End() != file2.Pos() {
@@ -84,7 +84,7 @@ func TestGoplsSourceDoesNotCallTokenFileMethods(t *testing.T) {
 		"GOFLAGS=-mod=mod",
 	)
 
-	pkgs, err := packages.Load(cfg, "go/token", "github.com/block/ftl-golang-tools/gopls/...")
+	pkgs, err := packages.Load(cfg, "go/token", "golang.org/x/tools/gopls/...")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,7 +116,9 @@ func TestGoplsSourceDoesNotCallTokenFileMethods(t *testing.T) {
 
 	for _, pkg := range pkgs {
 		switch pkg.PkgPath {
-		case "go/token", "github.com/block/ftl-golang-tools/gopls/internal/util/safetoken":
+		case "go/token",
+			"golang.org/x/tools/gopls/internal/util/safetoken", // this package
+			"golang.org/x/tools/gopls/internal/cache/parsego":  // copies go/parser/resolver.go
 			continue // allow calls within these packages
 		}
 

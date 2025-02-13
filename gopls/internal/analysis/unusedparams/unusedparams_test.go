@@ -7,11 +7,11 @@ package unusedparams_test
 import (
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
-	"github.com/block/ftl-golang-tools/gopls/internal/analysis/unusedparams"
+	"golang.org/x/tools/go/analysis/analysistest"
+	"golang.org/x/tools/gopls/internal/analysis/unusedparams"
 )
 
 func Test(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, unusedparams.Analyzer, "a", "typeparams")
+	analysistest.RunWithSuggestedFixes(t, testdata, unusedparams.Analyzer, "a", "generatedcode", "typeparams")
 }

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/block/ftl-golang-tools/internal/stack"
+	"golang.org/x/tools/internal/stack"
 )
 
 // this is only needed to support pre 1.14 when testing.TB did not have Cleanup

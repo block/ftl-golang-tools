@@ -16,10 +16,10 @@ import (
 	"go/token"
 	"reflect"
 
-	"github.com/block/ftl-golang-tools/go/analysis"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
-	"github.com/block/ftl-golang-tools/go/ast/inspector"
-	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/passes/inspect"
+	"golang.org/x/tools/go/ast/inspector"
+	"golang.org/x/tools/internal/analysisinternal"
 )
 
 //go:embed doc.go
@@ -30,13 +30,25 @@ var Analyzer = &analysis.Analyzer{
 	Doc:      analysisinternal.MustExtractDoc(doc, "simplifycompositelit"),
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
-	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/simplifycompositelit",
+	URL:      "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/simplifycompositelit",
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
+	// Gather information whether file is generated or not
+	generated := make(map[*token.File]bool)
+	for _, file := range pass.Files {
+		if ast.IsGenerated(file) {
+			generated[pass.Fset.File(file.FileStart)] = true
+		}
+	}
+
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	nodeFilter := []ast.Node{(*ast.CompositeLit)(nil)}
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
+		if _, ok := generated[pass.Fset.File(n.Pos())]; ok {
+			return // skip checking if it's generated code
+		}
+
 		expr := n.(*ast.CompositeLit)
 
 		outer := expr

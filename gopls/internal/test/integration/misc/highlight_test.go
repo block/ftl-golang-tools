@@ -8,8 +8,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	"golang.org/x/tools/gopls/internal/protocol"
+	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 func TestWorkspacePackageHighlight(t *testing.T) {
@@ -95,9 +95,6 @@ module mod.com
 go 1.12
 
 require example.com v1.2.3
--- go.sum --
-example.com v1.2.3 h1:WFzrgiQJwEDJNLDUOV1f9qlasQkvzXf2UNLaNIqbWsI=
-example.com v1.2.3/go.mod h1:Y2Rc5rVWjWur0h3pd9aEvK5Pof8YKDANh9gHA2Maujo=
 -- main.go --
 package main
 
@@ -110,6 +107,7 @@ func main() {}`
 
 	WithOptions(
 		ProxyFiles(proxy),
+		WriteGoSum("."),
 	).Run(t, mod, func(t *testing.T, env *Env) {
 		env.OpenFile("main.go")
 

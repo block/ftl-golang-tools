@@ -9,8 +9,8 @@
 package main
 
 import (
-	"github.com/block/ftl-golang-tools/go/analysis/passes/unusedwrite"
-	"github.com/block/ftl-golang-tools/go/analysis/singlechecker"
+	"golang.org/x/tools/go/analysis/passes/unusedwrite"
+	"golang.org/x/tools/go/analysis/singlechecker"
 )
 
 func main() { singlechecker.Main(unusedwrite.Analyzer) }

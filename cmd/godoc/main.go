@@ -39,13 +39,13 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/block/ftl-golang-tools/godoc"
-	"github.com/block/ftl-golang-tools/godoc/static"
-	"github.com/block/ftl-golang-tools/godoc/vfs"
-	"github.com/block/ftl-golang-tools/godoc/vfs/gatefs"
-	"github.com/block/ftl-golang-tools/godoc/vfs/mapfs"
-	"github.com/block/ftl-golang-tools/godoc/vfs/zipfs"
-	"github.com/block/ftl-golang-tools/internal/gocommand"
+	"golang.org/x/tools/godoc"
+	"golang.org/x/tools/godoc/static"
+	"golang.org/x/tools/godoc/vfs"
+	"golang.org/x/tools/godoc/vfs/gatefs"
+	"golang.org/x/tools/godoc/vfs/mapfs"
+	"golang.org/x/tools/godoc/vfs/zipfs"
+	"golang.org/x/tools/internal/gocommand"
 )
 
 const defaultAddr = "localhost:6060" // default webserver address

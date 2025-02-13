@@ -7,11 +7,11 @@ package simplifycompositelit_test
 import (
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
-	"github.com/block/ftl-golang-tools/gopls/internal/analysis/simplifycompositelit"
+	"golang.org/x/tools/go/analysis/analysistest"
+	"golang.org/x/tools/gopls/internal/analysis/simplifycompositelit"
 )
 
 func Test(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, simplifycompositelit.Analyzer, "a")
+	analysistest.RunWithSuggestedFixes(t, testdata, simplifycompositelit.Analyzer, "a", "generatedcode")
 }

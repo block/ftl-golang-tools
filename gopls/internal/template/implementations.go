@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/cache"
-	"github.com/block/ftl-golang-tools/gopls/internal/file"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol/semtok"
+	"golang.org/x/tools/gopls/internal/cache"
+	"golang.org/x/tools/gopls/internal/file"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/protocol/semtok"
 )
 
 // line number (1-based) and message
@@ -199,15 +199,8 @@ func SemanticTokens(ctx context.Context, snapshot *cache.Snapshot, spn protocol.
 		line, col := p.LineCol(t.Start)
 		add(line, col, uint32(sz))
 	}
-	const noStrings = false
-	const noNumbers = false
 	ans := &protocol.SemanticTokens{
-		Data: semtok.Encode(
-			items,
-			noStrings,
-			noNumbers,
-			snapshot.Options().SemanticTypes,
-			snapshot.Options().SemanticMods),
+		Data: semtok.Encode(items, nil, nil),
 		// for small cache, some day. for now, the LSP client ignores this
 		// (that is, when the LSP client starts returning these, we can cache)
 		ResultID: fmt.Sprintf("%v", time.Now()),

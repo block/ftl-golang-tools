@@ -5,6 +5,10 @@
 /*
 Package packagestest creates temporary projects on disk for testing go tools on.
 
+[Note: there is an open proposal (golang/go#70229) to deprecate, tag,
+and delete this package. If accepted, the last version of the package
+be available indefinitely but will not receive updates.]
+
 By changing the exporter used, you can create projects for multiple build
 systems from the same description, and run the same tests on them in many
 cases.
@@ -76,9 +80,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/expect"
-	"github.com/block/ftl-golang-tools/go/packages"
-	"github.com/block/ftl-golang-tools/internal/testenv"
+	"golang.org/x/tools/go/expect"
+	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/internal/testenv"
 )
 
 var (

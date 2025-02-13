@@ -16,7 +16,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/block/ftl-golang-tools/internal/pprof"
+	"golang.org/x/tools/internal/pprof"
 )
 
 func main() {

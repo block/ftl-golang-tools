@@ -64,7 +64,7 @@ graph using the Imports fields.
 
 The Load function can be configured by passing a pointer to a Config as
 the first argument. A nil Config is equivalent to the zero Config, which
-causes Load to run in LoadFiles mode, collecting minimal information.
+causes Load to run in [LoadFiles] mode, collecting minimal information.
 See the documentation for type Config for details.
 
 As noted earlier, the Config.Mode controls the amount of detail
@@ -72,14 +72,14 @@ reported about the loaded packages. See the documentation for type LoadMode
 for details.
 
 Most tools should pass their command-line arguments (after any flags)
-uninterpreted to [Load], so that it can interpret them
+uninterpreted to Load, so that it can interpret them
 according to the conventions of the underlying build system.
 
 See the Example function for typical usage.
 
 # The driver protocol
 
-[Load] may be used to load Go packages even in Go projects that use
+Load may be used to load Go packages even in Go projects that use
 alternative build systems, by installing an appropriate "driver"
 program for the build system and specifying its location in the
 GOPACKAGESDRIVER environment variable.
@@ -97,8 +97,17 @@ JSON-encoded [DriverRequest] message providing additional information
 is written to the driver's standard input. The driver must write a
 JSON-encoded [DriverResponse] message to its standard output. (This
 message differs from the JSON schema produced by 'go list'.)
+
+The value of the PWD environment variable seen by the driver process
+is the preferred name of its working directory. (The working directory
+may have other aliases due to symbolic links; see the comment on the
+Dir field of [exec.Cmd] for related information.)
+When the driver process emits in its response the name of a file
+that is a descendant of this directory, it must use an absolute path
+that has the value of PWD as a prefix, to ensure that the returned
+filenames satisfy the original query.
 */
-package packages // import "github.com/block/ftl-golang-tools/go/packages"
+package packages // import "golang.org/x/tools/go/packages"
 
 /*
 
@@ -106,7 +115,7 @@ Motivation and design considerations
 
 The new package's design solves problems addressed by two existing
 packages: go/build, which locates and describes packages, and
-github.com/block/ftl-golang-tools/go/loader, which loads, parses and type-checks them.
+golang.org/x/tools/go/loader, which loads, parses and type-checks them.
 The go/build.Package structure encodes too much of the 'go build' way
 of organizing projects, leaving us in need of a data type that describes a
 package of Go source code independent of the underlying build system.

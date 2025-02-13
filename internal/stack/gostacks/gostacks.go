@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/block/ftl-golang-tools/internal/stack"
+	"golang.org/x/tools/internal/stack"
 )
 
 func main() {

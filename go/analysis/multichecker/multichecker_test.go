@@ -14,10 +14,10 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/analysis"
-	"github.com/block/ftl-golang-tools/go/analysis/multichecker"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/findcall"
-	"github.com/block/ftl-golang-tools/internal/testenv"
+	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/multichecker"
+	"golang.org/x/tools/go/analysis/passes/findcall"
+	"golang.org/x/tools/internal/testenv"
 )
 
 func main() {

@@ -11,9 +11,8 @@ import (
 	"go/types"
 	"strings"
 
-	"github.com/block/ftl-golang-tools/go/analysis"
-	"github.com/block/ftl-golang-tools/internal/aliases"
-	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/internal/analysisinternal"
 )
 
 //go:embed doc.go
@@ -24,7 +23,7 @@ var Analyzer = &analysis.Analyzer{
 	Doc:              analysisinternal.MustExtractDoc(doc, "embed"),
 	Run:              run,
 	RunDespiteErrors: true,
-	URL:              "https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/embeddirective",
+	URL:              "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/embeddirective",
 }
 
 const FixCategory = "addembedimport" // recognized by gopls ApplyFix
@@ -148,7 +147,7 @@ func embeddableType(o types.Object) bool {
 
 	// For embed.FS the underlying type is an implementation detail.
 	// As long as the named type resolves to embed.FS, it is OK.
-	if named, ok := aliases.Unalias(o.Type()).(*types.Named); ok {
+	if named, ok := types.Unalias(o.Type()).(*types.Named); ok {
 		obj := named.Obj()
 		if obj.Pkg() != nil && obj.Pkg().Path() == "embed" && obj.Name() == "FS" {
 			return true

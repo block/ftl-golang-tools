@@ -13,7 +13,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command/gen"
+	"golang.org/x/tools/gopls/internal/protocol/command/gen"
 )
 
 func main() {

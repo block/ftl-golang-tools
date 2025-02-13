@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	jsonrpc2_v2 "github.com/block/ftl-golang-tools/internal/jsonrpc2_v2"
+	"golang.org/x/tools/gopls/internal/protocol"
+	jsonrpc2_v2 "golang.org/x/tools/internal/jsonrpc2_v2"
 
-	. "github.com/block/ftl-golang-tools/gopls/internal/lsprpc"
+	. "golang.org/x/tools/gopls/internal/lsprpc"
 )
 
 // ServerBinder binds incoming connections to a new server.

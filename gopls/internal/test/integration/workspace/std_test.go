@@ -5,13 +5,14 @@
 package workspace
 
 import (
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
 
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 func TestStdWorkspace(t *testing.T) {
@@ -36,7 +37,12 @@ func TestStdWorkspace(t *testing.T) {
 
 	// Query GOROOT. This is slightly more precise than e.g. runtime.GOROOT, as
 	// it queries the go command in the environment.
-	goroot, err := exec.Command("go", "env", "GOROOT").Output()
+	cmd := exec.Command("go", "env", "GOROOT")
+	// Run with GOTOOLCHAIN=local so as to not be affected by toolchain upgrades
+	// in the current directory (which is affected by gopls' go.mod file).
+	// This was golang/go#70187
+	cmd.Env = append(os.Environ(), "GOTOOLCHAIN=local")
+	goroot, err := cmd.Output()
 	if err != nil {
 		t.Fatal(err)
 	}

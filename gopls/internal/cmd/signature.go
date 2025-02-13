@@ -9,8 +9,8 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/internal/tool"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/internal/tool"
 )
 
 // signature implements the signature verb for gopls

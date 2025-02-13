@@ -1,14 +1,14 @@
 # Go Tools
 
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/block/ftl-golang-tools)](https://pkg.go.dev/github.com/block/ftl-golang-tools)
+[![PkgGoDev](https://pkg.go.dev/badge/golang.org/x/tools)](https://pkg.go.dev/golang.org/x/tools)
 
-This repository provides the `github.com/block/ftl-golang-tools` module, comprising
+This repository provides the `golang.org/x/tools` module, comprising
 various tools and packages mostly for static analysis of Go programs,
 some of which are listed below.
 Use the "Go reference" link above for more information about any package.
 
 It also contains the
-[`github.com/block/ftl-golang-tools/gopls`](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls)
+[`golang.org/x/tools/gopls`](https://pkg.go.dev/golang.org/x/tools/gopls)
 module, whose root package is a language-server protocol (LSP) server for Go.
 An LSP server analyses the source code of a project and
 responds to requests from a wide range of editors such as VSCode and
@@ -28,7 +28,7 @@ Selected commands:
 
 These commands may be fetched with a command such as
 ```
-go install github.com/block/ftl-golang-tools/cmd/goimports@latest
+go install golang.org/x/tools/cmd/goimports@latest
 ```
 
 Selected packages:
@@ -51,9 +51,6 @@ Selected packages:
 
 - `go/cfg` provides a simple control-flow graph (CFG) for a Go function.
 
-- `go/expect` reads Go source files used as test inputs and interprets
-  special comments within them as queries or assertions for testing.
-
 - `go/gcexportdata` and `go/gccgoexportdata` read and write the binary
   files containing type information used by the standard and `gccgo` compilers.
 
@@ -64,25 +61,27 @@ Numerous other packages provide more esoteric functionality.
 
 <!-- Some that didn't make the cut:
 
-github.com/block/ftl-golang-tools/benchmark/parse
-github.com/block/ftl-golang-tools/go/ast/astutil
-github.com/block/ftl-golang-tools/go/types/typeutil
-github.com/block/ftl-golang-tools/playground
-github.com/block/ftl-golang-tools/present
-github.com/block/ftl-golang-tools/refactor/importgraph
-github.com/block/ftl-golang-tools/refactor/rename
-github.com/block/ftl-golang-tools/refactor/satisfy
-github.com/block/ftl-golang-tools/txtar
+golang.org/x/tools/benchmark/parse
+golang.org/x/tools/go/ast/astutil
+golang.org/x/tools/go/types/typeutil
+golang.org/x/tools/playground
+golang.org/x/tools/present
+golang.org/x/tools/refactor/importgraph
+golang.org/x/tools/refactor/rename
+golang.org/x/tools/refactor/satisfy
+golang.org/x/tools/txtar
 
 -->
 
 ## Contributing
 
 This repository uses Gerrit for code changes.
-To learn how to submit changes, see https://golang.org/doc/contribute.html.
+To learn how to submit changes, see https://go.dev/doc/contribute.
+
+The git repository is https://go.googlesource.com/tools.
 
 The main issue tracker for the tools repository is located at
-https://github.com/golang/go/issues. Prefix your issue with "x/tools/(your
+https://go.dev/issues. Prefix your issue with "x/tools/(your
 subdir):" in the subject line, so it is easy to find.
 
 ### JavaScript and CSS Formatting

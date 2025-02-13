@@ -6,24 +6,6 @@ package analysis
 
 import "go/token"
 
-// A SimpleDiagnostic is a simplified representation of Diagnostic for use in APIs that don't have access
-// to package loader types.
-type SimpleDiagnostic struct {
-	Pos      SimplePosition
-	End      SimplePosition // optional
-	Category string         // optional
-	Message  string
-}
-
-// A SimplePosition is a simplified representation of token.Position for use in APIs that don't have access to
-// package loader types.
-type SimplePosition struct {
-	Filename string
-	Line     int
-	Column   int
-	Offset   int
-}
-
 // A Diagnostic is a message associated with a source location or range.
 //
 // An Analyzer may return a variety of diagnostics; the optional Category,
@@ -69,27 +51,6 @@ type Diagnostic struct {
 	Related []RelatedInformation
 }
 
-func (d Diagnostic) ToSimple(fset *token.FileSet) SimpleDiagnostic {
-	pos := fset.Position(d.Pos)
-	end := fset.Position(d.End)
-	return SimpleDiagnostic{
-		Pos: SimplePosition{
-			Filename: pos.Filename,
-			Line:     pos.Line,
-			Column:   pos.Column,
-			Offset:   pos.Offset,
-		},
-		End: SimplePosition{
-			Filename: end.Filename,
-			Line:     end.Line,
-			Column:   end.Column,
-			Offset:   end.Offset,
-		},
-		Category: d.Category,
-		Message:  d.Message,
-	}
-}
-
 // RelatedInformation contains information related to a diagnostic.
 // For example, a diagnostic that flags duplicated declarations of a
 // variable may include one RelatedInformation per existing
@@ -104,7 +65,9 @@ type RelatedInformation struct {
 // user can choose to apply to their code. Usually the SuggestedFix is
 // meant to fix the issue flagged by the diagnostic.
 //
-// The TextEdits must not overlap, nor contain edits for other packages.
+// The TextEdits must not overlap, nor contain edits for other
+// packages. Edits need not be totally ordered, but the order
+// determines how insertions at the same point will be applied.
 type SuggestedFix struct {
 	// A verb phrase describing the fix, to be shown to
 	// a user trying to decide whether to accept it.

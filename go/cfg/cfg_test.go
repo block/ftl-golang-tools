@@ -13,9 +13,9 @@ import (
 	"go/token"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/cfg"
-	"github.com/block/ftl-golang-tools/go/packages"
-	"github.com/block/ftl-golang-tools/internal/testenv"
+	"golang.org/x/tools/go/cfg"
+	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/internal/testenv"
 )
 
 const src = `package main
@@ -127,12 +127,6 @@ func f10(ch chan int) {
 	}
 	live()
 }
-
-func f11() {
-	goto; // mustn't crash
-	dead()
-}
-
 `
 
 func TestDeadCode(t *testing.T) {
@@ -182,7 +176,7 @@ func TestSmoke(t *testing.T) {
 	// The Mode API is just hateful.
 	// https://github.com/golang/go/issues/48226#issuecomment-1948792315
 	mode := packages.NeedDeps | packages.NeedImports | packages.NeedSyntax | packages.NeedTypes
-	pkgs, err := packages.Load(&packages.Config{Mode: mode}, "std", "github.com/block/ftl-golang-tools/...")
+	pkgs, err := packages.Load(&packages.Config{Mode: mode}, "std", "golang.org/x/tools/...")
 	if err != nil {
 		t.Fatal(err)
 	}

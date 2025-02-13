@@ -5,14 +5,14 @@
 //go:build !appengine
 // +build !appengine
 
-// Package socket implements an WebSocket-based playground backend.
+// Package socket implements a WebSocket-based playground backend.
 // Clients connect to a websocket handler and send run/kill commands, and
 // the server sends the output and exit status of the running processes.
 // Multiple clients running multiple processes may be served concurrently.
 // The wire format is JSON and is described by the Message type.
 //
 // This will not run on App Engine as WebSockets are not supported there.
-package socket // import "github.com/block/ftl-golang-tools/playground/socket"
+package socket // import "golang.org/x/tools/playground/socket"
 
 import (
 	"bytes"
@@ -34,7 +34,7 @@ import (
 	"unicode/utf8"
 
 	"golang.org/x/net/websocket"
-	"github.com/block/ftl-golang-tools/txtar"
+	"golang.org/x/tools/txtar"
 )
 
 // RunScripts specifies whether the socket handler should execute shell scripts

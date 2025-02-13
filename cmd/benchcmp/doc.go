@@ -34,4 +34,4 @@ in a format like this:
 	benchmark           old bytes     new bytes     delta
 	BenchmarkConcat     80            48            -40.00%
 */
-package main // import "github.com/block/ftl-golang-tools/cmd/benchcmp"
+package main // import "golang.org/x/tools/cmd/benchcmp"

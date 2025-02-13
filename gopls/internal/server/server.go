@@ -22,14 +22,14 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/cache"
-	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
-	"github.com/block/ftl-golang-tools/gopls/internal/golang"
-	"github.com/block/ftl-golang-tools/gopls/internal/progress"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/settings"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
-	"github.com/block/ftl-golang-tools/internal/event"
+	"golang.org/x/tools/gopls/internal/cache"
+	"golang.org/x/tools/gopls/internal/cache/metadata"
+	"golang.org/x/tools/gopls/internal/golang"
+	"golang.org/x/tools/gopls/internal/progress"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/settings"
+	"golang.org/x/tools/gopls/internal/util/bug"
+	"golang.org/x/tools/internal/event"
 )
 
 // New creates an LSP server and binds it to handle incoming client
@@ -303,7 +303,7 @@ func (s *server) initWeb() (*web, error) {
 		openClientEditor(req.Context(), s.client, protocol.Location{
 			URI:   uri,
 			Range: protocol.Range{Start: posn, End: posn},
-		})
+		}, s.Options())
 	})
 
 	// The /pkg/PATH&view=... handler shows package documentation for PATH.

@@ -7,13 +7,13 @@ package server
 import (
 	"context"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/file"
-	"github.com/block/ftl-golang-tools/gopls/internal/golang"
-	"github.com/block/ftl-golang-tools/gopls/internal/label"
-	"github.com/block/ftl-golang-tools/gopls/internal/mod"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/work"
-	"github.com/block/ftl-golang-tools/internal/event"
+	"golang.org/x/tools/gopls/internal/file"
+	"golang.org/x/tools/gopls/internal/golang"
+	"golang.org/x/tools/gopls/internal/label"
+	"golang.org/x/tools/gopls/internal/mod"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/work"
+	"golang.org/x/tools/internal/event"
 )
 
 func (s *server) Formatting(ctx context.Context, params *protocol.DocumentFormattingParams) ([]protocol.TextEdit, error) {

@@ -8,11 +8,12 @@ import (
 	_ "embed"
 	"go/ast"
 
-	"github.com/block/ftl-golang-tools/go/analysis"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
-	"github.com/block/ftl-golang-tools/go/ast/inspector"
-	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/passes/inspect"
+	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
+	"golang.org/x/tools/go/ast/inspector"
+	"golang.org/x/tools/go/types/typeutil"
+	"golang.org/x/tools/internal/analysisinternal"
 )
 
 //go:embed doc.go
@@ -22,20 +23,20 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "defers",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
-	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/defers",
+	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/defers",
 	Doc:      analysisutil.MustExtractDoc(doc, "defers"),
 	Run:      run,
 }
 
-func run(pass *analysis.Pass) (interface{}, error) {
-	if !analysisutil.Imports(pass.Pkg, "time") {
+func run(pass *analysis.Pass) (any, error) {
+	if !analysisinternal.Imports(pass.Pkg, "time") {
 		return nil, nil
 	}
 
 	checkDeferCall := func(node ast.Node) bool {
 		switch v := node.(type) {
 		case *ast.CallExpr:
-			if analysisutil.IsFunctionNamed(typeutil.StaticCallee(pass.TypesInfo, v), "time", "Since") {
+			if analysisinternal.IsFunctionNamed(typeutil.Callee(pass.TypesInfo, v), "time", "Since") {
 				pass.Reportf(v.Pos(), "call to time.Since is not deferred")
 			}
 		case *ast.FuncLit:

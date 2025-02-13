@@ -9,7 +9,7 @@ package cache
 import (
 	"io"
 
-	"github.com/block/ftl-golang-tools/internal/event/label"
+	"golang.org/x/tools/internal/event/label"
 )
 
 var (

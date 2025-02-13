@@ -13,7 +13,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
+	"golang.org/x/tools/internal/jsonrpc2"
 )
 
 // Connector is the interface used to connect to a server.

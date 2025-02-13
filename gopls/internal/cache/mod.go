@@ -8,19 +8,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path/filepath"
 	"regexp"
 	"strings"
 
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/module"
-	"github.com/block/ftl-golang-tools/gopls/internal/file"
-	"github.com/block/ftl-golang-tools/gopls/internal/label"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
-	"github.com/block/ftl-golang-tools/internal/event"
-	"github.com/block/ftl-golang-tools/internal/gocommand"
-	"github.com/block/ftl-golang-tools/internal/memoize"
+	"golang.org/x/tools/gopls/internal/file"
+	"golang.org/x/tools/gopls/internal/label"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/protocol/command"
+	"golang.org/x/tools/internal/event"
+	"golang.org/x/tools/internal/memoize"
 )
 
 // A ParsedModule contains the results of parsing a go.mod file.
@@ -252,11 +250,7 @@ func modWhyImpl(ctx context.Context, snapshot *Snapshot, fh file.Handle) (map[st
 	for _, req := range pm.File.Require {
 		args = append(args, req.Mod.Path)
 	}
-	inv, cleanupInvocation, err := snapshot.GoCommandInvocation(false, &gocommand.Invocation{
-		Verb:       "mod",
-		Args:       args,
-		WorkingDir: filepath.Dir(fh.URI().Path()),
-	})
+	inv, cleanupInvocation, err := snapshot.GoCommandInvocation(NoNetwork, fh.URI().DirPath(), "mod", args)
 	if err != nil {
 		return nil, err
 	}
@@ -418,10 +412,7 @@ func (s *Snapshot) goCommandDiagnostic(pm *ParsedModule, loc protocol.Location, 
 
 	switch {
 	case strings.Contains(goCmdError, "inconsistent vendoring"):
-		cmd, err := command.NewVendorCommand("Run go mod vendor", command.URIArg{URI: pm.URI})
-		if err != nil {
-			return nil, err
-		}
+		cmd := command.NewVendorCommand("Run go mod vendor", command.URIArg{URI: pm.URI})
 		return &Diagnostic{
 			URI:      pm.URI,
 			Range:    loc.Range,
@@ -435,14 +426,8 @@ See https://github.com/golang/go/issues/39164 for more detail on this issue.`,
 	case strings.Contains(goCmdError, "updates to go.sum needed"), strings.Contains(goCmdError, "missing go.sum entry"):
 		var args []protocol.DocumentURI
 		args = append(args, s.View().ModFiles()...)
-		tidyCmd, err := command.NewTidyCommand("Run go mod tidy", command.URIArgs{URIs: args})
-		if err != nil {
-			return nil, err
-		}
-		updateCmd, err := command.NewUpdateGoSumCommand("Update go.sum", command.URIArgs{URIs: args})
-		if err != nil {
-			return nil, err
-		}
+		tidyCmd := command.NewTidyCommand("Run go mod tidy", command.URIArgs{URIs: args})
+		updateCmd := command.NewUpdateGoSumCommand("Update go.sum", command.URIArgs{URIs: args})
 		msg := "go.sum is out of sync with go.mod. Please update it by applying the quick fix."
 		if innermost != nil {
 			msg = fmt.Sprintf("go.sum is out of sync with go.mod: entry for %v is missing. Please updating it by applying the quick fix.", innermost)
@@ -460,14 +445,11 @@ See https://github.com/golang/go/issues/39164 for more detail on this issue.`,
 		}, nil
 	case strings.Contains(goCmdError, "disabled by GOPROXY=off") && innermost != nil:
 		title := fmt.Sprintf("Download %v@%v", innermost.Path, innermost.Version)
-		cmd, err := command.NewAddDependencyCommand(title, command.DependencyArgs{
+		cmd := command.NewAddDependencyCommand(title, command.DependencyArgs{
 			URI:        pm.URI,
 			AddRequire: false,
 			GoCmdArgs:  []string{fmt.Sprintf("%v@%v", innermost.Path, innermost.Version)},
 		})
-		if err != nil {
-			return nil, err
-		}
 		return &Diagnostic{
 			URI:            pm.URI,
 			Range:          loc.Range,

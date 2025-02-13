@@ -7,7 +7,7 @@ package protocol
 import (
 	"fmt"
 
-	"github.com/block/ftl-golang-tools/internal/diff"
+	"golang.org/x/tools/internal/diff"
 )
 
 // EditsFromDiffEdits converts diff.Edits to a non-nil slice of LSP TextEdits.
@@ -125,6 +125,16 @@ func DocumentChangeEdit(fh fileHandle, textedits []TextEdit) DocumentChange {
 				TextDocumentIdentifier: TextDocumentIdentifier{URI: fh.URI()},
 			},
 			Edits: AsAnnotatedTextEdits(textedits),
+		},
+	}
+}
+
+// DocumentChangeCreate constructs a DocumentChange that creates a file.
+func DocumentChangeCreate(uri DocumentURI) DocumentChange {
+	return DocumentChange{
+		CreateFile: &CreateFile{
+			Kind: "create",
+			URI:  uri,
 		},
 	}
 }

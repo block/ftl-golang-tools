@@ -5,7 +5,6 @@
 package rename
 
 import (
-	"go/ast"
 	"go/token"
 	"go/types"
 	"os"
@@ -14,8 +13,6 @@ import (
 	"runtime"
 	"strings"
 	"unicode"
-
-	"github.com/block/ftl-golang-tools/go/ast/astutil"
 )
 
 func objectKind(obj types.Object) string {
@@ -61,10 +58,6 @@ func isLocal(obj types.Object) bool {
 	return depth >= 4
 }
 
-func isPackageLevel(obj types.Object) bool {
-	return obj.Pkg().Scope().Lookup(obj.Name()) == obj
-}
-
 // -- Plundered from go/scanner: ---------------------------------------
 
 func isLetter(ch rune) bool {
@@ -75,7 +68,7 @@ func isDigit(ch rune) bool {
 	return '0' <= ch && ch <= '9' || ch >= 0x80 && unicode.IsDigit(ch)
 }
 
-// -- Plundered from github.com/block/ftl-golang-tools/cmd/guru -----------------
+// -- Plundered from golang.org/x/tools/cmd/guru -----------------
 
 // sameFile returns true if x and y have the same basename and denote
 // the same file.
@@ -96,8 +89,6 @@ func sameFile(x, y string) bool {
 	}
 	return false
 }
-
-func unparen(e ast.Expr) ast.Expr { return astutil.Unparen(e) }
 
 func is[T any](x any) bool {
 	_, ok := x.(T)

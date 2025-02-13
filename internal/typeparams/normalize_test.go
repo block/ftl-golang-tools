@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/block/ftl-golang-tools/internal/typeparams"
+	. "golang.org/x/tools/internal/typeparams"
 )
 
 func TestStructuralTerms(t *testing.T) {
@@ -89,8 +89,8 @@ type T[P interface{ A|B; C }] int
 			if len(terms) == 0 {
 				got = "all"
 			} else {
-				qf := types.RelativeTo(pkg)
-				got = types.TypeString(types.NewUnion(terms), qf)
+				qual := types.RelativeTo(pkg)
+				got = types.TypeString(types.NewUnion(terms), qual)
 			}
 			want := regexp.MustCompile(test.want)
 			if !want.MatchString(got) {

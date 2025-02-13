@@ -25,7 +25,7 @@
 // arguments. For each change that matches the pattern, the target must
 // enable that change and also print one or more “match lines”
 // (to standard output or standard error) describing the change.
-// The [github.com/block/ftl-golang-tools/internal/bisect] package provides functions to help
+// The [golang.org/x/tools/internal/bisect] package provides functions to help
 // targets implement this protocol. We plan to publish that package
 // in a non-internal location after finalizing its API.
 //
@@ -145,7 +145,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/block/ftl-golang-tools/internal/bisect"
+	"golang.org/x/tools/internal/bisect"
 )
 
 // Preserve import of bisect, to allow [bisect.Match] in the doc comment.
@@ -262,7 +262,7 @@ type Bisect struct {
 	// each pattern starts with a !.
 	Disable bool
 
-	// SkipDigits is the number of hex digits to use in skip messages.
+	// SkipHexDigits is the number of hex digits to use in skip messages.
 	// If the set of available changes is the same in each run, as it should be,
 	// then this doesn't matter: we'll only exclude suffixes that uniquely identify
 	// a given change. But for some programs, especially bisecting runtime

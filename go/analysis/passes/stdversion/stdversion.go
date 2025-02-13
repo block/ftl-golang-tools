@@ -11,12 +11,13 @@ import (
 	"go/build"
 	"go/types"
 	"regexp"
+	"slices"
 
-	"github.com/block/ftl-golang-tools/go/analysis"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
-	"github.com/block/ftl-golang-tools/go/ast/inspector"
-	"github.com/block/ftl-golang-tools/internal/typesinternal"
-	"github.com/block/ftl-golang-tools/internal/versions"
+	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/passes/inspect"
+	"golang.org/x/tools/go/ast/inspector"
+	"golang.org/x/tools/internal/typesinternal"
+	"golang.org/x/tools/internal/versions"
 )
 
 const Doc = `report uses of too-new standard library symbols
@@ -37,7 +38,7 @@ var Analyzer = &analysis.Analyzer{
 	Name:             "stdversion",
 	Doc:              Doc,
 	Requires:         []*analysis.Analyzer{inspect.Analyzer},
-	URL:              "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/stdversion",
+	URL:              "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/stdversion",
 	RunDespiteErrors: true,
 	Run:              run,
 }
@@ -46,16 +47,14 @@ func run(pass *analysis.Pass) (any, error) {
 	// Prior to go1.22, versions.FileVersion returns only the
 	// toolchain version, which is of no use to us, so
 	// disable this analyzer on earlier versions.
-	if !slicesContains(build.Default.ReleaseTags, "go1.22") {
+	if !slices.Contains(build.Default.ReleaseTags, "go1.22") {
 		return nil, nil
 	}
 
 	// Don't report diagnostics for modules marked before go1.21,
 	// since at that time the go directive wasn't clearly
 	// specified as a toolchain requirement.
-	//
-	// TODO(adonovan): after go1.21, call GoVersion directly.
-	pkgVersion := any(pass.Pkg).(interface{ GoVersion() string }).GoVersion()
+	pkgVersion := pass.Pkg.GoVersion()
 	if !versions.AtLeast(pkgVersion, "go1.21") {
 		return nil, nil
 	}
@@ -88,7 +87,7 @@ func run(pass *analysis.Pass) (any, error) {
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
 		switch n := n.(type) {
 		case *ast.File:
-			if isGenerated(n) {
+			if ast.IsGenerated(n) {
 				// Suppress diagnostics in generated files (such as cgo).
 				fileVersion = ""
 			} else {
@@ -115,19 +114,6 @@ func run(pass *analysis.Pass) (any, error) {
 	return nil, nil
 }
 
-// Reduced from x/tools/gopls/internal/golang/util.go. Good enough for now.
-// TODO(adonovan): use ast.IsGenerated in go1.21.
-func isGenerated(f *ast.File) bool {
-	for _, group := range f.Comments {
-		for _, comment := range group.List {
-			if matched := generatedRx.MatchString(comment.Text); matched {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 // Matches cgo generated comment as well as the proposed standard:
 //
 //	https://golang.org/s/generatedcode
@@ -146,14 +132,4 @@ func origin(obj types.Object) types.Object {
 		}
 	}
 	return obj
-}
-
-// TODO(adonovan): use go1.21 slices.Contains.
-func slicesContains[S ~[]E, E comparable](slice S, x E) bool {
-	for _, elem := range slice {
-		if elem == x {
-			return true
-		}
-	}
-	return false
 }

@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // Package astutil contains common utilities for working with the Go AST.
-package astutil // import "github.com/block/ftl-golang-tools/go/ast/astutil"
+package astutil // import "golang.org/x/tools/go/ast/astutil"
 
 import (
 	"fmt"
@@ -195,7 +195,7 @@ func AddNamedImport(fset *token.FileSet, f *ast.File, name, path string) (added 
 
 func isThirdParty(importPath string) bool {
 	// Third party package import path usually contains "." (".com", ".org", ...)
-	// This logic is taken from github.com/block/ftl-golang-tools/imports package.
+	// This logic is taken from golang.org/x/tools/imports package.
 	return strings.Contains(importPath, ".")
 }
 
@@ -344,7 +344,12 @@ func RewriteImport(fset *token.FileSet, f *ast.File, oldPath, newPath string) (r
 }
 
 // UsesImport reports whether a given import is used.
+// The provided File must have been parsed with syntactic object resolution
+// (not using go/parser.SkipObjectResolution).
 func UsesImport(f *ast.File, path string) (used bool) {
+	if f.Scope == nil {
+		panic("file f was not parsed with syntactic object resolution")
+	}
 	spec := importSpec(f, path)
 	if spec == nil {
 		return

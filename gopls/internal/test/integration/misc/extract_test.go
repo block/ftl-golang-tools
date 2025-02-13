@@ -7,10 +7,11 @@ package misc
 import (
 	"testing"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/test/compare"
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	"golang.org/x/tools/gopls/internal/settings"
+	"golang.org/x/tools/gopls/internal/test/compare"
+	. "golang.org/x/tools/gopls/internal/test/integration"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/protocol"
 )
 
 func TestExtractFunction(t *testing.T) {
@@ -38,7 +39,7 @@ func Foo() int {
 		// Find the extract function code action.
 		var extractFunc *protocol.CodeAction
 		for _, action := range actions {
-			if action.Kind == protocol.RefactorExtract && action.Title == "Extract function" {
+			if action.Kind == settings.RefactorExtractFunction {
 				extractFunc = &action
 				break
 			}

@@ -7,10 +7,8 @@ package vta
 import (
 	"go/types"
 
-	"github.com/block/ftl-golang-tools/go/callgraph"
-	"github.com/block/ftl-golang-tools/go/ssa"
-	"github.com/block/ftl-golang-tools/internal/aliases"
-	"github.com/block/ftl-golang-tools/internal/typeparams"
+	"golang.org/x/tools/go/ssa"
+	"golang.org/x/tools/internal/typeparams"
 )
 
 func canAlias(n1, n2 node) bool {
@@ -25,7 +23,7 @@ func isReferenceNode(n node) bool {
 		return true
 	}
 
-	if _, ok := aliases.Unalias(n.Type()).(*types.Pointer); ok {
+	if _, ok := types.Unalias(n.Type()).(*types.Pointer); ok {
 		return true
 	}
 
@@ -149,29 +147,21 @@ func sliceArrayElem(t types.Type) types.Type {
 	}
 }
 
-// siteCallees returns a go1.23 iterator for the callees for call site `c`
-// given program `callgraph`.
-func siteCallees(c ssa.CallInstruction, callgraph *callgraph.Graph) func(yield func(*ssa.Function) bool) {
+// siteCallees returns a go1.23 iterator for the callees for call site `c`.
+func siteCallees(c ssa.CallInstruction, callees calleesFunc) func(yield func(*ssa.Function) bool) {
 	// TODO: when x/tools uses go1.23, change callers to use range-over-func
 	// (https://go.dev/issue/65237).
-	node := callgraph.Nodes[c.Parent()]
 	return func(yield func(*ssa.Function) bool) {
-		if node == nil {
-			return
-		}
-
-		for _, edge := range node.Out {
-			if edge.Site == c {
-				if !yield(edge.Callee.Func) {
-					return
-				}
+		for _, callee := range callees(c) {
+			if !yield(callee) {
+				return
 			}
 		}
 	}
 }
 
 func canHaveMethods(t types.Type) bool {
-	t = aliases.Unalias(t)
+	t = types.Unalias(t)
 	if _, ok := t.(*types.Named); ok {
 		return true
 	}

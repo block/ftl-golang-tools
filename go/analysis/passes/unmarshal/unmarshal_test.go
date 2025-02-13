@@ -7,8 +7,8 @@ package unmarshal_test
 import (
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/unmarshal"
+	"golang.org/x/tools/go/analysis/analysistest"
+	"golang.org/x/tools/go/analysis/passes/unmarshal"
 )
 
 func Test(t *testing.T) {

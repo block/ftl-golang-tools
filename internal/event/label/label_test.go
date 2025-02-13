@@ -11,8 +11,8 @@ import (
 	"testing"
 	"unsafe"
 
-	"github.com/block/ftl-golang-tools/internal/event/keys"
-	"github.com/block/ftl-golang-tools/internal/event/label"
+	"golang.org/x/tools/internal/event/keys"
+	"golang.org/x/tools/internal/event/label"
 )
 
 var (

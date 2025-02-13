@@ -7,11 +7,11 @@ package unusedwrite_test
 import (
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/unusedwrite"
+	"golang.org/x/tools/go/analysis/analysistest"
+	"golang.org/x/tools/go/analysis/passes/unusedwrite"
 )
 
 func Test(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.Run(t, testdata, unusedwrite.Analyzer, "a")
+	analysistest.Run(t, testdata, unusedwrite.Analyzer, "a", "importsunsafe")
 }

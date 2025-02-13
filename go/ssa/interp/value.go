@@ -44,9 +44,8 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/block/ftl-golang-tools/go/ssa"
-	"github.com/block/ftl-golang-tools/go/types/typeutil"
-	"github.com/block/ftl-golang-tools/internal/aliases"
+	"golang.org/x/tools/go/ssa"
+	"golang.org/x/tools/go/types/typeutil"
 )
 
 type value interface{}
@@ -100,10 +99,7 @@ var (
 // hashType returns a hash for t such that
 // types.Identical(x, y) => hashType(x) == hashType(y).
 func hashType(t types.Type) int {
-	mu.Lock()
-	h := int(hasher.Hash(t))
-	mu.Unlock()
-	return h
+	return int(hasher.Hash(t))
 }
 
 // usesBuiltinMap returns true if the built-in hash function and
@@ -119,7 +115,7 @@ func usesBuiltinMap(t types.Type) bool {
 	switch t := t.(type) {
 	case *types.Basic, *types.Chan, *types.Pointer:
 		return true
-	case *types.Named, *aliases.Alias:
+	case *types.Named, *types.Alias:
 		return usesBuiltinMap(t.Underlying())
 	case *types.Interface, *types.Array, *types.Struct:
 		return false
@@ -142,7 +138,7 @@ func (x array) hash(t types.Type) int {
 	h := 0
 	tElt := t.Underlying().(*types.Array).Elem()
 	for _, xi := range x {
-		h += hash(tElt, xi)
+		h += hash(t, tElt, xi)
 	}
 	return h
 }
@@ -165,7 +161,7 @@ func (x structure) hash(t types.Type) int {
 	h := 0
 	for i, n := 0, tStruct.NumFields(); i < n; i++ {
 		if f := tStruct.Field(i); !f.Anonymous() {
-			h += hash(f.Type(), x[i])
+			h += hash(t, f.Type(), x[i])
 		}
 	}
 	return h
@@ -184,8 +180,8 @@ func (x iface) eq(t types.Type, _y interface{}) bool {
 	return sameType(x.t, y.t) && (x.t == nil || equals(x.t, x.v, y.v))
 }
 
-func (x iface) hash(_ types.Type) int {
-	return hashType(x.t)*8581 + hash(x.t, x.v)
+func (x iface) hash(outer types.Type) int {
+	return hashType(x.t)*8581 + hash(outer, x.t, x.v)
 }
 
 func (x rtype) hash(_ types.Type) int {
@@ -257,7 +253,8 @@ func equals(t types.Type, x, y value) bool {
 }
 
 // Returns an integer hash of x such that equals(x, y) => hash(x) == hash(y).
-func hash(t types.Type, x value) int {
+// The outer type is used only for the "unhashable" panic message.
+func hash(outer, t types.Type, x value) int {
 	switch x := x.(type) {
 	case bool:
 		if x {
@@ -309,7 +306,7 @@ func hash(t types.Type, x value) int {
 	case rtype:
 		return x.hash(t)
 	}
-	panic(fmt.Sprintf("%T is unhashable", x))
+	panic(fmt.Sprintf("unhashable type %v", outer))
 }
 
 // reflect.Value struct values don't have a fixed shape, since the

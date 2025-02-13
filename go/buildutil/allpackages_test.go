@@ -16,8 +16,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/buildutil"
-	"github.com/block/ftl-golang-tools/go/packages/packagestest"
+	"golang.org/x/tools/go/buildutil"
+	"golang.org/x/tools/internal/packagestest"
 )
 
 func TestAllPackages(t *testing.T) {
@@ -26,7 +26,7 @@ func TestAllPackages(t *testing.T) {
 	}
 
 	exported := packagestest.Export(t, packagestest.GOPATH, []packagestest.Module{
-		{Name: "github.com/block/ftl-golang-tools/go/buildutil", Files: packagestest.MustCopyFileTree(".")}})
+		{Name: "golang.org/x/tools/go/buildutil", Files: packagestest.MustCopyFileTree(".")}})
 	defer exported.Cleanup()
 
 	var gopath string
@@ -54,7 +54,7 @@ func TestAllPackages(t *testing.T) {
 		t.Errorf("Found only %d packages, want at least %d", len(all), wantAtLeast)
 	}
 
-	for _, want := range []string{"fmt", "crypto/sha256", "github.com/block/ftl-golang-tools/go/buildutil"} {
+	for _, want := range []string{"fmt", "crypto/sha256", "golang.org/x/tools/go/buildutil"} {
 		if !set[want] {
 			t.Errorf("Package %q not found; got %s", want, all)
 		}

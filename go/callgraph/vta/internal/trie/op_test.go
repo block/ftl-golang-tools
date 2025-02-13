@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/block/ftl-golang-tools/go/callgraph/vta/internal/trie"
+	"golang.org/x/tools/go/callgraph/vta/internal/trie"
 )
 
 // This file tests trie.Map by cross checking operations on a collection of

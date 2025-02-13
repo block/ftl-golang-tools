@@ -18,7 +18,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/block/ftl-golang-tools/go/packages"
+	"golang.org/x/tools/go/packages"
 )
 
 const runAsDriverEnv = "DRIVERTEST_RUN_AS_DRIVER"

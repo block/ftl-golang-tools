@@ -13,11 +13,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/analysis/passes/assign"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/findcall"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/printf"
-	"github.com/block/ftl-golang-tools/go/analysis/unitchecker"
-	"github.com/block/ftl-golang-tools/go/packages/packagestest"
+	"golang.org/x/tools/go/analysis/passes/assign"
+	"golang.org/x/tools/go/analysis/passes/findcall"
+	"golang.org/x/tools/go/analysis/passes/printf"
+	"golang.org/x/tools/go/analysis/unitchecker"
+	"golang.org/x/tools/internal/packagestest"
 )
 
 func TestMain(m *testing.M) {
@@ -133,7 +133,7 @@ func _() {
 				"message": "self-assignment of i to i",
 				"suggested_fixes": \[
 					\{
-						"message": "Remove",
+						"message": "Remove self-assignment",
 						"edits": \[
 							\{
 								"filename": "([/._\-a-zA-Z0-9]+[\\/]fake[\\/])?c/c.go",

@@ -12,10 +12,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/settings"
-	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake"
-	"github.com/block/ftl-golang-tools/internal/testenv"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/settings"
+	"golang.org/x/tools/gopls/internal/test/integration/fake"
+	"golang.org/x/tools/internal/testenv"
 )
 
 func TestZeroConfigAlgorithm(t *testing.T) {
@@ -85,7 +85,8 @@ func TestZeroConfigAlgorithm(t *testing.T) {
 				options: func(dir string) map[string]any {
 					return map[string]any{
 						"env": map[string]any{
-							"GOPATH": dir,
+							"GO111MODULE": "", // golang/go#70196: must be unset
+							"GOPATH":      dir,
 						},
 					}
 				},
@@ -336,16 +337,19 @@ replace (
 			for _, f := range test.folders {
 				opts := settings.DefaultOptions()
 				if f.options != nil {
-					for _, err := range opts.Set(f.options(dir)) {
+					_, errs := opts.Set(f.options(dir))
+					for _, err := range errs {
 						t.Fatal(err)
 					}
 				}
-				env, err := FetchGoEnv(ctx, toURI(f.dir), opts)
+				uri := toURI(f.dir)
+				env, err := FetchGoEnv(ctx, uri, opts)
 				if err != nil {
 					t.Fatalf("FetchGoEnv failed: %v", err)
 				}
+				t.Logf("FetchGoEnv(%q) = %+v", uri, env)
 				folders = append(folders, &Folder{
-					Dir:     toURI(f.dir),
+					Dir:     uri,
 					Name:    path.Base(f.dir),
 					Options: opts,
 					Env:     *env,

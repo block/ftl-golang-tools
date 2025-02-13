@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	"golang.org/x/tools/gopls/internal/protocol"
+	. "golang.org/x/tools/gopls/internal/test/integration"
 )
 
 func TestStandaloneFiles(t *testing.T) {
@@ -194,7 +194,7 @@ func main() {}
 		)
 
 		cfg := env.Editor.Config()
-		cfg.Settings = map[string]interface{}{
+		cfg.Settings = map[string]any{
 			"standaloneTags": []string{"ignore"},
 		}
 		env.ChangeConfiguration(cfg)

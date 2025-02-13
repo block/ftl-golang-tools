@@ -7,9 +7,9 @@ package export
 import (
 	"context"
 
-	"github.com/block/ftl-golang-tools/internal/event"
-	"github.com/block/ftl-golang-tools/internal/event/core"
-	"github.com/block/ftl-golang-tools/internal/event/label"
+	"golang.org/x/tools/internal/event"
+	"golang.org/x/tools/internal/event/core"
+	"golang.org/x/tools/internal/event/label"
 )
 
 // Labels builds an exporter that manipulates the context using the event.

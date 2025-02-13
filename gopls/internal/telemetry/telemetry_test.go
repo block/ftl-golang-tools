@@ -16,23 +16,23 @@ import (
 	"testing"
 	"time"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
-	"github.com/block/ftl-golang-tools/gopls/internal/telemetry"
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
 	"golang.org/x/telemetry/counter"
 	"golang.org/x/telemetry/counter/countertest" // requires go1.21+
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/gopls/internal/protocol/command"
+	"golang.org/x/tools/gopls/internal/telemetry"
+	. "golang.org/x/tools/gopls/internal/test/integration"
+	"golang.org/x/tools/gopls/internal/util/bug"
 )
 
 func TestMain(m *testing.M) {
-	tmp, err := os.MkdirTemp("", "gopls-telemetry-test")
+	tmp, err := os.MkdirTemp("", "gopls-telemetry-test-counters")
 	if err != nil {
 		panic(err)
 	}
 	countertest.Open(tmp)
 	code := Main(m)
-	os.RemoveAll(tmp)
+	os.RemoveAll(tmp) // golang/go#68243: ignore error; cleanup fails on Windows
 	os.Exit(code)
 }
 
@@ -54,6 +54,7 @@ func TestTelemetry(t *testing.T) {
 		counter.New("gopls/client:" + editor),
 		counter.New("gopls/goversion:1." + goversion),
 		counter.New("fwd/vscode/linter:a"),
+		counter.New("gopls/gotoolchain:local"),
 	}
 	initialCounts := make([]uint64, len(sessionCounters))
 	for i, c := range sessionCounters {
@@ -70,6 +71,9 @@ func TestTelemetry(t *testing.T) {
 		Modes(Default), // must be in-process to receive the bug report below
 		Settings{"showBugReports": true},
 		ClientName("Visual Studio Code"),
+		EnvVars{
+			"GOTOOLCHAIN": "local", // so that the local counter is incremented
+		},
 	).Run(t, "", func(_ *testing.T, env *Env) {
 		goversion = strconv.Itoa(env.GoVersion())
 		addForwardedCounters(env, []string{"vscode/linter:a"}, []int64{1})
@@ -78,10 +82,10 @@ func TestTelemetry(t *testing.T) {
 		// This will increment a counter named something like:
 		//
 		// `gopls/bug
-		// github.com/block/ftl-golang-tools/gopls/internal/util/bug.report:+35
-		// github.com/block/ftl-golang-tools/gopls/internal/util/bug.Report:=68
-		// github.com/block/ftl-golang-tools/gopls/internal/telemetry_test.TestTelemetry.func2:+4
-		// github.com/block/ftl-golang-tools/gopls/internal/test/integration.(*Runner).Run.func1:+87
+		// golang.org/x/tools/gopls/internal/util/bug.report:+35
+		// golang.org/x/tools/gopls/internal/util/bug.Report:=68
+		// golang.org/x/tools/gopls/internal/telemetry_test.TestTelemetry.func2:+4
+		// golang.org/x/tools/gopls/internal/test/integration.(*Runner).Run.func1:+87
 		// testing.tRunner:+150
 		// runtime.goexit:+0`
 		//
@@ -93,6 +97,7 @@ func TestTelemetry(t *testing.T) {
 	// gopls/editor:client
 	// gopls/goversion:1.x
 	// fwd/vscode/linter:a
+	// gopls/gotoolchain:local
 	for i, c := range sessionCounters {
 		want := initialCounts[i] + 1
 		got, err := countertest.ReadCounter(c)
@@ -111,6 +116,50 @@ func TestTelemetry(t *testing.T) {
 	if len(counts) != 1 || !hasEntry(counts, t.Name(), 1) {
 		t.Errorf("read stackcounter(%q) = (%#v, %v), want one entry", "gopls/bug", counts, err)
 		t.Logf("Current timestamp = %v", time.Now().UTC())
+	}
+}
+
+func TestSettingTelemetry(t *testing.T) {
+	// counters that should be incremented by each session
+	sessionCounters := []*counter.Counter{
+		counter.New("gopls/setting/diagnosticsDelay"),
+		counter.New("gopls/setting/staticcheck:true"),
+		counter.New("gopls/setting/noSemanticString:true"),
+		counter.New("gopls/setting/analyses/deprecated:false"),
+	}
+
+	initialCounts := make([]uint64, len(sessionCounters))
+	for i, c := range sessionCounters {
+		count, err := countertest.ReadCounter(c)
+		if err != nil {
+			continue // counter db not open, or counter not found
+		}
+		initialCounts[i] = count
+	}
+
+	// Run gopls.
+	WithOptions(
+		Modes(Default),
+		Settings{
+			"staticcheck": true,
+			"analyses": map[string]bool{
+				"deprecated": false,
+			},
+			"diagnosticsDelay": "0s",
+			"noSemanticString": true,
+		},
+	).Run(t, "", func(_ *testing.T, env *Env) {
+	})
+
+	for i, c := range sessionCounters {
+		count, err := countertest.ReadCounter(c)
+		if err != nil {
+			t.Errorf("ReadCounter(%q) failed: %v", c.Name(), err)
+			continue
+		}
+		if count <= initialCounts[i] {
+			t.Errorf("ReadCounter(%q) = %d, want > %d", c.Name(), count, initialCounts[i])
+		}
 	}
 }
 

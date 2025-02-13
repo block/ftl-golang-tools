@@ -4,13 +4,13 @@
 
 // Package importgraph computes the forward and reverse import
 // dependency graphs for all packages in a Go workspace.
-package importgraph // import "github.com/block/ftl-golang-tools/refactor/importgraph"
+package importgraph // import "golang.org/x/tools/refactor/importgraph"
 
 import (
 	"go/build"
 	"sync"
 
-	"github.com/block/ftl-golang-tools/go/buildutil"
+	"golang.org/x/tools/go/buildutil"
 )
 
 // A Graph is an import dependency graph, either forward or reverse.
@@ -68,7 +68,7 @@ func Build(ctxt *build.Context) (forward, reverse Graph, errors map[string]error
 		err  error
 	}
 
-	ch := make(chan interface{})
+	ch := make(chan any)
 
 	go func() {
 		sema := make(chan int, 20) // I/O concurrency limiting semaphore

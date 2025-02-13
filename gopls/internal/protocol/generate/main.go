@@ -31,7 +31,7 @@ const vscodeRepo = "https://github.com/microsoft/vscode-languageserver-node"
 // protocol version 3.17.0 (as declared by the metaData.version field).
 // (Point releases are reflected in the git tag version even when they are cosmetic
 // and don't change the protocol.)
-var lspGitRef = "release/protocol/3.17.6-next.2"
+var lspGitRef = "release/protocol/3.17.6-next.9"
 
 var (
 	repodir   = flag.String("d", "", "directory containing clone of "+vscodeRepo)
@@ -98,7 +98,7 @@ func writeclient() {
 		`import (
 	"context"
 
-	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
+	"golang.org/x/tools/internal/jsonrpc2"
 )
 `)
 	out.WriteString("type Client interface {\n")
@@ -127,7 +127,7 @@ func writeserver() {
 		`import (
 	"context"
 
-	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
+	"golang.org/x/tools/internal/jsonrpc2"
 )
 `)
 	out.WriteString("type Server interface {\n")

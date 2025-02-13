@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"golang.org/x/tools/gopls/internal/protocol"
+	. "golang.org/x/tools/gopls/internal/test/integration"
+	"golang.org/x/tools/gopls/internal/util/bug"
 )
 
 func TestMain(m *testing.M) {
@@ -226,6 +226,32 @@ func shorten(fn protocol.DocumentURI) string {
 	}
 	j := len(pieces)
 	return pieces[j-2] + "/" + pieces[j-1]
+}
+
+func TestCompletionPanic_Issue57621(t *testing.T) {
+	const src = `
+-- go.mod --
+module mod.com
+
+go 1.12
+-- hello.tmpl --
+{{range .Planets}}
+Hello {{
+{{end}}
+`
+	Run(t, src, func(t *testing.T, env *Env) {
+		env.OpenFile("hello.tmpl")
+		// None of these should panic.
+		env.Completion(env.RegexpSearch("hello.tmpl", `Hello ()\{\{`))
+		env.Completion(env.RegexpSearch("hello.tmpl", `Hello \{()\{`))
+		env.Completion(env.RegexpSearch("hello.tmpl", `Hello \{\{()`))
+		env.Completion(env.RegexpSearch("hello.tmpl", `()\{\{range`))
+		env.Completion(env.RegexpSearch("hello.tmpl", `\{()\{range`))
+		env.Completion(env.RegexpSearch("hello.tmpl", `\{\{()range`))
+		env.Completion(env.RegexpSearch("hello.tmpl", `Planets()}}`))
+		env.Completion(env.RegexpSearch("hello.tmpl", `Planets}()}`))
+		env.Completion(env.RegexpSearch("hello.tmpl", `Planets}}()`))
+	})
 }
 
 // Hover needs tests

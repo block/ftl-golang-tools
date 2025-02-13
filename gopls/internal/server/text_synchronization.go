@@ -13,14 +13,14 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/cache"
-	"github.com/block/ftl-golang-tools/gopls/internal/file"
-	"github.com/block/ftl-golang-tools/gopls/internal/golang"
-	"github.com/block/ftl-golang-tools/gopls/internal/label"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/internal/event"
-	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
-	"github.com/block/ftl-golang-tools/internal/xcontext"
+	"golang.org/x/tools/gopls/internal/cache"
+	"golang.org/x/tools/gopls/internal/file"
+	"golang.org/x/tools/gopls/internal/golang"
+	"golang.org/x/tools/gopls/internal/label"
+	"golang.org/x/tools/gopls/internal/protocol"
+	"golang.org/x/tools/internal/event"
+	"golang.org/x/tools/internal/jsonrpc2"
+	"golang.org/x/tools/internal/xcontext"
 )
 
 // ModificationSource identifies the origin of a change.
@@ -61,9 +61,9 @@ const (
 	// ResetGoModDiagnostics command.
 	FromResetGoModDiagnostics
 
-	// FromToggleGCDetails refers to state changes resulting from toggling
-	// gc_details on or off for a package.
-	FromToggleGCDetails
+	// FromToggleCompilerOptDetails refers to state changes resulting from toggling
+	// a package's compiler optimization details flag.
+	FromToggleCompilerOptDetails
 )
 
 func (m ModificationSource) String() string {
@@ -105,7 +105,7 @@ func (s *server) DidOpen(ctx context.Context, params *protocol.DidOpenTextDocume
 	// file is opened, and we can't do that inside didModifyFiles because we
 	// don't want to request configuration while holding a lock.
 	if len(s.session.Views()) == 0 {
-		dir := filepath.Dir(uri.Path())
+		dir := uri.DirPath()
 		s.addFolders(ctx, []protocol.WorkspaceFolder{{
 			URI:  string(protocol.URIFromPath(dir)),
 			Name: filepath.Base(dir),

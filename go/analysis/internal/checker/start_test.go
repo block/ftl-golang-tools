@@ -10,18 +10,19 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/analysis"
-	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
-	"github.com/block/ftl-golang-tools/go/analysis/internal/checker"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
-	"github.com/block/ftl-golang-tools/go/ast/inspector"
-	"github.com/block/ftl-golang-tools/internal/testenv"
+	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/analysistest"
+	"golang.org/x/tools/go/analysis/internal/checker"
+	"golang.org/x/tools/go/analysis/passes/inspect"
+	"golang.org/x/tools/go/ast/inspector"
+	"golang.org/x/tools/internal/testenv"
 )
 
 // TestStartFixes make sure modifying the first character
 // of the file takes effect.
 func TestStartFixes(t *testing.T) {
 	testenv.NeedsGoPackages(t)
+	testenv.RedirectStderr(t) // associated checker.Run output with this test
 
 	files := map[string]string{
 		"comment/doc.go": `/* Package comment */
@@ -39,6 +40,7 @@ package comment
 	path := filepath.Join(testdata, "src/comment/doc.go")
 	checker.Fix = true
 	checker.Run([]string{"file=" + path}, []*analysis.Analyzer{commentAnalyzer})
+	checker.Fix = false
 
 	contents, err := os.ReadFile(path)
 	if err != nil {
@@ -55,6 +57,7 @@ package comment
 
 var commentAnalyzer = &analysis.Analyzer{
 	Name:     "comment",
+	Doc:      "comment",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      commentRun,
 }

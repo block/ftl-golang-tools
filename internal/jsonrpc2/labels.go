@@ -4,7 +4,7 @@
 
 package jsonrpc2
 
-import "github.com/block/ftl-golang-tools/internal/event/keys"
+import "golang.org/x/tools/internal/event/keys"
 
 // These keys are used for creating labels to instrument jsonrpc2 events.
 var (

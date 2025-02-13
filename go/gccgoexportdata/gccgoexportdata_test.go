@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/gccgoexportdata"
+	"golang.org/x/tools/go/gccgoexportdata"
 )
 
 // Test ensures this package can read gccgo export data from the

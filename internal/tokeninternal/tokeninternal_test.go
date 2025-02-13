@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/internal/tokeninternal"
+	"golang.org/x/tools/internal/tokeninternal"
 )
 
 func TestAddExistingFiles(t *testing.T) {

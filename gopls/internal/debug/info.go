@@ -15,7 +15,7 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/version"
+	"golang.org/x/tools/gopls/internal/version"
 )
 
 type PrintMode int

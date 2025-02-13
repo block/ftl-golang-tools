@@ -22,8 +22,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/block/ftl-golang-tools/go/cfg"
-	"github.com/block/ftl-golang-tools/go/packages"
+	"golang.org/x/tools/go/cfg"
+	"golang.org/x/tools/go/packages"
 )
 
 func main() {

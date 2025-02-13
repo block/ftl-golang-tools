@@ -6,7 +6,7 @@
 // +build ignore
 
 // This file provides an example command for static checkers
-// conforming to the github.com/block/ftl-golang-tools/go/analysis API.
+// conforming to the golang.org/x/tools/go/analysis API.
 // It serves as a model for the behavior of the cmd/vet tool in $GOROOT.
 // Being based on the unitchecker driver, it must be run by go vet:
 //
@@ -17,38 +17,38 @@
 package main
 
 import (
-	"github.com/block/ftl-golang-tools/go/analysis/unitchecker"
+	"golang.org/x/tools/go/analysis/unitchecker"
 
-	"github.com/block/ftl-golang-tools/go/analysis/passes/appends"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/asmdecl"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/assign"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/atomic"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/bools"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/buildtag"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/cgocall"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/composite"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/copylock"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/directive"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/errorsas"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/framepointer"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/httpresponse"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/ifaceassert"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/loopclosure"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/lostcancel"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/nilfunc"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/printf"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/shift"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/sigchanyzer"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/stdmethods"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/stringintconv"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/structtag"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/testinggoroutine"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/tests"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/timeformat"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/unmarshal"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/unreachable"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/unsafeptr"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/unusedresult"
+	"golang.org/x/tools/go/analysis/passes/appends"
+	"golang.org/x/tools/go/analysis/passes/asmdecl"
+	"golang.org/x/tools/go/analysis/passes/assign"
+	"golang.org/x/tools/go/analysis/passes/atomic"
+	"golang.org/x/tools/go/analysis/passes/bools"
+	"golang.org/x/tools/go/analysis/passes/buildtag"
+	"golang.org/x/tools/go/analysis/passes/cgocall"
+	"golang.org/x/tools/go/analysis/passes/composite"
+	"golang.org/x/tools/go/analysis/passes/copylock"
+	"golang.org/x/tools/go/analysis/passes/directive"
+	"golang.org/x/tools/go/analysis/passes/errorsas"
+	"golang.org/x/tools/go/analysis/passes/framepointer"
+	"golang.org/x/tools/go/analysis/passes/httpresponse"
+	"golang.org/x/tools/go/analysis/passes/ifaceassert"
+	"golang.org/x/tools/go/analysis/passes/loopclosure"
+	"golang.org/x/tools/go/analysis/passes/lostcancel"
+	"golang.org/x/tools/go/analysis/passes/nilfunc"
+	"golang.org/x/tools/go/analysis/passes/printf"
+	"golang.org/x/tools/go/analysis/passes/shift"
+	"golang.org/x/tools/go/analysis/passes/sigchanyzer"
+	"golang.org/x/tools/go/analysis/passes/stdmethods"
+	"golang.org/x/tools/go/analysis/passes/stringintconv"
+	"golang.org/x/tools/go/analysis/passes/structtag"
+	"golang.org/x/tools/go/analysis/passes/testinggoroutine"
+	"golang.org/x/tools/go/analysis/passes/tests"
+	"golang.org/x/tools/go/analysis/passes/timeformat"
+	"golang.org/x/tools/go/analysis/passes/unmarshal"
+	"golang.org/x/tools/go/analysis/passes/unreachable"
+	"golang.org/x/tools/go/analysis/passes/unsafeptr"
+	"golang.org/x/tools/go/analysis/passes/unusedresult"
 )
 
 func main() {

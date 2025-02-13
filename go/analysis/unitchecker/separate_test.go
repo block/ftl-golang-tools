@@ -15,17 +15,18 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync/atomic"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/analysis/passes/printf"
-	"github.com/block/ftl-golang-tools/go/analysis/unitchecker"
-	"github.com/block/ftl-golang-tools/go/gcexportdata"
-	"github.com/block/ftl-golang-tools/go/packages"
-	"github.com/block/ftl-golang-tools/internal/testenv"
-	"github.com/block/ftl-golang-tools/internal/testfiles"
-	"github.com/block/ftl-golang-tools/txtar"
+	"golang.org/x/tools/go/analysis/passes/printf"
+	"golang.org/x/tools/go/analysis/unitchecker"
+	"golang.org/x/tools/go/gcexportdata"
+	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/internal/testenv"
+	"golang.org/x/tools/internal/testfiles"
+	"golang.org/x/tools/txtar"
 )
 
 // TestExampleSeparateAnalysis demonstrates the principle of separate
@@ -82,10 +83,11 @@ func MyPrintf(format string, args ...any) {
 `
 
 	// Expand archive into tmp tree.
-	tmpdir := t.TempDir()
-	if err := testfiles.ExtractTxtar(tmpdir, txtar.Parse([]byte(src))); err != nil {
+	fs, err := txtar.FS(txtar.Parse([]byte(src)))
+	if err != nil {
 		t.Fatal(err)
 	}
+	tmpdir := testfiles.CopyToTmp(t, fs)
 
 	// Load metadata for the main package and all its dependencies.
 	cfg := &packages.Config{
@@ -166,6 +168,8 @@ func MyPrintf(format string, args ...any) {
 			if v := pkg.Module.GoVersion; v != "" {
 				cfg.GoVersion = "go" + v
 			}
+			cfg.ModulePath = pkg.Module.Path
+			cfg.ModuleVersion = pkg.Module.Version
 		}
 
 		// Write the JSON configuration message to a file.
@@ -219,6 +223,7 @@ func MyPrintf(format string, args ...any) {
 	// from separate analysis of "main", "lib", and "fmt":
 
 	const want = `/main/main.go:6:2: [printf] separate/lib.MyPrintf format %s has arg 123 of wrong type int`
+	sort.Strings(allDiagnostics)
 	if got := strings.Join(allDiagnostics, "\n"); got != want {
 		t.Errorf("Got: %s\nWant: %s", got, want)
 	}

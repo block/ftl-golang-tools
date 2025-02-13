@@ -42,20 +42,22 @@
 //
 // * os.Exit is implemented using panic, causing deferred functions to
 // run.
-package interp // import "github.com/block/ftl-golang-tools/go/ssa/interp"
+package interp // import "golang.org/x/tools/go/ssa/interp"
 
 import (
 	"fmt"
 	"go/token"
 	"go/types"
+	"log"
 	"os"
 	"reflect"
 	"runtime"
+	"slices"
 	"sync/atomic"
 	_ "unsafe"
 
-	"github.com/block/ftl-golang-tools/go/ssa"
-	"github.com/block/ftl-golang-tools/internal/typeparams"
+	"golang.org/x/tools/go/ssa"
+	"golang.org/x/tools/internal/typeparams"
 )
 
 type continuation int
@@ -108,6 +110,7 @@ type frame struct {
 	result           value
 	panicking        bool
 	panic            interface{}
+	phitemps         []value // temporaries for parallel phi assignment
 }
 
 func (fr *frame) get(key ssa.Value) value {
@@ -379,12 +382,7 @@ func visitInstr(fr *frame, instr ssa.Instruction) continuation {
 		fr.env[instr] = &closure{instr.Fn.(*ssa.Function), bindings}
 
 	case *ssa.Phi:
-		for i, pred := range instr.Block().Preds {
-			if fr.prevBlock == pred {
-				fr.env[instr] = fr.get(instr.Edges[i])
-				break
-			}
-		}
+		log.Fatal("unreachable") // phis are processed at block entry
 
 	case *ssa.Select:
 		var cases []reflect.SelectCase
@@ -589,8 +587,9 @@ func runFrame(fr *frame) {
 		if fr.i.mode&EnableTracing != 0 {
 			fmt.Fprintf(os.Stderr, ".%s:\n", fr.block)
 		}
-	block:
-		for _, instr := range fr.block.Instrs {
+
+		nonPhis := executePhis(fr)
+		for _, instr := range nonPhis {
 			if fr.i.mode&EnableTracing != 0 {
 				if v, ok := instr.(ssa.Value); ok {
 					fmt.Fprintln(os.Stderr, "\t", v.Name(), "=", instr)
@@ -598,16 +597,47 @@ func runFrame(fr *frame) {
 					fmt.Fprintln(os.Stderr, "\t", instr)
 				}
 			}
-			switch visitInstr(fr, instr) {
-			case kReturn:
+			if visitInstr(fr, instr) == kReturn {
 				return
-			case kNext:
-				// no-op
-			case kJump:
-				break block
 			}
+			// Inv: kNext (continue) or kJump (last instr)
 		}
 	}
+}
+
+// executePhis executes the phi-nodes at the start of the current
+// block and returns the non-phi instructions.
+func executePhis(fr *frame) []ssa.Instruction {
+	firstNonPhi := -1
+	for i, instr := range fr.block.Instrs {
+		if _, ok := instr.(*ssa.Phi); !ok {
+			firstNonPhi = i
+			break
+		}
+	}
+	// Inv: 0 <= firstNonPhi; every block contains a non-phi.
+
+	nonPhis := fr.block.Instrs[firstNonPhi:]
+	if firstNonPhi > 0 {
+		phis := fr.block.Instrs[:firstNonPhi]
+		// Execute parallel assignment of phis.
+		//
+		// See "the swap problem" in Briggs et al's "Practical Improvements
+		// to the Construction and Destruction of SSA Form" for discussion.
+		predIndex := slices.Index(fr.block.Preds, fr.prevBlock)
+		fr.phitemps = fr.phitemps[:0]
+		for _, phi := range phis {
+			phi := phi.(*ssa.Phi)
+			if fr.i.mode&EnableTracing != 0 {
+				fmt.Fprintln(os.Stderr, "\t", phi.Name(), "=", phi)
+			}
+			fr.phitemps = append(fr.phitemps, fr.get(phi.Edges[predIndex]))
+		}
+		for i, phi := range phis {
+			fr.env[phi.(*ssa.Phi)] = fr.phitemps[i]
+		}
+	}
+	return nonPhis
 }
 
 // doRecover implements the recover() built-in.
@@ -723,11 +753,3 @@ func Interpret(mainpkg *ssa.Package, mode Mode, sizes types.Sizes, filename stri
 	}
 	return
 }
-<<<<<<< HEAD
-=======
-
-// TODO(taking): Hack while proposal #66601 is being finalized.
-//
-//go:linkname deferStack github.com/block/ftl-golang-tools/go/ssa.deferStack
-func deferStack(i *ssa.Defer) ssa.Value
->>>>>>> fd2747320 (update module path)

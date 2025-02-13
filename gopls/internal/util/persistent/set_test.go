@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/util/constraints"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/persistent"
+	"golang.org/x/tools/gopls/internal/util/constraints"
+	"golang.org/x/tools/gopls/internal/util/persistent"
 )
 
 func TestSet(t *testing.T) {
@@ -111,11 +111,11 @@ func diff[K constraints.Ordered](got *persistent.Set[K], want []K) string {
 		wantSet[w] = struct{}{}
 	}
 	var diff []string
-	got.Range(func(key K) {
+	for key := range got.All() {
 		if _, ok := wantSet[key]; !ok {
 			diff = append(diff, fmt.Sprintf("+%v", key))
 		}
-	})
+	}
 	for key := range wantSet {
 		if !got.Contains(key) {
 			diff = append(diff, fmt.Sprintf("-%v", key))

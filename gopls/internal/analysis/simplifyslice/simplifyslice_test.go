@@ -7,11 +7,11 @@ package simplifyslice_test
 import (
 	"testing"
 
-	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
-	"github.com/block/ftl-golang-tools/gopls/internal/analysis/simplifyslice"
+	"golang.org/x/tools/go/analysis/analysistest"
+	"golang.org/x/tools/gopls/internal/analysis/simplifyslice"
 )
 
 func Test(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, simplifyslice.Analyzer, "a", "typeparams")
+	analysistest.RunWithSuggestedFixes(t, testdata, simplifyslice.Analyzer, "a", "generatedcode", "typeparams")
 }
