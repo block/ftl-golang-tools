@@ -12,9 +12,8 @@ import (
 
 	"github.com/block/ftl-golang-tools/go/analysis"
 	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
 	"github.com/block/ftl-golang-tools/go/ast/inspector"
-	"github.com/block/ftl-golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
@@ -42,12 +41,12 @@ var Analyzer = &analysis.Analyzer{
 	Run:      run,
 }
 
-func run(pass *analysis.Pass) (interface{}, error) {
+func run(pass *analysis.Pass) (any, error) {
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
 	// Fast path: if the package doesn't import net/http,
 	// skip the traversal.
-	if !analysisutil.Imports(pass.Pkg, "net/http") {
+	if !analysisinternal.Imports(pass.Pkg, "net/http") {
 		return nil, nil
 	}
 
@@ -119,7 +118,7 @@ func isHTTPFuncOrMethodOnClient(info *types.Info, expr *ast.CallExpr) bool {
 		return false // the function called does not return two values.
 	}
 	isPtr, named := typesinternal.ReceiverNamed(res.At(0))
-	if !isPtr || named == nil || !analysisutil.IsNamedType(named, "net/http", "Response") {
+	if !isPtr || named == nil || !analysisinternal.IsTypeNamed(named, "net/http", "Response") {
 		return false // the first return type is not *http.Response.
 	}
 
@@ -134,11 +133,11 @@ func isHTTPFuncOrMethodOnClient(info *types.Info, expr *ast.CallExpr) bool {
 		return ok && id.Name == "http" // function in net/http package.
 	}
 
-	if analysisutil.IsNamedType(typ, "net/http", "Client") {
+	if analysisinternal.IsTypeNamed(typ, "net/http", "Client") {
 		return true // method on http.Client.
 	}
-	ptr, ok := aliases.Unalias(typ).(*types.Pointer)
-	return ok && analysisutil.IsNamedType(ptr.Elem(), "net/http", "Client") // method on *http.Client.
+	ptr, ok := types.Unalias(typ).(*types.Pointer)
+	return ok && analysisinternal.IsTypeNamed(ptr.Elem(), "net/http", "Client") // method on *http.Client.
 }
 
 // restOfBlock, given a traversal stack, finds the innermost containing

@@ -2,12 +2,16 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package settings
+package settings_test
 
 import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/block/ftl-golang-tools/gopls/internal/clonetest"
+	. "github.com/block/ftl-golang-tools/gopls/internal/settings"
 )
 
 func TestDefaultsEquivalence(t *testing.T) {
@@ -18,7 +22,7 @@ func TestDefaultsEquivalence(t *testing.T) {
 	}
 }
 
-func TestSetOption(t *testing.T) {
+func TestOptions_Set(t *testing.T) {
 	type testCase struct {
 		name      string
 		value     any
@@ -87,17 +91,33 @@ func TestSetOption(t *testing.T) {
 			},
 		},
 		{
-			name:  "hoverKind",
-			value: "Structured",
+			name:      "hoverKind",
+			value:     "Structured",
+			wantError: true,
 			check: func(o Options) bool {
-				return o.HoverKind == Structured
+				return o.HoverKind == FullDocumentation
+			},
+		},
+		{
+			name:      "ui.documentation.hoverKind",
+			value:     "Structured",
+			wantError: true,
+			check: func(o Options) bool {
+				return o.HoverKind == FullDocumentation
+			},
+		},
+		{
+			name:  "hoverKind",
+			value: "FullDocumentation",
+			check: func(o Options) bool {
+				return o.HoverKind == FullDocumentation
 			},
 		},
 		{
 			name:  "ui.documentation.hoverKind",
-			value: "Structured",
+			value: "FullDocumentation",
 			check: func(o Options) bool {
-				return o.HoverKind == Structured
+				return o.HoverKind == FullDocumentation
 			},
 		},
 		{
@@ -161,17 +181,6 @@ func TestSetOption(t *testing.T) {
 			},
 		},
 		{
-			name: "annotations",
-			value: map[string]any{
-				"Nil":      false,
-				"noBounds": true,
-			},
-			wantError: true,
-			check: func(o Options) bool {
-				return !o.Annotations[Nil] && !o.Annotations[Bounds]
-			},
-		},
-		{
 			name:      "vulncheck",
 			value:     []any{"invalid"},
 			wantError: true,
@@ -195,18 +204,9 @@ func TestSetOption(t *testing.T) {
 		},
 	}
 
-	if !StaticcheckSupported {
-		tests = append(tests, testCase{
-			name:      "staticcheck",
-			value:     true,
-			check:     func(o Options) bool { return o.Staticcheck == true },
-			wantError: true, // o.StaticcheckSupported is unset
-		})
-	}
-
 	for _, test := range tests {
 		var opts Options
-		err := opts.set(test.name, test.value, make(map[string]struct{}))
+		_, err := opts.Set(map[string]any{test.name: test.value})
 		if err != nil {
 			if !test.wantError {
 				t.Errorf("Options.set(%q, %v) failed: %v",
@@ -223,5 +223,25 @@ func TestSetOption(t *testing.T) {
 		if !test.check(opts) {
 			t.Errorf("Options.set(%q, %v): unexpected result %+v", test.name, test.value, opts)
 		}
+	}
+}
+
+func TestOptions_Clone(t *testing.T) {
+	// Test that the Options.Clone actually performs a deep clone of the Options
+	// struct.
+
+	golden := clonetest.NonZero[*Options]()
+	opts := clonetest.NonZero[*Options]()
+	opts2 := opts.Clone()
+
+	// The clone should be equivalent to the original.
+	if diff := cmp.Diff(golden, opts2); diff != "" {
+		t.Errorf("Clone() does not match original (-want +got):\n%s", diff)
+	}
+
+	// Mutating the clone should not mutate the original.
+	clonetest.ZeroOut(opts2)
+	if diff := cmp.Diff(golden, opts); diff != "" {
+		t.Errorf("Mutating clone mutated the original (-want +got):\n%s", diff)
 	}
 }

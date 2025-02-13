@@ -15,7 +15,6 @@ import (
 	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
 	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
 	"github.com/block/ftl-golang-tools/go/ast/inspector"
-	"github.com/block/ftl-golang-tools/internal/aliases"
 	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
@@ -26,7 +25,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "stringintconv",
 	Doc:      analysisutil.MustExtractDoc(doc, "stringintconv"),
-	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/stringintconv",
+	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/stringintconv",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }
@@ -199,32 +198,30 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		// the type has methods, as some {String,GoString,Format}
 		// may change the behavior of fmt.Sprint.
 		if len(ttypes) == 1 && len(vtypes) == 1 && types.NewMethodSet(V0).Len() == 0 {
-			fmtName, importEdit := analysisinternal.AddImport(pass.TypesInfo, file, arg.Pos(), "fmt", "fmt")
+			_, prefix, importEdits := analysisinternal.AddImport(pass.TypesInfo, file, "fmt", "fmt", "Sprint", arg.Pos())
 			if types.Identical(T0, types.Typ[types.String]) {
 				// string(x) -> fmt.Sprint(x)
-				addFix("Format the number as a decimal", []analysis.TextEdit{
-					importEdit,
-					{
+				addFix("Format the number as a decimal", append(importEdits,
+					analysis.TextEdit{
 						Pos:     call.Fun.Pos(),
 						End:     call.Fun.End(),
-						NewText: []byte(fmtName + ".Sprint"),
-					},
-				})
+						NewText: []byte(prefix + "Sprint"),
+					}),
+				)
 			} else {
 				// mystring(x) -> mystring(fmt.Sprint(x))
-				addFix("Format the number as a decimal", []analysis.TextEdit{
-					importEdit,
-					{
+				addFix("Format the number as a decimal", append(importEdits,
+					analysis.TextEdit{
 						Pos:     call.Lparen + 1,
 						End:     call.Lparen + 1,
-						NewText: []byte(fmtName + ".Sprint("),
+						NewText: []byte(prefix + "Sprint("),
 					},
-					{
+					analysis.TextEdit{
 						Pos:     call.Rparen,
 						End:     call.Rparen,
 						NewText: []byte(")"),
-					},
-				})
+					}),
+				)
 			}
 		}
 
@@ -250,7 +247,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 func structuralTypes(t types.Type) ([]types.Type, error) {
 	var structuralTypes []types.Type
-	if tp, ok := aliases.Unalias(t).(*types.TypeParam); ok {
+	if tp, ok := types.Unalias(t).(*types.TypeParam); ok {
 		terms, err := typeparams.StructuralTerms(tp)
 		if err != nil {
 			return nil, err

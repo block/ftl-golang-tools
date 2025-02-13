@@ -15,16 +15,16 @@ import (
 	"html/template"
 	"os"
 	"runtime"
-	"sort"
 	"strings"
 	"testing"
 
+	"github.com/jba/templatecheck"
 	"github.com/block/ftl-golang-tools/go/packages"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
 	"github.com/block/ftl-golang-tools/gopls/internal/debug"
 	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/moremaps"
 	"github.com/block/ftl-golang-tools/internal/testenv"
-	"github.com/jba/templatecheck"
 )
 
 var templates = map[string]struct {
@@ -110,13 +110,7 @@ func TestTemplates(t *testing.T) {
 		}
 	}
 	// now check all the known templates, in alphabetic order, for determinacy
-	keys := []string{}
-	for k := range templates {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		v := templates[k]
+	for k, v := range moremaps.Sorted(templates) {
 		// the FuncMap is an annoyance; should not be necessary
 		if err := templatecheck.CheckHTML(v.tmpl, v.data); err != nil {
 			t.Errorf("%s: %v", k, err)

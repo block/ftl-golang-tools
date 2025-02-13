@@ -1,4 +1,7 @@
-# Semantic Tokens
+# Gopls: Semantic Tokens
+
+TODO(adonovan): this doc is internal, not for end users.
+Move it closer to the code in golang or protocol/semtok.
 
 The [LSP](https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#textDocument_semanticTokens)
 specifies semantic tokens as a way of telling clients about language-specific
@@ -51,14 +54,15 @@ and change over time. (Nonetheless, a minimal implementation would not return `k
 `number`, `comment`, or `string`.)
 
 The maximal position isn't particularly well-specified either. To chose one example, a
-format string might have formatting codes (`%[4]-3.6f`), escape sequences (`\U00010604`), and regular
+format string might have formatting codes (`%-[4].6f`), escape sequences (`\U00010604`), and regular
 characters. Should these all be distinguished? One could even imagine distinguishing
 different runes by their Unicode language assignment, or some other Unicode property, such as
-being [confusable](http://www.unicode.org/Public/security/10.0.0/confusables.txt).
+being [confusable](http://www.unicode.org/Public/security/10.0.0/confusables.txt). While gopls does not fully adhere to such distinctions,
+it does recognizes formatting directives within strings, decorating them with "format" modifiers,
+providing more precise semantic highlighting in format strings.
 
-Gopls does not come close to either of these principles.  Semantic tokens are returned for
-identifiers, keywords, operators, comments, and literals. (Semantic tokens do not
-cover the file. They are not returned for
+Semantic tokens are returned for identifiers, keywords, operators, comments, and literals.
+(Semantic tokens do not cover the file. They are not returned for
 white space or punctuation, and there is no semantic token for labels.)
 The following describes more precisely what gopls
 does, with a few notes on possible alternative choices.
@@ -69,9 +73,9 @@ The references to *object* refer to the
 1. __`keyword`__ All Go [keywords](https://golang.org/ref/spec#Keywords) are marked `keyword`.
 1. __`namespace`__ All package names are marked `namespace`. In an import, if there is an
 alias, it would be marked. Otherwise the last component of the import path is marked.
-1. __`type`__ Objects of type ```types.TypeName``` are marked `type`.
-If they are also ```types.Basic```
-the modifier is `defaultLibrary`. (And in ```type B struct{C}```, ```B``` has modifier `definition`.)
+1. __`type`__ Objects of type ```types.TypeName``` are marked `type`. It also reports
+a modifier for the top-level constructor of the object's type, one of:
+`interface`, `struct`, `signature`, `pointer`, `array`, `map`, `slice`, `chan`, `string`, `number`, `bool`, `invalid`.
 1. __`parameter`__ The formal arguments in ```ast.FuncDecl``` and ```ast.FuncType``` nodes are marked `parameter`.
 1. __`variable`__  Identifiers in the
 scope of ```const``` are modified with `readonly`. ```nil``` is usually a `variable` modified with both

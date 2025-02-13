@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"go/ast"
 	"io"
 	"log"
 	"os"
@@ -18,10 +17,13 @@ import (
 	"regexp"
 	"runtime"
 	"runtime/pprof"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
 
+	"golang.org/x/mod/modfile"
+	"golang.org/x/telemetry/counter"
 	"github.com/block/ftl-golang-tools/go/ast/astutil"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
@@ -39,15 +41,23 @@ import (
 	"github.com/block/ftl-golang-tools/internal/diff"
 	"github.com/block/ftl-golang-tools/internal/event"
 	"github.com/block/ftl-golang-tools/internal/gocommand"
+	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
 	"github.com/block/ftl-golang-tools/internal/tokeninternal"
 	"github.com/block/ftl-golang-tools/internal/xcontext"
-	"golang.org/x/mod/modfile"
-	"golang.org/x/telemetry/counter"
 )
 
 func (s *server) ExecuteCommand(ctx context.Context, params *protocol.ExecuteCommandParams) (interface{}, error) {
 	ctx, done := event.Start(ctx, "lsp.Server.executeCommand")
 	defer done()
+
+	// For test synchronization, always create a progress notification.
+	//
+	// This may be in addition to user-facing progress notifications created in
+	// the course of command execution.
+	if s.Options().VerboseWorkDoneProgress {
+		work := s.progress.Start(ctx, params.Command, "Verbose: running command...", nil, nil)
+		defer work.End(ctx, "Done.")
+	}
 
 	var found bool
 	for _, name := range s.Options().SupportedCommands {
@@ -72,8 +82,195 @@ type commandHandler struct {
 	params *protocol.ExecuteCommandParams
 }
 
+func (h *commandHandler) Modules(ctx context.Context, args command.ModulesArgs) (command.ModulesResult, error) {
+	// keepModule filters modules based on the command args
+	keepModule := func(goMod protocol.DocumentURI) bool {
+		// Does the directory enclose the view's go.mod file?
+		if !args.Dir.Encloses(goMod) {
+			return false
+		}
+
+		// Calculate the relative path
+		rel, err := filepath.Rel(args.Dir.Path(), goMod.Path())
+		if err != nil {
+			return false // "can't happen" (see prior Encloses check)
+		}
+
+		assert(filepath.Base(goMod.Path()) == "go.mod", fmt.Sprintf("invalid go.mod path: want go.mod, got %q", goMod.Path()))
+
+		// Invariant: rel is a relative path without "../" segments and the last
+		// segment is "go.mod"
+		nparts := strings.Count(rel, string(filepath.Separator))
+		return args.MaxDepth < 0 || nparts <= args.MaxDepth
+	}
+
+	// Views may include:
+	//   - go.work views containing one or more modules each;
+	//   - go.mod views containing a single module each;
+	//   - GOPATH and/or ad hoc views containing no modules.
+	//
+	// Retrieving a view via the request path would only work for a
+	// non-recursive query for a go.mod view, and even in that case
+	// [Session.SnapshotOf] doesn't work on directories. Thus we check every
+	// view.
+	var result command.ModulesResult
+	seen := map[protocol.DocumentURI]bool{}
+	for _, v := range h.s.session.Views() {
+		s, release, err := v.Snapshot()
+		if err != nil {
+			return command.ModulesResult{}, err
+		}
+		defer release()
+
+		for _, modFile := range v.ModFiles() {
+			if !keepModule(modFile) {
+				continue
+			}
+
+			// Deduplicate
+			if seen[modFile] {
+				continue
+			}
+			seen[modFile] = true
+
+			fh, err := s.ReadFile(ctx, modFile)
+			if err != nil {
+				return command.ModulesResult{}, err
+			}
+			mod, err := s.ParseMod(ctx, fh)
+			if err != nil {
+				return command.ModulesResult{}, err
+			}
+			if mod.File.Module == nil {
+				continue // syntax contains errors
+			}
+			result.Modules = append(result.Modules, command.Module{
+				Path:    mod.File.Module.Mod.Path,
+				Version: mod.File.Module.Mod.Version,
+				GoMod:   mod.URI,
+			})
+		}
+	}
+	return result, nil
+}
+
+func (h *commandHandler) Packages(ctx context.Context, args command.PackagesArgs) (command.PackagesResult, error) {
+	// Convert file arguments into directories
+	dirs := make([]protocol.DocumentURI, len(args.Files))
+	for i, file := range args.Files {
+		if filepath.Ext(file.Path()) == ".go" {
+			dirs[i] = file.Dir()
+		} else {
+			dirs[i] = file
+		}
+	}
+
+	keepPackage := func(pkg *metadata.Package) bool {
+		for _, file := range pkg.GoFiles {
+			for _, dir := range dirs {
+				if file.Dir() == dir || args.Recursive && dir.Encloses(file) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	result := command.PackagesResult{
+		Module: make(map[string]command.Module),
+	}
+
+	err := h.run(ctx, commandConfig{
+		progress: "Packages",
+	}, func(ctx context.Context, _ commandDeps) error {
+		for _, view := range h.s.session.Views() {
+			snapshot, release, err := view.Snapshot()
+			if err != nil {
+				return err
+			}
+			defer release()
+
+			metas, err := snapshot.WorkspaceMetadata(ctx)
+			if err != nil {
+				return err
+			}
+
+			// Filter out unwanted packages
+			metas = slices.DeleteFunc(metas, func(meta *metadata.Package) bool {
+				return meta.IsIntermediateTestVariant() ||
+					!keepPackage(meta)
+			})
+
+			start := len(result.Packages)
+			for _, meta := range metas {
+				var mod command.Module
+				if meta.Module != nil {
+					mod = command.Module{
+						Path:    meta.Module.Path,
+						Version: meta.Module.Version,
+						GoMod:   protocol.URIFromPath(meta.Module.GoMod),
+					}
+					result.Module[mod.Path] = mod // Overwriting is ok
+				}
+
+				result.Packages = append(result.Packages, command.Package{
+					Path:       string(meta.PkgPath),
+					ForTest:    string(meta.ForTest),
+					ModulePath: mod.Path,
+				})
+			}
+
+			if args.Mode&command.NeedTests == 0 {
+				continue
+			}
+
+			// Make a single request to the index (per snapshot) to minimize the
+			// performance hit
+			var ids []cache.PackageID
+			for _, meta := range metas {
+				ids = append(ids, meta.ID)
+			}
+
+			allTests, err := snapshot.Tests(ctx, ids...)
+			if err != nil {
+				return err
+			}
+
+			for i, tests := range allTests {
+				pkg := &result.Packages[start+i]
+				fileByPath := map[protocol.DocumentURI]*command.TestFile{}
+				for _, test := range tests.All() {
+					test := command.TestCase{
+						Name: test.Name,
+						Loc:  test.Location,
+					}
+
+					file, ok := fileByPath[test.Loc.URI]
+					if !ok {
+						f := command.TestFile{
+							URI: test.Loc.URI,
+						}
+						i := len(pkg.TestFiles)
+						pkg.TestFiles = append(pkg.TestFiles, f)
+						file = &pkg.TestFiles[i]
+						fileByPath[test.Loc.URI] = file
+					}
+					file.Tests = append(file.Tests, test)
+				}
+			}
+		}
+
+		return nil
+	})
+	return result, err
+}
+
 func (h *commandHandler) MaybePromptForTelemetry(ctx context.Context) error {
-	go h.s.maybePromptForTelemetry(ctx, true)
+	// if the server's TelemetryPrompt is true, it's likely the server already
+	// handled prompting for it. Don't try to prompt again.
+	if !h.s.options.TelemetryPrompt {
+		go h.s.maybePromptForTelemetry(ctx, true)
+	}
 	return nil
 }
 
@@ -92,12 +289,31 @@ func (*commandHandler) AddTelemetryCounters(_ context.Context, args command.AddT
 	return nil
 }
 
+func (c *commandHandler) AddTest(ctx context.Context, loc protocol.Location) (*protocol.WorkspaceEdit, error) {
+	var result *protocol.WorkspaceEdit
+	err := c.run(ctx, commandConfig{
+		forURI: loc.URI,
+	}, func(ctx context.Context, deps commandDeps) error {
+		if deps.snapshot.FileKind(deps.fh) != file.Go {
+			return fmt.Errorf("can't add test for non-Go file")
+		}
+		docedits, err := golang.AddTestForFunc(ctx, deps.snapshot, loc)
+		if err != nil {
+			return err
+		}
+		return applyChanges(ctx, c.s.client, docedits)
+	})
+	// TODO(hxjiang): move the cursor to the new test once edits applied.
+	return result, err
+}
+
 // commandConfig configures common command set-up and execution.
 type commandConfig struct {
-	requireSave bool                 // whether all files must be saved for the command to work
-	progress    string               // title to use for progress reporting. If empty, no progress will be reported. Mandatory for async commands.
-	forView     string               // view to resolve to a snapshot; incompatible with forURI
-	forURI      protocol.DocumentURI // URI to resolve to a snapshot. If unset, snapshot will be nil.
+	requireSave   bool                           // whether all files must be saved for the command to work
+	progress      string                         // title to use for progress reporting. If empty, no progress will be reported.
+	progressStyle settings.WorkDoneProgressStyle // style information for client-side progress display.
+	forView       string                         // view to resolve to a snapshot; incompatible with forURI
+	forURI        protocol.DocumentURI           // URI to resolve to a snapshot. If unset, snapshot will be nil.
 }
 
 // commandDeps is evaluated from a commandConfig. Note that not all fields may
@@ -167,7 +383,11 @@ func (c *commandHandler) run(ctx context.Context, cfg commandConfig, run command
 
 	ctx, cancel := context.WithCancel(xcontext.Detach(ctx))
 	if cfg.progress != "" {
-		deps.work = c.s.progress.Start(ctx, cfg.progress, "Running...", c.params.WorkDoneToken, cancel)
+		header := ""
+		if _, ok := c.s.options.SupportedWorkDoneProgressFormats[cfg.progressStyle]; ok && cfg.progressStyle != "" {
+			header = fmt.Sprintf("style: %s\n\n", cfg.progressStyle)
+		}
+		deps.work = c.s.progress.Start(ctx, cfg.progress, header+"Running...", c.params.WorkDoneToken, cancel)
 	}
 	runcmd := func() error {
 		defer release()
@@ -187,10 +407,13 @@ func (c *commandHandler) run(ctx context.Context, cfg commandConfig, run command
 		return err
 	}
 
-	if enum := command.Command(c.params.Command); enum.IsAsync() {
+	// For legacy reasons, gopls.run_govulncheck must run asynchronously.
+	// TODO(golang/vscode-go#3572): remove this (along with the
+	// gopls.run_govulncheck command entirely) once VS Code only uses the new
+	// gopls.vulncheck command.
+	if c.params.Command == "gopls.run_govulncheck" {
 		if cfg.progress == "" {
-			log.Fatalf("asynchronous command %q does not enable progress reporting",
-				enum)
+			log.Fatalf("asynchronous command gopls.run_govulncheck does not enable progress reporting")
 		}
 		go func() {
 			if err := runcmd(); err != nil {
@@ -199,6 +422,7 @@ func (c *commandHandler) run(ctx context.Context, cfg commandConfig, run command
 		}()
 		return nil
 	}
+
 	return runcmd()
 }
 
@@ -206,9 +430,9 @@ func (c *commandHandler) ApplyFix(ctx context.Context, args command.ApplyFixArgs
 	var result *protocol.WorkspaceEdit
 	err := c.run(ctx, commandConfig{
 		// Note: no progress here. Applying fixes should be quick.
-		forURI: args.URI,
+		forURI: args.Location.URI,
 	}, func(ctx context.Context, deps commandDeps) error {
-		changes, err := golang.ApplyFix(ctx, args.Fix, deps.snapshot, deps.fh, args.Range)
+		changes, err := golang.ApplyFix(ctx, args.Fix, deps.snapshot, deps.fh, args.Location.Range)
 		if err != nil {
 			return err
 		}
@@ -217,16 +441,7 @@ func (c *commandHandler) ApplyFix(ctx context.Context, args command.ApplyFixArgs
 			result = wsedit
 			return nil
 		}
-		resp, err := c.s.client.ApplyEdit(ctx, &protocol.ApplyWorkspaceEditParams{
-			Edit: *wsedit,
-		})
-		if err != nil {
-			return err
-		}
-		if !resp.Applied {
-			return errors.New(resp.FailureReason)
-		}
-		return nil
+		return applyChanges(ctx, c.s.client, changes)
 	})
 	return result, err
 }
@@ -388,11 +603,7 @@ func (c *commandHandler) Vendor(ctx context.Context, args command.URIArg) error 
 		// modules.txt in-place. In that case we could theoretically allow this
 		// command to run concurrently.
 		stderr := new(bytes.Buffer)
-		inv, cleanupInvocation, err := deps.snapshot.GoCommandInvocation(true, &gocommand.Invocation{
-			Verb:       "mod",
-			Args:       []string{"vendor"},
-			WorkingDir: filepath.Dir(args.URI.Path()),
-		})
+		inv, cleanupInvocation, err := deps.snapshot.GoCommandInvocation(cache.NetworkOK, args.URI.DirPath(), "mod", []string{"vendor"})
 		if err != nil {
 			return err
 		}
@@ -451,17 +662,7 @@ func (c *commandHandler) RemoveDependency(ctx context.Context, args command.Remo
 		if err != nil {
 			return err
 		}
-		response, err := c.s.client.ApplyEdit(ctx, &protocol.ApplyWorkspaceEditParams{
-			Edit: *protocol.NewWorkspaceEdit(
-				protocol.DocumentChangeEdit(deps.fh, edits)),
-		})
-		if err != nil {
-			return err
-		}
-		if !response.Applied {
-			return fmt.Errorf("edits not applied because of %s", response.FailureReason)
-		}
-		return nil
+		return applyChanges(ctx, c.s.client, []protocol.DocumentChange{protocol.DocumentChangeEdit(deps.fh, edits)})
 	})
 }
 
@@ -487,30 +688,23 @@ func dropDependency(pm *cache.ParsedModule, modulePath string) ([]protocol.TextE
 	return protocol.EditsFromDiffEdits(pm.Mapper, diff)
 }
 
-// Test is an alias for RunTests (with splayed arguments).
-func (c *commandHandler) Test(ctx context.Context, uri protocol.DocumentURI, tests, benchmarks []string) error {
-	return c.RunTests(ctx, command.RunTestsArgs{
-		URI:        uri,
-		Tests:      tests,
-		Benchmarks: benchmarks,
-	})
-}
+func (c *commandHandler) Doc(ctx context.Context, args command.DocArgs) (protocol.URI, error) {
+	if args.Location.URI == "" {
+		return "", errors.New("missing location URI")
+	}
 
-func (c *commandHandler) Doc(ctx context.Context, loc protocol.Location) error {
-	return c.run(ctx, commandConfig{
+	var result protocol.URI
+	err := c.run(ctx, commandConfig{
 		progress: "", // the operation should be fast
-		forURI:   loc.URI,
+		forURI:   args.Location.URI,
 	}, func(ctx context.Context, deps commandDeps) error {
-		pkg, pgf, err := golang.NarrowestPackageForFile(ctx, deps.snapshot, loc.URI)
+		pkg, pgf, err := golang.NarrowestPackageForFile(ctx, deps.snapshot, args.Location.URI)
 		if err != nil {
 			return err
 		}
-
-		// When invoked from a _test.go file, show the
-		// documentation of the package under test.
-		pkgpath := pkg.Metadata().PkgPath
-		if pkg.Metadata().ForTest != "" {
-			pkgpath = pkg.Metadata().ForTest
+		start, end, err := pgf.RangePos(args.Location.Range)
+		if err != nil {
+			return err
 		}
 
 		// Start web server.
@@ -519,63 +713,19 @@ func (c *commandHandler) Doc(ctx context.Context, loc protocol.Location) error {
 			return err
 		}
 
-		// Compute fragment (e.g. "#Buffer.Len") based on
-		// enclosing top-level declaration, if exported.
-		var fragment string
-		pos, err := pgf.PositionPos(loc.Range.Start)
-		if err != nil {
-			return err
-		}
-		path, _ := astutil.PathEnclosingInterval(pgf.File, pos, pos)
-		if n := len(path); n > 1 {
-			switch decl := path[n-2].(type) {
-			case *ast.FuncDecl:
-				if decl.Name.IsExported() {
-					// e.g. "#Println"
-					fragment = decl.Name.Name
-
-					// method?
-					if decl.Recv != nil && len(decl.Recv.List) > 0 {
-						recv := decl.Recv.List[0].Type
-						if star, ok := recv.(*ast.StarExpr); ok {
-							recv = star.X // *N -> N
-						}
-						if id, ok := recv.(*ast.Ident); ok && id.IsExported() {
-							// e.g. "#Buffer.Len"
-							fragment = id.Name + "." + fragment
-						} else {
-							fragment = ""
-						}
-					}
-				}
-
-			case *ast.GenDecl:
-				// path=[... Spec? GenDecl File]
-				for _, spec := range decl.Specs {
-					if n > 2 && spec == path[n-3] {
-						var name *ast.Ident
-						switch spec := spec.(type) {
-						case *ast.ValueSpec:
-							// var, const: use first name
-							name = spec.Names[0]
-						case *ast.TypeSpec:
-							name = spec.Name
-						}
-						if name != nil && name.IsExported() {
-							fragment = name.Name
-						}
-						break
-					}
-				}
-			}
-		}
+		// Compute package path and optional symbol fragment
+		// (e.g. "#Buffer.Len") from the the selection.
+		pkgpath, fragment, _ := golang.DocFragment(pkg, pgf, start, end)
 
 		// Direct the client to open the /pkg page.
-		url := web.PkgURL(deps.snapshot.View().ID(), pkgpath, fragment)
-		openClientBrowser(ctx, c.s.client, url)
+		result = web.PkgURL(deps.snapshot.View().ID(), pkgpath, fragment)
+		if args.ShowDocument {
+			openClientBrowser(ctx, c.s.client, "Doc", result, c.s.Options())
+		}
 
 		return nil
 	})
+	return result, err
 }
 
 func (c *commandHandler) RunTests(ctx context.Context, args command.RunTestsArgs) error {
@@ -584,6 +734,7 @@ func (c *commandHandler) RunTests(ctx context.Context, args command.RunTestsArgs
 		requireSave: true,              // go test honors overlays, but tests themselves cannot
 		forURI:      args.URI,
 	}, func(ctx context.Context, deps commandDeps) error {
+		jsonrpc2.Async(ctx) // don't block RPCs behind this command, since it can take a while
 		return c.runTests(ctx, deps.snapshot, deps.work, args.URI, args.Tests, args.Benchmarks)
 	})
 }
@@ -604,11 +755,8 @@ func (c *commandHandler) runTests(ctx context.Context, snapshot *cache.Snapshot,
 	// Run `go test -run Func` on each test.
 	var failedTests int
 	for _, funcName := range tests {
-		inv, cleanupInvocation, err := snapshot.GoCommandInvocation(false, &gocommand.Invocation{
-			Verb:       "test",
-			Args:       []string{pkgPath, "-v", "-count=1", fmt.Sprintf("-run=^%s$", regexp.QuoteMeta(funcName))},
-			WorkingDir: filepath.Dir(uri.Path()),
-		})
+		args := []string{pkgPath, "-v", "-count=1", fmt.Sprintf("-run=^%s$", regexp.QuoteMeta(funcName))}
+		inv, cleanupInvocation, err := snapshot.GoCommandInvocation(cache.NoNetwork, uri.DirPath(), "test", args)
 		if err != nil {
 			return err
 		}
@@ -624,10 +772,8 @@ func (c *commandHandler) runTests(ctx context.Context, snapshot *cache.Snapshot,
 	// Run `go test -run=^$ -bench Func` on each test.
 	var failedBenchmarks int
 	for _, funcName := range benchmarks {
-		inv, cleanupInvocation, err := snapshot.GoCommandInvocation(false, &gocommand.Invocation{
-			Verb:       "test",
-			Args:       []string{pkgPath, "-v", "-run=^$", fmt.Sprintf("-bench=^%s$", regexp.QuoteMeta(funcName))},
-			WorkingDir: filepath.Dir(uri.Path()),
+		inv, cleanupInvocation, err := snapshot.GoCommandInvocation(cache.NoNetwork, uri.DirPath(), "test", []string{
+			pkgPath, "-v", "-run=^$", fmt.Sprintf("-bench=^%s$", regexp.QuoteMeta(funcName)),
 		})
 		if err != nil {
 			return err
@@ -687,11 +833,7 @@ func (c *commandHandler) Generate(ctx context.Context, args command.GenerateArgs
 		if args.Recursive {
 			pattern = "./..."
 		}
-		inv, cleanupInvocation, err := deps.snapshot.GoCommandInvocation(true, &gocommand.Invocation{
-			Verb:       "generate",
-			Args:       []string{"-x", pattern},
-			WorkingDir: args.Dir.Path(),
-		})
+		inv, cleanupInvocation, err := deps.snapshot.GoCommandInvocation(cache.NetworkOK, args.Dir.Path(), "generate", []string{"-x", pattern})
 		if err != nil {
 			return err
 		}
@@ -720,12 +862,10 @@ func (c *commandHandler) GoGetPackage(ctx context.Context, args command.GoGetPac
 		}
 		defer cleanupModDir()
 
-		inv, cleanupInvocation, err := snapshot.GoCommandInvocation(true, &gocommand.Invocation{
-			Verb:       "list",
-			Args:       []string{"-f", "{{.Module.Path}}@{{.Module.Version}}", "-mod=mod", "-modfile=" + filepath.Join(tempDir, "go.mod"), args.Pkg},
-			Env:        []string{"GOWORK=off"},
-			WorkingDir: modURI.Dir().Path(),
-		})
+		inv, cleanupInvocation, err := snapshot.GoCommandInvocation(cache.NetworkOK, modURI.DirPath(), "list",
+			[]string{"-f", "{{.Module.Path}}@{{.Module.Version}}", "-mod=mod", "-modfile=" + filepath.Join(tempDir, "go.mod"), args.Pkg},
+			"GOWORK=off",
+		)
 		if err != nil {
 			return err
 		}
@@ -855,12 +995,8 @@ func addModuleRequire(invoke func(...string) (*bytes.Buffer, error), args []stri
 
 // TODO(rfindley): inline.
 func (s *server) getUpgrades(ctx context.Context, snapshot *cache.Snapshot, uri protocol.DocumentURI, modules []string) (map[string]string, error) {
-	inv, cleanup, err := snapshot.GoCommandInvocation(true, &gocommand.Invocation{
-		Verb: "list",
-		// -mod=readonly is necessary when vendor is present (golang/go#66055)
-		Args:       append([]string{"-mod=readonly", "-m", "-u", "-json"}, modules...),
-		WorkingDir: filepath.Dir(uri.Path()),
-	})
+	args := append([]string{"-mod=readonly", "-m", "-u", "-json"}, modules...)
+	inv, cleanup, err := snapshot.GoCommandInvocation(cache.NetworkOK, uri.DirPath(), "list", args)
 	if err != nil {
 		return nil, err
 	}
@@ -885,24 +1021,23 @@ func (s *server) getUpgrades(ctx context.Context, snapshot *cache.Snapshot, uri 
 }
 
 func (c *commandHandler) GCDetails(ctx context.Context, uri protocol.DocumentURI) error {
-	return c.ToggleGCDetails(ctx, command.URIArg{URI: uri})
-}
-
-func (c *commandHandler) ToggleGCDetails(ctx context.Context, args command.URIArg) error {
 	return c.run(ctx, commandConfig{
-		progress: "Toggling GC Details",
-		forURI:   args.URI,
+		forURI: uri,
 	}, func(ctx context.Context, deps commandDeps) error {
-		return c.modifyState(ctx, FromToggleGCDetails, func() (*cache.Snapshot, func(), error) {
+		return c.modifyState(ctx, FromToggleCompilerOptDetails, func() (*cache.Snapshot, func(), error) {
+			// Don't blindly use "dir := deps.fh.URI().Dir()"; validate.
 			meta, err := golang.NarrowestMetadataForFile(ctx, deps.snapshot, deps.fh.URI())
 			if err != nil {
 				return nil, nil, err
 			}
-			wantDetails := !deps.snapshot.WantGCDetails(meta.ID) // toggle the gc details state
+			if len(meta.CompiledGoFiles) == 0 {
+				return nil, nil, fmt.Errorf("package %q does not compile file %q", meta.ID, deps.fh.URI())
+			}
+			dir := meta.CompiledGoFiles[0].Dir()
+
+			want := !deps.snapshot.WantCompilerOptDetails(dir) // toggle per-directory flag
 			return c.s.session.InvalidateView(ctx, deps.snapshot.View(), cache.StateChange{
-				GCDetails: map[metadata.PackageID]bool{
-					meta.ID: wantDetails,
-				},
+				CompilerOptDetails: map[protocol.DocumentURI]bool{dir: want},
 			})
 		})
 	})
@@ -977,17 +1112,20 @@ func (c *commandHandler) AddImport(ctx context.Context, args command.AddImportAr
 		if err != nil {
 			return fmt.Errorf("could not add import: %v", err)
 		}
-		r, err := c.s.client.ApplyEdit(ctx, &protocol.ApplyWorkspaceEditParams{
-			Edit: *protocol.NewWorkspaceEdit(
-				protocol.DocumentChangeEdit(deps.fh, edits)),
-		})
+		return applyChanges(ctx, c.s.client, []protocol.DocumentChange{protocol.DocumentChangeEdit(deps.fh, edits)})
+	})
+}
+
+func (c *commandHandler) ExtractToNewFile(ctx context.Context, args protocol.Location) error {
+	return c.run(ctx, commandConfig{
+		progress: "Extract to a new file",
+		forURI:   args.URI,
+	}, func(ctx context.Context, deps commandDeps) error {
+		changes, err := golang.ExtractToNewFile(ctx, deps.snapshot, deps.fh, args.Range)
 		if err != nil {
-			return fmt.Errorf("could not apply import edits: %v", err)
+			return err
 		}
-		if !r.Applied {
-			return fmt.Errorf("failed to apply edits: %v", r.FailureReason)
-		}
-		return nil
+		return applyChanges(ctx, c.s.client, changes)
 	})
 }
 
@@ -1005,7 +1143,7 @@ func (c *commandHandler) StartDebugging(ctx context.Context, args command.Debugg
 		return result, fmt.Errorf("starting debug server: %w", err)
 	}
 	result.URLs = []string{"http://" + listenedAddr}
-	openClientBrowser(ctx, c.s.client, result.URLs[0])
+	openClientBrowser(ctx, c.s.client, "Debug", result.URLs[0], c.s.Options())
 	return result, nil
 }
 
@@ -1072,6 +1210,79 @@ func (c *commandHandler) FetchVulncheckResult(ctx context.Context, arg command.U
 	return ret, err
 }
 
+const GoVulncheckCommandTitle = "govulncheck"
+
+func (c *commandHandler) Vulncheck(ctx context.Context, args command.VulncheckArgs) (command.VulncheckResult, error) {
+	if args.URI == "" {
+		return command.VulncheckResult{}, errors.New("VulncheckArgs is missing URI field")
+	}
+
+	var commandResult command.VulncheckResult
+	err := c.run(ctx, commandConfig{
+		progress:      GoVulncheckCommandTitle,
+		progressStyle: settings.WorkDoneProgressStyleLog,
+		requireSave:   true, // govulncheck cannot honor overlays
+		forURI:        args.URI,
+	}, func(ctx context.Context, deps commandDeps) error {
+		jsonrpc2.Async(ctx) // run this in parallel with other requests: vulncheck can be slow.
+
+		workDoneWriter := progress.NewWorkDoneWriter(ctx, deps.work)
+		dir := args.URI.DirPath()
+		pattern := args.Pattern
+
+		result, err := scan.RunGovulncheck(ctx, pattern, deps.snapshot, dir, workDoneWriter)
+		if err != nil {
+			return err
+		}
+		commandResult.Result = result
+		commandResult.Token = deps.work.Token()
+
+		snapshot, release, err := c.s.session.InvalidateView(ctx, deps.snapshot.View(), cache.StateChange{
+			Vulns: map[protocol.DocumentURI]*vulncheck.Result{args.URI: result},
+		})
+		if err != nil {
+			return err
+		}
+		defer release()
+
+		// Diagnosing with the background context ensures new snapshots are fully
+		// diagnosed.
+		c.s.diagnoseSnapshot(snapshot.BackgroundContext(), snapshot, nil, 0)
+
+		affecting := make(map[string]bool, len(result.Entries))
+		for _, finding := range result.Findings {
+			if len(finding.Trace) > 1 { // at least 2 frames if callstack exists (vulnerability, entry)
+				affecting[finding.OSV] = true
+			}
+		}
+		if len(affecting) == 0 {
+			showMessage(ctx, c.s.client, protocol.Info, "No vulnerabilities found")
+			return nil
+		}
+		affectingOSVs := make([]string, 0, len(affecting))
+		for id := range affecting {
+			affectingOSVs = append(affectingOSVs, id)
+		}
+		sort.Strings(affectingOSVs)
+
+		showMessage(ctx, c.s.client, protocol.Warning, fmt.Sprintf("Found %v", strings.Join(affectingOSVs, ", ")))
+
+		return nil
+	})
+	if err != nil {
+		return command.VulncheckResult{}, err
+	}
+	return commandResult, nil
+}
+
+// RunGovulncheck is like Vulncheck (in fact, a copy), but is tweaked slightly
+// to run asynchronously rather than return a result.
+//
+// This logic was copied, rather than factored out, as this implementation is
+// slated for deletion.
+//
+// TODO(golang/vscode-go#3572)
+// TODO(hxjiang): deprecate gopls.run_govulncheck.
 func (c *commandHandler) RunGovulncheck(ctx context.Context, args command.VulncheckArgs) (command.RunVulncheckResult, error) {
 	if args.URI == "" {
 		return command.RunVulncheckResult{}, errors.New("VulncheckArgs is missing URI field")
@@ -1084,8 +1295,8 @@ func (c *commandHandler) RunGovulncheck(ctx context.Context, args command.Vulnch
 	// synchronize the start of the run and return the token.
 	tokenChan := make(chan protocol.ProgressToken, 1)
 	err := c.run(ctx, commandConfig{
-		progress:    "govulncheck", // (asynchronous)
-		requireSave: true,          // govulncheck cannot honor overlays
+		progress:    GoVulncheckCommandTitle,
+		requireSave: true, // govulncheck cannot honor overlays
 		forURI:      args.URI,
 	}, func(ctx context.Context, deps commandDeps) error {
 		tokenChan <- deps.work.Token()
@@ -1335,8 +1546,21 @@ func showMessage(ctx context.Context, cli protocol.Client, typ protocol.MessageT
 
 // openClientBrowser causes the LSP client to open the specified URL
 // in an external browser.
-func openClientBrowser(ctx context.Context, cli protocol.Client, url protocol.URI) {
-	showDocumentImpl(ctx, cli, url, nil)
+//
+// If the client does not support window/showDocument, a window/showMessage
+// request is instead used, with the format "$title: open your browser to $url".
+func openClientBrowser(ctx context.Context, cli protocol.Client, title string, url protocol.URI, opts *settings.Options) {
+	if opts.ShowDocumentSupported {
+		showDocumentImpl(ctx, cli, url, nil, opts)
+	} else {
+		params := &protocol.ShowMessageParams{
+			Type:    protocol.Info,
+			Message: fmt.Sprintf("%s: open your browser to %s", title, url),
+		}
+		if err := cli.ShowMessage(ctx, params); err != nil {
+			event.Error(ctx, "failed to show brower url", err)
+		}
+	}
 }
 
 // openClientEditor causes the LSP client to open the specified document
@@ -1344,11 +1568,17 @@ func openClientBrowser(ctx context.Context, cli protocol.Client, url protocol.UR
 //
 // Note that VS Code 1.87.2 doesn't currently raise the window; this is
 // https://github.com/microsoft/vscode/issues/207634
-func openClientEditor(ctx context.Context, cli protocol.Client, loc protocol.Location) {
-	showDocumentImpl(ctx, cli, protocol.URI(loc.URI), &loc.Range)
+func openClientEditor(ctx context.Context, cli protocol.Client, loc protocol.Location, opts *settings.Options) {
+	if !opts.ShowDocumentSupported {
+		return // no op
+	}
+	showDocumentImpl(ctx, cli, protocol.URI(loc.URI), &loc.Range, opts)
 }
 
-func showDocumentImpl(ctx context.Context, cli protocol.Client, url protocol.URI, rangeOpt *protocol.Range) {
+func showDocumentImpl(ctx context.Context, cli protocol.Client, url protocol.URI, rangeOpt *protocol.Range, opts *settings.Options) {
+	if !opts.ShowDocumentSupported {
+		return // no op
+	}
 	// In principle we shouldn't send a showDocument request to a
 	// client that doesn't support it, as reported by
 	// ShowDocumentClientCapabilities. But even clients that do
@@ -1383,10 +1613,23 @@ func showDocumentImpl(ctx context.Context, cli protocol.Client, url protocol.URI
 func (c *commandHandler) ChangeSignature(ctx context.Context, args command.ChangeSignatureArgs) (*protocol.WorkspaceEdit, error) {
 	var result *protocol.WorkspaceEdit
 	err := c.run(ctx, commandConfig{
-		forURI: args.RemoveParameter.URI,
+		forURI: args.Location.URI,
 	}, func(ctx context.Context, deps commandDeps) error {
-		// For now, gopls only supports removing unused parameters.
-		docedits, err := golang.RemoveUnusedParameter(ctx, deps.fh, args.RemoveParameter.Range, deps.snapshot)
+		pkg, pgf, err := golang.NarrowestPackageForFile(ctx, deps.snapshot, args.Location.URI)
+		if err != nil {
+			return err
+		}
+
+		// For now, gopls only supports parameter permutation or removal.
+		var perm []int
+		for _, newParam := range args.NewParams {
+			if newParam.NewField != "" {
+				return fmt.Errorf("adding new parameters is currently unsupported")
+			}
+			perm = append(perm, newParam.OldIndex)
+		}
+
+		docedits, err := golang.ChangeSignature(ctx, deps.snapshot, pkg, pgf, args.Location.Range, perm)
 		if err != nil {
 			return err
 		}
@@ -1395,13 +1638,7 @@ func (c *commandHandler) ChangeSignature(ctx context.Context, args command.Chang
 			result = wsedit
 			return nil
 		}
-		r, err := c.s.client.ApplyEdit(ctx, &protocol.ApplyWorkspaceEditParams{
-			Edit: *wsedit,
-		})
-		if !r.Applied {
-			return fmt.Errorf("failed to apply edits: %v", r.FailureReason)
-		}
-		return nil
+		return applyChanges(ctx, c.s.client, docedits)
 	})
 	return result, err
 }
@@ -1471,7 +1708,7 @@ func (c *commandHandler) FreeSymbols(ctx context.Context, viewID string, loc pro
 		return err
 	}
 	url := web.freesymbolsURL(viewID, loc)
-	openClientBrowser(ctx, c.s.client, url)
+	openClientBrowser(ctx, c.s.client, "Free symbols", url, c.s.Options())
 	return nil
 }
 
@@ -1481,7 +1718,14 @@ func (c *commandHandler) Assembly(ctx context.Context, viewID, packageID, symbol
 		return err
 	}
 	url := web.assemblyURL(viewID, packageID, symbol)
-	openClientBrowser(ctx, c.s.client, url)
+	openClientBrowser(ctx, c.s.client, "Assembly", url, c.s.Options())
+	return nil
+}
+
+func (c *commandHandler) ClientOpenURL(ctx context.Context, url string) error {
+	// Fall back to "Gopls: open your browser..." if we must send a showMessage
+	// request, since we don't know the context of this command.
+	openClientBrowser(ctx, c.s.client, "Gopls", url, c.s.Options())
 	return nil
 }
 
@@ -1490,4 +1734,33 @@ func (c *commandHandler) ScanImports(ctx context.Context) error {
 		v.ScanImports()
 	}
 	return nil
+}
+
+func (c *commandHandler) PackageSymbols(ctx context.Context, args command.PackageSymbolsArgs) (command.PackageSymbolsResult, error) {
+	var result command.PackageSymbolsResult
+	err := c.run(ctx, commandConfig{
+		forURI: args.URI,
+	}, func(ctx context.Context, deps commandDeps) error {
+		if deps.snapshot.FileKind(deps.fh) != file.Go {
+			// golang/vscode-go#3681: fail silently, to avoid spurious error popups.
+			return nil
+		}
+		res, err := golang.PackageSymbols(ctx, deps.snapshot, args.URI)
+		if err != nil {
+			return err
+		}
+		result = res
+		return nil
+	})
+
+	// sort symbols for determinism
+	sort.SliceStable(result.Symbols, func(i, j int) bool {
+		iv, jv := result.Symbols[i], result.Symbols[j]
+		if iv.Name == jv.Name {
+			return iv.Range.Start.Line < jv.Range.Start.Line
+		}
+		return iv.Name < jv.Name
+	})
+
+	return result, err
 }

@@ -45,7 +45,6 @@ import (
 	"github.com/block/ftl-golang-tools/go/ast/astutil"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
-	"github.com/block/ftl-golang-tools/internal/aliases"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
 	"github.com/block/ftl-golang-tools/internal/typesinternal"
 	"github.com/block/ftl-golang-tools/refactor/satisfy"
@@ -101,7 +100,7 @@ func (r *renamer) check(from types.Object) {
 		r.checkInFileBlock(from_)
 	} else if from_, ok := from.(*types.Label); ok {
 		r.checkLabel(from_)
-	} else if isPackageLevel(from) {
+	} else if typesinternal.IsPackageLevel(from) {
 		r.checkInPackageBlock(from)
 	} else if v, ok := from.(*types.Var); ok && v.IsField() {
 		r.checkStructField(v)
@@ -504,7 +503,7 @@ func (r *renamer) checkStructField(from *types.Var) {
 	if from.Anonymous() {
 		if named, ok := from.Type().(*types.Named); ok {
 			r.check(named.Obj())
-		} else if named, ok := aliases.Unalias(typesinternal.Unpointer(from.Type())).(*types.Named); ok {
+		} else if named, ok := types.Unalias(typesinternal.Unpointer(from.Type())).(*types.Named); ok {
 			r.check(named.Obj())
 		}
 	}
@@ -813,7 +812,7 @@ func (r *renamer) checkMethod(from *types.Func) {
 				var iface string
 
 				I := recv(imeth).Type()
-				if named, ok := aliases.Unalias(I).(*types.Named); ok {
+				if named, ok := types.Unalias(I).(*types.Named); ok {
 					pos = named.Obj().Pos()
 					iface = "interface " + named.Obj().Name()
 				} else {
@@ -867,9 +866,17 @@ func (r *renamer) satisfy() map[satisfy.Constraint]bool {
 			//
 			// Only proceed if all packages have no errors.
 			if len(pkg.ParseErrors()) > 0 || len(pkg.TypeErrors()) > 0 {
+				var filename string
+				if len(pkg.ParseErrors()) > 0 {
+					err := pkg.ParseErrors()[0][0]
+					filename = filepath.Base(err.Pos.Filename)
+				} else if len(pkg.TypeErrors()) > 0 {
+					err := pkg.TypeErrors()[0]
+					filename = filepath.Base(err.Fset.File(err.Pos).Name())
+				}
 				r.errorf(token.NoPos, // we don't have a position for this error.
-					"renaming %q to %q not possible because %q has errors",
-					r.from, r.to, pkg.Metadata().PkgPath)
+					"renaming %q to %q not possible because %q in %q has errors",
+					r.from, r.to, filename, pkg.Metadata().PkgPath)
 				return nil
 			}
 			f.Find(pkg.TypesInfo(), pkg.Syntax())
@@ -883,7 +890,7 @@ func (r *renamer) satisfy() map[satisfy.Constraint]bool {
 
 // recv returns the method's receiver.
 func recv(meth *types.Func) *types.Var {
-	return meth.Type().(*types.Signature).Recv()
+	return meth.Signature().Recv()
 }
 
 // someUse returns an arbitrary use of obj within info.
@@ -940,13 +947,6 @@ func isLocal(obj types.Object) bool {
 		depth++
 	}
 	return depth >= 4
-}
-
-func isPackageLevel(obj types.Object) bool {
-	if obj == nil {
-		return false
-	}
-	return obj.Pkg().Scope().Lookup(obj.Name()) == obj
 }
 
 // -- Plundered from go/scanner: ---------------------------------------

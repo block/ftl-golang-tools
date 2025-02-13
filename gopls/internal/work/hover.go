@@ -9,11 +9,11 @@ import (
 	"context"
 	"fmt"
 
+	"golang.org/x/mod/modfile"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
 	"github.com/block/ftl-golang-tools/gopls/internal/file"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 	"github.com/block/ftl-golang-tools/internal/event"
-	"golang.org/x/mod/modfile"
 )
 
 func Hover(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, position protocol.Position) (*protocol.Hover, error) {

@@ -15,6 +15,7 @@ import (
 	"github.com/block/ftl-golang-tools/gopls/internal/label"
 	"github.com/block/ftl-golang-tools/gopls/internal/mod"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
 	"github.com/block/ftl-golang-tools/internal/event"
 )
 
@@ -30,7 +31,7 @@ func (s *server) CodeLens(ctx context.Context, params *protocol.CodeLensParams) 
 	}
 	defer release()
 
-	var lensFuncs map[protocol.CodeLensSource]cache.CodeLensSourceFunc
+	var lensFuncs map[settings.CodeLensSource]cache.CodeLensSourceFunc
 	switch snapshot.FileKind(fh) {
 	case file.Mod:
 		lensFuncs = mod.CodeLensSources()

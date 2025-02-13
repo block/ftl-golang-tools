@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/format"
+	"go/printer"
 	"go/token"
 	"go/types"
 	"strings"
@@ -24,11 +25,11 @@ import (
 
 	"github.com/block/ftl-golang-tools/go/analysis"
 	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/fuzzy"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
-	"github.com/block/ftl-golang-tools/internal/aliases"
 	"github.com/block/ftl-golang-tools/internal/analysisinternal"
-	"github.com/block/ftl-golang-tools/internal/fuzzy"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 // Diagnose computes diagnostics for fillable struct literals overlapping with
@@ -89,7 +90,7 @@ func Diagnose(f *ast.File, start, end token.Pos, pkg *types.Package, info *types
 		var name string
 		if typ != tStruct {
 			// named struct type (e.g. pkg.S[T])
-			name = types.TypeString(typ, types.RelativeTo(pkg))
+			name = types.TypeString(typ, typesinternal.NameRelativeTo(pkg))
 		} else {
 			// anonymous struct type
 			totalFields := len(fillableFields)
@@ -159,7 +160,7 @@ func SuggestedFix(fset *token.FileSet, start, end token.Pos, content []byte, fil
 	tStruct, ok := typ.Underlying().(*types.Struct)
 	if !ok {
 		return nil, nil, fmt.Errorf("%s is not a (pointer to) struct type",
-			types.TypeString(typ, types.RelativeTo(pkg)))
+			types.TypeString(typ, typesinternal.NameRelativeTo(pkg)))
 	}
 	// Inv: typ is the possibly-named struct type.
 
@@ -168,26 +169,16 @@ func SuggestedFix(fset *token.FileSet, start, end token.Pos, content []byte, fil
 	// Check which types have already been filled in. (we only want to fill in
 	// the unfilled types, or else we'll blat user-supplied details)
 	prefilledFields := map[string]ast.Expr{}
+	var elts []ast.Expr
 	for _, e := range expr.Elts {
 		if kv, ok := e.(*ast.KeyValueExpr); ok {
 			if key, ok := kv.Key.(*ast.Ident); ok {
 				prefilledFields[key.Name] = kv.Value
+				elts = append(elts, kv)
 			}
 		}
 	}
 
-	// Use a new fileset to build up a token.File for the new composite
-	// literal. We need one line for foo{, one line for }, and one line for
-	// each field we're going to set. format.Node only cares about line
-	// numbers, so we don't need to set columns, and each line can be
-	// 1 byte long.
-	// TODO(adonovan): why is this necessary? The position information
-	// is going to be wrong for the existing trees in prefilledFields.
-	// Can't the formatter just do its best with an empty fileset?
-	fakeFset := token.NewFileSet()
-	tok := fakeFset.AddFile("", -1, fieldCount+2)
-
-	line := 2 // account for 1-based lines and the left brace
 	var fieldTyps []types.Type
 	for i := 0; i < fieldCount; i++ {
 		field := tStruct.Field(i)
@@ -199,67 +190,47 @@ func SuggestedFix(fset *token.FileSet, start, end token.Pos, content []byte, fil
 		fieldTyps = append(fieldTyps, field.Type())
 	}
 	matches := analysisinternal.MatchingIdents(fieldTyps, file, start, info, pkg)
-	var elts []ast.Expr
+	qual := typesinternal.FileQualifier(file, pkg)
+
 	for i, fieldTyp := range fieldTyps {
 		if fieldTyp == nil {
 			continue // TODO(adonovan): is this reachable?
 		}
 		fieldName := tStruct.Field(i).Name()
-
-		tok.AddLine(line - 1) // add 1 byte per line
-		if line > tok.LineCount() {
-			panic(fmt.Sprintf("invalid line number %v (of %v) for fillstruct", line, tok.LineCount()))
+		if _, ok := prefilledFields[fieldName]; ok {
+			// We already stored these when looping over expr.Elt.
+			// Want to preserve the original order of prefilled fields
+			continue
 		}
-		pos := tok.LineStart(line)
 
 		kv := &ast.KeyValueExpr{
 			Key: &ast.Ident{
-				NamePos: pos,
-				Name:    fieldName,
+				Name: fieldName,
 			},
-			Colon: pos,
 		}
-		if expr, ok := prefilledFields[fieldName]; ok {
+
+		names, ok := matches[fieldTyp]
+		if !ok {
+			return nil, nil, fmt.Errorf("invalid struct field type: %v", fieldTyp)
+		}
+
+		// Find the name most similar to the field name.
+		// If no name matches the pattern, generate a zero value.
+		// NOTE: We currently match on the name of the field key rather than the field type.
+		if best := fuzzy.BestMatch(fieldName, names); best != "" {
+			kv.Value = ast.NewIdent(best)
+		} else if expr, isValid := populateValue(fieldTyp, qual); isValid {
 			kv.Value = expr
 		} else {
-			names, ok := matches[fieldTyp]
-			if !ok {
-				return nil, nil, fmt.Errorf("invalid struct field type: %v", fieldTyp)
-			}
-
-			// Find the name most similar to the field name.
-			// If no name matches the pattern, generate a zero value.
-			// NOTE: We currently match on the name of the field key rather than the field type.
-			if best := fuzzy.BestMatch(fieldName, names); best != "" {
-				kv.Value = ast.NewIdent(best)
-			} else if v := populateValue(file, pkg, fieldTyp); v != nil {
-				kv.Value = v
-			} else {
-				return nil, nil, nil // no fix to suggest
-			}
+			return nil, nil, nil // no fix to suggest
 		}
+
 		elts = append(elts, kv)
-		line++
 	}
 
 	// If all of the struct's fields are unexported, we have nothing to do.
 	if len(elts) == 0 {
 		return nil, nil, fmt.Errorf("no elements to fill")
-	}
-
-	// Add the final line for the right brace. Offset is the number of
-	// bytes already added plus 1.
-	tok.AddLine(len(elts) + 1)
-	line = len(elts) + 2
-	if line > tok.LineCount() {
-		panic(fmt.Sprintf("invalid line number %v (of %v) for fillstruct", line, tok.LineCount()))
-	}
-
-	cl := &ast.CompositeLit{
-		Type:   expr.Type,
-		Lbrace: tok.LineStart(1),
-		Elts:   elts,
-		Rbrace: tok.LineStart(line),
 	}
 
 	// Find the line on which the composite literal is declared.
@@ -273,26 +244,66 @@ func SuggestedFix(fset *token.FileSet, start, end token.Pos, content []byte, fil
 	index := bytes.Index(firstLine, trimmed)
 	whitespace := firstLine[:index]
 
-	// First pass through the formatter: turn the expr into a string.
-	var formatBuf bytes.Buffer
-	if err := format.Node(&formatBuf, fakeFset, cl); err != nil {
-		return nil, nil, fmt.Errorf("failed to run first format on:\n%s\ngot err: %v", cl.Type, err)
-	}
-	sug := indent(formatBuf.Bytes(), whitespace)
-
-	if len(prefilledFields) > 0 {
-		// Attempt a second pass through the formatter to line up columns.
-		sourced, err := format.Source(sug)
-		if err == nil {
-			sug = indent(sourced, whitespace)
+	// Write a new composite literal "_{...}" composed of all prefilled and new elements,
+	// preserving existing formatting and comments.
+	// An alternative would be to only format the new fields,
+	// but by printing the entire composite literal, we ensure
+	// that the result is gofmt'ed.
+	var buf bytes.Buffer
+	buf.WriteString("_{\n")
+	fcmap := ast.NewCommentMap(fset, file, file.Comments)
+	comments := fcmap.Filter(expr).Comments() // comments inside the expr, in source order
+	for _, elt := range elts {
+		// Print comments before the current elt
+		for len(comments) > 0 && comments[0].Pos() < elt.Pos() {
+			for _, co := range comments[0].List {
+				fmt.Fprintln(&buf, co.Text)
+			}
+			comments = comments[1:]
 		}
+
+		// Print the current elt with comments
+		eltcomments := fcmap.Filter(elt).Comments()
+		if err := format.Node(&buf, fset, &printer.CommentedNode{Node: elt, Comments: eltcomments}); err != nil {
+			return nil, nil, err
+		}
+		buf.WriteString(",")
+
+		// Prune comments up to the end of the elt
+		for len(comments) > 0 && comments[0].Pos() < elt.End() {
+			comments = comments[1:]
+		}
+
+		// Write comments associated with the current elt that appear after it
+		// printer.CommentedNode only prints comments inside the elt.
+		for _, cg := range eltcomments {
+			for _, co := range cg.List {
+				if co.Pos() >= elt.End() {
+					fmt.Fprintln(&buf, co.Text)
+					if len(comments) > 0 {
+						comments = comments[1:]
+					}
+				}
+			}
+		}
+		buf.WriteString("\n")
 	}
+	buf.WriteString("}")
+	formatted, err := format.Source(buf.Bytes())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	sug := indent(formatted, whitespace)
+	// Remove _
+	idx := bytes.IndexByte(sug, '{') // cannot fail
+	sug = sug[idx:]
 
 	return fset, &analysis.SuggestedFix{
 		TextEdits: []analysis.TextEdit{
 			{
-				Pos:     expr.Pos(),
-				End:     expr.End(),
+				Pos:     expr.Lbrace,
+				End:     expr.Rbrace + token.Pos(len("}")),
 				NewText: sug,
 			},
 		},
@@ -329,69 +340,43 @@ func indent(str, ind []byte) []byte {
 // The reasoning here is that users will call fillstruct with the intention of
 // initializing the struct, in which case setting these fields to nil has no effect.
 //
-// populateValue returns nil if the value cannot be filled.
-func populateValue(f *ast.File, pkg *types.Package, typ types.Type) ast.Expr {
-	switch u := typ.Underlying().(type) {
-	case *types.Basic:
-		switch {
-		case u.Info()&types.IsNumeric != 0:
-			return &ast.BasicLit{Kind: token.INT, Value: "0"}
-		case u.Info()&types.IsBoolean != 0:
-			return &ast.Ident{Name: "false"}
-		case u.Info()&types.IsString != 0:
-			return &ast.BasicLit{Kind: token.STRING, Value: `""`}
-		case u.Kind() == types.UnsafePointer:
-			return ast.NewIdent("nil")
-		case u.Kind() == types.Invalid:
-			return nil
+// If the input contains an invalid type, populateValue may panic or return
+// expression that may not compile.
+func populateValue(typ types.Type, qual types.Qualifier) (_ ast.Expr, isValid bool) {
+	switch t := typ.(type) {
+	case *types.TypeParam, *types.Interface, *types.Struct, *types.Basic:
+		return typesinternal.ZeroExpr(t, qual)
+
+	case *types.Alias, *types.Named:
+		switch t.Underlying().(type) {
+		// Avoid typesinternal.ZeroExpr here as we don't want to return nil.
+		case *types.Map, *types.Slice:
+			return &ast.CompositeLit{
+				Type: typesinternal.TypeExpr(t, qual),
+			}, true
 		default:
-			panic(fmt.Sprintf("unknown basic type %v", u))
+			return typesinternal.ZeroExpr(t, qual)
 		}
 
-	case *types.Map:
-		k := analysisinternal.TypeExpr(f, pkg, u.Key())
-		v := analysisinternal.TypeExpr(f, pkg, u.Elem())
-		if k == nil || v == nil {
-			return nil
-		}
+	// Avoid typesinternal.ZeroExpr here as we don't want to return nil.
+	case *types.Map, *types.Slice:
 		return &ast.CompositeLit{
-			Type: &ast.MapType{
-				Key:   k,
-				Value: v,
-			},
-		}
-	case *types.Slice:
-		s := analysisinternal.TypeExpr(f, pkg, u.Elem())
-		if s == nil {
-			return nil
-		}
-		return &ast.CompositeLit{
-			Type: &ast.ArrayType{
-				Elt: s,
-			},
-		}
+			Type: typesinternal.TypeExpr(t, qual),
+		}, true
 
 	case *types.Array:
-		a := analysisinternal.TypeExpr(f, pkg, u.Elem())
-		if a == nil {
-			return nil
-		}
 		return &ast.CompositeLit{
 			Type: &ast.ArrayType{
-				Elt: a,
+				Elt: typesinternal.TypeExpr(t.Elem(), qual),
 				Len: &ast.BasicLit{
-					Kind: token.INT, Value: fmt.Sprintf("%v", u.Len()),
+					Kind: token.INT, Value: fmt.Sprintf("%v", t.Len()),
 				},
 			},
-		}
+		}, true
 
 	case *types.Chan:
-		v := analysisinternal.TypeExpr(f, pkg, u.Elem())
-		if v == nil {
-			return nil
-		}
-		dir := ast.ChanDir(u.Dir())
-		if u.Dir() == types.SendRecv {
+		dir := ast.ChanDir(t.Dir())
+		if t.Dir() == types.SendRecv {
 			dir = ast.SEND | ast.RECV
 		}
 		return &ast.CallExpr{
@@ -399,60 +384,35 @@ func populateValue(f *ast.File, pkg *types.Package, typ types.Type) ast.Expr {
 			Args: []ast.Expr{
 				&ast.ChanType{
 					Dir:   dir,
-					Value: v,
+					Value: typesinternal.TypeExpr(t.Elem(), qual),
 				},
 			},
-		}
-
-	case *types.Struct:
-		s := analysisinternal.TypeExpr(f, pkg, typ)
-		if s == nil {
-			return nil
-		}
-		return &ast.CompositeLit{
-			Type: s,
-		}
+		}, true
 
 	case *types.Signature:
-		var params []*ast.Field
-		for i := 0; i < u.Params().Len(); i++ {
-			p := analysisinternal.TypeExpr(f, pkg, u.Params().At(i).Type())
-			if p == nil {
-				return nil
-			}
-			params = append(params, &ast.Field{
-				Type: p,
-				Names: []*ast.Ident{
-					{
-						Name: u.Params().At(i).Name(),
+		return &ast.FuncLit{
+			Type: typesinternal.TypeExpr(t, qual).(*ast.FuncType),
+			// The body of the function literal contains a panic statement to
+			// avoid type errors.
+			Body: &ast.BlockStmt{
+				List: []ast.Stmt{
+					&ast.ExprStmt{
+						X: &ast.CallExpr{
+							Fun: ast.NewIdent("panic"),
+							Args: []ast.Expr{
+								&ast.BasicLit{
+									Kind:  token.STRING,
+									Value: `"TODO"`,
+								},
+							},
+						},
 					},
 				},
-			})
-		}
-		var returns []*ast.Field
-		for i := 0; i < u.Results().Len(); i++ {
-			r := analysisinternal.TypeExpr(f, pkg, u.Results().At(i).Type())
-			if r == nil {
-				return nil
-			}
-			returns = append(returns, &ast.Field{
-				Type: r,
-			})
-		}
-		return &ast.FuncLit{
-			Type: &ast.FuncType{
-				Params: &ast.FieldList{
-					List: params,
-				},
-				Results: &ast.FieldList{
-					List: returns,
-				},
 			},
-			Body: &ast.BlockStmt{},
-		}
+		}, true
 
 	case *types.Pointer:
-		switch aliases.Unalias(u.Elem()).(type) {
+		switch tt := types.Unalias(t.Elem()).(type) {
 		case *types.Basic:
 			return &ast.CallExpr{
 				Fun: &ast.Ident{
@@ -460,38 +420,31 @@ func populateValue(f *ast.File, pkg *types.Package, typ types.Type) ast.Expr {
 				},
 				Args: []ast.Expr{
 					&ast.Ident{
-						Name: u.Elem().String(),
+						Name: t.Elem().String(),
 					},
 				},
-			}
+			}, true
+		// Pointer to type parameter should return new(T) instead of &*new(T).
+		case *types.TypeParam:
+			return &ast.CallExpr{
+				Fun: &ast.Ident{
+					Name: "new",
+				},
+				Args: []ast.Expr{
+					&ast.Ident{
+						Name: tt.Obj().Name(),
+					},
+				},
+			}, true
 		default:
-			x := populateValue(f, pkg, u.Elem())
-			if x == nil {
-				return nil
-			}
+			// TODO(hxjiang): & prefix only works if populateValue returns a
+			// composite literal T{} or the expression new(T).
+			expr, isValid := populateValue(t.Elem(), qual)
 			return &ast.UnaryExpr{
 				Op: token.AND,
-				X:  x,
-			}
+				X:  expr,
+			}, isValid
 		}
-
-	case *types.Interface:
-		if param, ok := aliases.Unalias(typ).(*types.TypeParam); ok {
-			// *new(T) is the zero value of a type parameter T.
-			// TODO(adonovan): one could give a more specific zero
-			// value if the type has a core type that is, say,
-			// always a number or a pointer. See go/ssa for details.
-			return &ast.StarExpr{
-				X: &ast.CallExpr{
-					Fun: ast.NewIdent("new"),
-					Args: []ast.Expr{
-						ast.NewIdent(param.Obj().Name()),
-					},
-				},
-			}
-		}
-
-		return ast.NewIdent("nil")
 	}
-	return nil
+	return nil, false
 }

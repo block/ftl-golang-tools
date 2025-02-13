@@ -10,16 +10,20 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"strconv"
+	"strings"
 
-	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	astutil "github.com/block/ftl-golang-tools/go/ast/astutil"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
 	"github.com/block/ftl-golang-tools/gopls/internal/file"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/typesutil"
+	goplsastutil "github.com/block/ftl-golang-tools/gopls/internal/util/astutil"
+	internalastutil "github.com/block/ftl-golang-tools/internal/astutil"
 	"github.com/block/ftl-golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/internal/fmtstr"
 )
 
-func Highlight(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, position protocol.Position) ([]protocol.Range, error) {
+func Highlight(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, position protocol.Position) ([]protocol.DocumentHighlight, error) {
 	ctx, done := event.Start(ctx, "golang.Highlight")
 	defer done()
 
@@ -50,39 +54,56 @@ func Highlight(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, po
 			}
 		}
 	}
-	result, err := highlightPath(path, pgf.File, pkg.TypesInfo())
+	result, err := highlightPath(pkg.TypesInfo(), path, pos)
 	if err != nil {
 		return nil, err
 	}
-	var ranges []protocol.Range
-	for rng := range result {
+	var ranges []protocol.DocumentHighlight
+	for rng, kind := range result {
 		rng, err := pgf.PosRange(rng.start, rng.end)
 		if err != nil {
 			return nil, err
 		}
-		ranges = append(ranges, rng)
+		ranges = append(ranges, protocol.DocumentHighlight{
+			Range: rng,
+			Kind:  kind,
+		})
 	}
 	return ranges, nil
 }
 
 // highlightPath returns ranges to highlight for the given enclosing path,
 // which should be the result of astutil.PathEnclosingInterval.
-func highlightPath(path []ast.Node, file *ast.File, info *types.Info) (map[posRange]struct{}, error) {
-	result := make(map[posRange]struct{})
+func highlightPath(info *types.Info, path []ast.Node, pos token.Pos) (map[posRange]protocol.DocumentHighlightKind, error) {
+	result := make(map[posRange]protocol.DocumentHighlightKind)
+
+	// Inside a call to a printf-like function (as identified
+	// by a simple heuristic).
+	// Treat each corresponding ("%v", arg) pair as a highlight class.
+	for _, node := range path {
+		if call, ok := node.(*ast.CallExpr); ok {
+			lit, idx := formatStringAndIndex(info, call)
+			if idx != -1 {
+				highlightPrintf(call, idx, pos, lit, result)
+			}
+		}
+	}
+
+	file := path[len(path)-1].(*ast.File)
 	switch node := path[0].(type) {
 	case *ast.BasicLit:
 		// Import path string literal?
 		if len(path) > 1 {
 			if imp, ok := path[1].(*ast.ImportSpec); ok {
 				highlight := func(n ast.Node) {
-					result[posRange{start: n.Pos(), end: n.End()}] = struct{}{}
+					highlightNode(result, n, protocol.Text)
 				}
 
 				// Highlight the import itself...
 				highlight(imp)
 
 				// ...and all references to it in the file.
-				if pkgname, ok := typesutil.ImportedPkgName(info, imp); ok {
+				if pkgname := info.PkgNameOf(imp); pkgname != nil {
 					ast.Inspect(file, func(n ast.Node) bool {
 						if id, ok := n.(*ast.Ident); ok &&
 							info.Uses[id] == pkgname {
@@ -124,11 +145,133 @@ func highlightPath(path []ast.Node, file *ast.File, info *types.Info) (map[posRa
 				highlightLoopControlFlow(path, info, result)
 			}
 		}
-	default:
-		// If the cursor is in an unidentified area, return empty results.
-		return nil, nil
 	}
+
 	return result, nil
+}
+
+// formatStringAndIndex returns the BasicLit and index of the BasicLit (the last
+// non-variadic parameter) within the given printf-like call
+// expression, returns -1 as index if unknown.
+func formatStringAndIndex(info *types.Info, call *ast.CallExpr) (*ast.BasicLit, int) {
+	typ := info.Types[call.Fun].Type
+	if typ == nil {
+		return nil, -1 // missing type
+	}
+	sig, ok := typ.(*types.Signature)
+	if !ok {
+		return nil, -1 // ill-typed
+	}
+	if !sig.Variadic() {
+		// Skip checking non-variadic functions.
+		return nil, -1
+	}
+	idx := sig.Params().Len() - 2
+	if !(0 <= idx && idx < len(call.Args)) {
+		// Skip checking functions without a format string parameter, or
+		// missing the corresponding format argument.
+		return nil, -1
+	}
+	// We only care about literal format strings, so fmt.Sprint("a"+"b%s", "bar") won't be highlighted.
+	if lit, ok := call.Args[idx].(*ast.BasicLit); ok && lit.Kind == token.STRING {
+		return lit, idx
+	}
+	return nil, -1
+}
+
+// highlightPrintf highlights operations in a format string and their corresponding
+// variadic arguments in a (possible) printf-style function call.
+// For example:
+//
+// fmt.Printf("Hello %s, you scored %d", name, score)
+//
+// If the cursor is on %s or name, it will highlight %s as a write operation,
+// and name as a read operation.
+func highlightPrintf(call *ast.CallExpr, idx int, cursorPos token.Pos, lit *ast.BasicLit, result map[posRange]protocol.DocumentHighlightKind) {
+	format, err := strconv.Unquote(lit.Value)
+	if err != nil {
+		return
+	}
+	if !strings.Contains(format, "%") {
+		return
+	}
+	operations, err := fmtstr.Parse(format, idx)
+	if err != nil {
+		return
+	}
+
+	// fmt.Printf("%[1]d %[1].2d", 3)
+	//
+	// When cursor is in `%[1]d`, we record `3` being successfully highlighted.
+	// And because we will also record `%[1].2d`'s corresponding arguments index is `3`
+	// in `visited`, even though it will not highlight any item in the first pass,
+	// in the second pass we can correctly highlight it. So the three are the same class.
+	succeededArg := 0
+	visited := make(map[posRange]int, 0)
+
+	// highlightPair highlights the operation and its potential argument pair if the cursor is within either range.
+	highlightPair := func(rang fmtstr.Range, argIndex int) {
+		rangeStart, rangeEnd, err := internalastutil.RangeInStringLiteral(lit, rang.Start, rang.End)
+		if err != nil {
+			return
+		}
+		visited[posRange{rangeStart, rangeEnd}] = argIndex
+
+		var arg ast.Expr
+		if argIndex < len(call.Args) {
+			arg = call.Args[argIndex]
+		}
+
+		// cursorPos can't equal to end position, otherwise the two
+		// neighborhood such as (%[2]*d) are both highlighted if cursor in "d" (ending of [2]*).
+		if rangeStart <= cursorPos && cursorPos < rangeEnd ||
+			arg != nil && goplsastutil.NodeContains(arg, cursorPos) {
+			highlightRange(result, rangeStart, rangeEnd, protocol.Write)
+			if arg != nil {
+				succeededArg = argIndex
+				highlightRange(result, arg.Pos(), arg.End(), protocol.Read)
+			}
+		}
+	}
+
+	for _, op := range operations {
+		// If width or prec has any *, we can not highlight the full range from % to verb,
+		// because it will overlap with the sub-range of *, for example:
+		//
+		// fmt.Printf("%*[3]d", 4, 5, 6)
+		//               ^  ^ we can only highlight this range when cursor in 6. '*' as a one-rune range will
+		//               highlight for 4.
+		hasAsterisk := false
+
+		// Try highlight Width if there is a *.
+		if op.Width.Dynamic != -1 {
+			hasAsterisk = true
+			highlightPair(op.Width.Range, op.Width.Dynamic)
+		}
+
+		// Try highlight Precision if there is a *.
+		if op.Prec.Dynamic != -1 {
+			hasAsterisk = true
+			highlightPair(op.Prec.Range, op.Prec.Dynamic)
+		}
+
+		// Try highlight Verb.
+		if op.Verb.Verb != '%' {
+			// If any * is found inside operation, narrow the highlight range.
+			if hasAsterisk {
+				highlightPair(op.Verb.Range, op.Verb.ArgIndex)
+			} else {
+				highlightPair(op.Range, op.Verb.ArgIndex)
+			}
+		}
+	}
+
+	// Second pass, try to highlight those missed operations.
+	for rang, argIndex := range visited {
+		if succeededArg == argIndex {
+			highlightRange(result, rang.start, rang.end, protocol.Write)
+		}
+	}
 }
 
 type posRange struct {
@@ -145,7 +288,7 @@ type posRange struct {
 //
 // As a special case, if the cursor is within a complicated expression, control
 // flow highlighting is disabled, as it would highlight too much.
-func highlightFuncControlFlow(path []ast.Node, result map[posRange]unit) {
+func highlightFuncControlFlow(path []ast.Node, result map[posRange]protocol.DocumentHighlightKind) {
 
 	var (
 		funcType   *ast.FuncType   // type of enclosing func, or nil
@@ -211,10 +354,7 @@ findEnclosingFunc:
 
 	if highlightAll {
 		// Add the "func" part of the func declaration.
-		result[posRange{
-			start: funcType.Func,
-			end:   funcEnd,
-		}] = unit{}
+		highlightRange(result, funcType.Func, funcEnd, protocol.Text)
 	} else if returnStmt == nil && !inResults {
 		return // nothing to highlight
 	} else {
@@ -242,7 +382,7 @@ findEnclosingFunc:
 				for _, field := range funcType.Results.List {
 					for j, name := range field.Names {
 						if inNode(name) || highlightIndexes[i+j] {
-							result[posRange{name.Pos(), name.End()}] = unit{}
+							highlightNode(result, name, protocol.Text)
 							highlightIndexes[i+j] = true
 							break findField // found/highlighted the specific name
 						}
@@ -257,7 +397,7 @@ findEnclosingFunc:
 					// ...where it would make more sense to highlight only y. But we don't
 					// reach this function if not in a func, return, ident, or basiclit.
 					if inNode(field) || highlightIndexes[i] {
-						result[posRange{field.Pos(), field.End()}] = unit{}
+						highlightNode(result, field, protocol.Text)
 						highlightIndexes[i] = true
 						if inNode(field) {
 							for j := range field.Names {
@@ -286,12 +426,12 @@ findEnclosingFunc:
 			case *ast.ReturnStmt:
 				if highlightAll {
 					// Add the entire return statement.
-					result[posRange{n.Pos(), n.End()}] = unit{}
+					highlightNode(result, n, protocol.Text)
 				} else {
 					// Add the highlighted indexes.
 					for i, expr := range n.Results {
 						if highlightIndexes[i] {
-							result[posRange{expr.Pos(), expr.End()}] = unit{}
+							highlightNode(result, expr, protocol.Text)
 						}
 					}
 				}
@@ -304,7 +444,7 @@ findEnclosingFunc:
 }
 
 // highlightUnlabeledBreakFlow highlights the innermost enclosing for/range/switch or swlect
-func highlightUnlabeledBreakFlow(path []ast.Node, info *types.Info, result map[posRange]struct{}) {
+func highlightUnlabeledBreakFlow(path []ast.Node, info *types.Info, result map[posRange]protocol.DocumentHighlightKind) {
 	// Reverse walk the path until we find closest loop, select, or switch.
 	for _, n := range path {
 		switch n.(type) {
@@ -323,7 +463,7 @@ func highlightUnlabeledBreakFlow(path []ast.Node, info *types.Info, result map[p
 
 // highlightLabeledFlow highlights the enclosing labeled for, range,
 // or switch statement denoted by a labeled break or continue stmt.
-func highlightLabeledFlow(path []ast.Node, info *types.Info, stmt *ast.BranchStmt, result map[posRange]struct{}) {
+func highlightLabeledFlow(path []ast.Node, info *types.Info, stmt *ast.BranchStmt, result map[posRange]protocol.DocumentHighlightKind) {
 	use := info.Uses[stmt.Label]
 	if use == nil {
 		return
@@ -350,7 +490,7 @@ func labelFor(path []ast.Node) *ast.Ident {
 	return nil
 }
 
-func highlightLoopControlFlow(path []ast.Node, info *types.Info, result map[posRange]struct{}) {
+func highlightLoopControlFlow(path []ast.Node, info *types.Info, result map[posRange]protocol.DocumentHighlightKind) {
 	var loop ast.Node
 	var loopLabel *ast.Ident
 	stmtLabel := labelFor(path)
@@ -372,11 +512,9 @@ Outer:
 	}
 
 	// Add the for statement.
-	rng := posRange{
-		start: loop.Pos(),
-		end:   loop.Pos() + token.Pos(len("for")),
-	}
-	result[rng] = struct{}{}
+	rngStart := loop.Pos()
+	rngEnd := loop.Pos() + token.Pos(len("for"))
+	highlightRange(result, rngStart, rngEnd, protocol.Text)
 
 	// Traverse AST to find branch statements within the same for-loop.
 	ast.Inspect(loop, func(n ast.Node) bool {
@@ -391,7 +529,7 @@ Outer:
 			return true
 		}
 		if b.Label == nil || info.Uses[b.Label] == info.Defs[loopLabel] {
-			result[posRange{start: b.Pos(), end: b.End()}] = struct{}{}
+			highlightNode(result, b, protocol.Text)
 		}
 		return true
 	})
@@ -404,7 +542,7 @@ Outer:
 		}
 
 		if n, ok := n.(*ast.BranchStmt); ok && n.Tok == token.CONTINUE {
-			result[posRange{start: n.Pos(), end: n.End()}] = struct{}{}
+			highlightNode(result, n, protocol.Text)
 		}
 		return true
 	})
@@ -422,13 +560,13 @@ Outer:
 		}
 		// statement with labels that matches the loop
 		if b.Label != nil && info.Uses[b.Label] == info.Defs[loopLabel] {
-			result[posRange{start: b.Pos(), end: b.End()}] = struct{}{}
+			highlightNode(result, b, protocol.Text)
 		}
 		return true
 	})
 }
 
-func highlightSwitchFlow(path []ast.Node, info *types.Info, result map[posRange]struct{}) {
+func highlightSwitchFlow(path []ast.Node, info *types.Info, result map[posRange]protocol.DocumentHighlightKind) {
 	var switchNode ast.Node
 	var switchNodeLabel *ast.Ident
 	stmtLabel := labelFor(path)
@@ -450,11 +588,9 @@ Outer:
 	}
 
 	// Add the switch statement.
-	rng := posRange{
-		start: switchNode.Pos(),
-		end:   switchNode.Pos() + token.Pos(len("switch")),
-	}
-	result[rng] = struct{}{}
+	rngStart := switchNode.Pos()
+	rngEnd := switchNode.Pos() + token.Pos(len("switch"))
+	highlightRange(result, rngStart, rngEnd, protocol.Text)
 
 	// Traverse AST to find break statements within the same switch.
 	ast.Inspect(switchNode, func(n ast.Node) bool {
@@ -471,7 +607,7 @@ Outer:
 		}
 
 		if b.Label == nil || info.Uses[b.Label] == info.Defs[switchNodeLabel] {
-			result[posRange{start: b.Pos(), end: b.End()}] = struct{}{}
+			highlightNode(result, b, protocol.Text)
 		}
 		return true
 	})
@@ -489,37 +625,118 @@ Outer:
 		}
 
 		if b.Label != nil && info.Uses[b.Label] == info.Defs[switchNodeLabel] {
-			result[posRange{start: b.Pos(), end: b.End()}] = struct{}{}
+			highlightNode(result, b, protocol.Text)
 		}
 
 		return true
 	})
 }
 
-func highlightIdentifier(id *ast.Ident, file *ast.File, info *types.Info, result map[posRange]struct{}) {
-	highlight := func(n ast.Node) {
-		result[posRange{start: n.Pos(), end: n.End()}] = struct{}{}
+func highlightNode(result map[posRange]protocol.DocumentHighlightKind, n ast.Node, kind protocol.DocumentHighlightKind) {
+	highlightRange(result, n.Pos(), n.End(), kind)
+}
+
+func highlightRange(result map[posRange]protocol.DocumentHighlightKind, pos, end token.Pos, kind protocol.DocumentHighlightKind) {
+	rng := posRange{pos, end}
+	// Order of traversal is important: some nodes (e.g. identifiers) are
+	// visited more than once, but the kind set during the first visitation "wins".
+	if _, exists := result[rng]; !exists {
+		result[rng] = kind
 	}
+}
+
+func highlightIdentifier(id *ast.Ident, file *ast.File, info *types.Info, result map[posRange]protocol.DocumentHighlightKind) {
 
 	// obj may be nil if the Ident is undefined.
 	// In this case, the behavior expected by tests is
 	// to match other undefined Idents of the same name.
 	obj := info.ObjectOf(id)
 
+	highlightIdent := func(n *ast.Ident, kind protocol.DocumentHighlightKind) {
+		if n.Name == id.Name && info.ObjectOf(n) == obj {
+			highlightNode(result, n, kind)
+		}
+	}
+	// highlightWriteInExpr is called for expressions that are
+	// logically on the left side of an assignment.
+	// We follow the behavior of VSCode+Rust and GoLand, which differs
+	// slightly from types.TypeAndValue.Assignable:
+	//     *ptr = 1       // ptr write
+	//     *ptr.field = 1 // ptr read, field write
+	//     s.field = 1    // s read, field write
+	//     array[i] = 1   // array read
+	var highlightWriteInExpr func(expr ast.Expr)
+	highlightWriteInExpr = func(expr ast.Expr) {
+		switch expr := expr.(type) {
+		case *ast.Ident:
+			highlightIdent(expr, protocol.Write)
+		case *ast.SelectorExpr:
+			highlightIdent(expr.Sel, protocol.Write)
+		case *ast.StarExpr:
+			highlightWriteInExpr(expr.X)
+		case *ast.ParenExpr:
+			highlightWriteInExpr(expr.X)
+		}
+	}
+
 	ast.Inspect(file, func(n ast.Node) bool {
 		switch n := n.(type) {
-		case *ast.Ident:
-			if n.Name == id.Name && info.ObjectOf(n) == obj {
-				highlight(n)
+		case *ast.AssignStmt:
+			for _, s := range n.Lhs {
+				highlightWriteInExpr(s)
 			}
-
+		case *ast.GenDecl:
+			if n.Tok == token.CONST || n.Tok == token.VAR {
+				for _, spec := range n.Specs {
+					if spec, ok := spec.(*ast.ValueSpec); ok {
+						for _, ele := range spec.Names {
+							highlightWriteInExpr(ele)
+						}
+					}
+				}
+			}
+		case *ast.IncDecStmt:
+			highlightWriteInExpr(n.X)
+		case *ast.SendStmt:
+			highlightWriteInExpr(n.Chan)
+		case *ast.CompositeLit:
+			t := info.TypeOf(n)
+			if t == nil {
+				t = types.Typ[types.Invalid]
+			}
+			if ptr, ok := t.Underlying().(*types.Pointer); ok {
+				t = ptr.Elem()
+			}
+			if _, ok := t.Underlying().(*types.Struct); ok {
+				for _, expr := range n.Elts {
+					if expr, ok := (expr).(*ast.KeyValueExpr); ok {
+						highlightWriteInExpr(expr.Key)
+					}
+				}
+			}
+		case *ast.RangeStmt:
+			highlightWriteInExpr(n.Key)
+			highlightWriteInExpr(n.Value)
+		case *ast.Field:
+			for _, name := range n.Names {
+				highlightIdent(name, protocol.Text)
+			}
+		case *ast.Ident:
+			// This case is reached for all Idents,
+			// including those also visited by highlightWriteInExpr.
+			if is[*types.Var](info.ObjectOf(n)) {
+				highlightIdent(n, protocol.Read)
+			} else {
+				// kind of idents in PkgName, etc. is Text
+				highlightIdent(n, protocol.Text)
+			}
 		case *ast.ImportSpec:
-			pkgname, ok := typesutil.ImportedPkgName(info, n)
-			if ok && pkgname == obj {
+			pkgname := info.PkgNameOf(n)
+			if pkgname == obj {
 				if n.Name != nil {
-					highlight(n.Name)
+					highlightNode(result, n.Name, protocol.Text)
 				} else {
-					highlight(n)
+					highlightNode(result, n, protocol.Text)
 				}
 			}
 		}

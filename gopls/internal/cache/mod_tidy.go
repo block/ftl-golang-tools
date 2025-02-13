@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/mod/modfile"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
 	"github.com/block/ftl-golang-tools/gopls/internal/file"
 	"github.com/block/ftl-golang-tools/gopls/internal/label"
@@ -22,9 +23,7 @@ import (
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
 	"github.com/block/ftl-golang-tools/internal/diff"
 	"github.com/block/ftl-golang-tools/internal/event"
-	"github.com/block/ftl-golang-tools/internal/gocommand"
 	"github.com/block/ftl-golang-tools/internal/memoize"
-	"golang.org/x/mod/modfile"
 )
 
 // This error is sought by mod diagnostics.
@@ -108,12 +107,8 @@ func modTidyImpl(ctx context.Context, snapshot *Snapshot, pm *ParsedModule) (*Ti
 	}
 	defer cleanup()
 
-	inv, cleanupInvocation, err := snapshot.GoCommandInvocation(false, &gocommand.Invocation{
-		Verb:       "mod",
-		Args:       []string{"tidy", "-modfile=" + filepath.Join(tempDir, "go.mod")},
-		Env:        []string{"GOWORK=off"},
-		WorkingDir: pm.URI.Dir().Path(),
-	})
+	args := []string{"tidy", "-modfile=" + filepath.Join(tempDir, "go.mod")}
+	inv, cleanupInvocation, err := snapshot.GoCommandInvocation(NoNetwork, pm.URI.DirPath(), "mod", args, "GOWORK=off")
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +262,7 @@ func missingModuleDiagnostics(ctx context.Context, snapshot *Snapshot, pm *Parse
 			// Example:
 			//
 			// import (
-			//   "github.com/block/ftl-golang-tools/go/expect"
+			//   "github.com/block/ftl-golang-tools/internal/expect"
 			//   "github.com/block/ftl-golang-tools/go/packages"
 			// )
 			// They both are related to the same module: "github.com/block/ftl-golang-tools".
@@ -333,14 +328,11 @@ func unusedDiagnostic(m *protocol.Mapper, req *modfile.Require, onlyDiagnostic b
 		return nil, err
 	}
 	title := fmt.Sprintf("Remove dependency: %s", req.Mod.Path)
-	cmd, err := command.NewRemoveDependencyCommand(title, command.RemoveDependencyArgs{
+	cmd := command.NewRemoveDependencyCommand(title, command.RemoveDependencyArgs{
 		URI:            m.URI,
 		OnlyDiagnostic: onlyDiagnostic,
 		ModulePath:     req.Mod.Path,
 	})
-	if err != nil {
-		return nil, err
-	}
 	return &Diagnostic{
 		URI:            m.URI,
 		Range:          rng,
@@ -406,14 +398,11 @@ func missingModuleDiagnostic(pm *ParsedModule, req *modfile.Require) (*Diagnosti
 		}
 	}
 	title := fmt.Sprintf("Add %s to your go.mod file", req.Mod.Path)
-	cmd, err := command.NewAddDependencyCommand(title, command.DependencyArgs{
+	cmd := command.NewAddDependencyCommand(title, command.DependencyArgs{
 		URI:        pm.Mapper.URI,
 		AddRequire: !req.Indirect,
 		GoCmdArgs:  []string{req.Mod.Path + "@" + req.Mod.Version},
 	})
-	if err != nil {
-		return nil, err
-	}
 	return &Diagnostic{
 		URI:            pm.Mapper.URI,
 		Range:          rng,

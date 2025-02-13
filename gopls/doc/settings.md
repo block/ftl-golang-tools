@@ -1,8 +1,8 @@
-# Settings
+# Gopls: Settings
 
 This document describes gopls' configuration settings.
 
-Gopls settings are defined by an JSON object whose valid fields are
+Gopls settings are defined by a JSON object whose valid fields are
 described below. These fields are gopls-specific, and generic LSP
 clients have no knowledge of them.
 
@@ -17,9 +17,7 @@ Some clients also permit settings to be configured differently for
 each workspace folder.
 
 Any settings that are experimental or for debugging purposes are
-marked as such. To enable all experimental features, use
-**allExperiments: `true`**. You will still be able to independently
-override specific experimental features.
+marked as such.
 
 <!--
 All settings are uniquely identified by name such as `semanticTokens`
@@ -48,7 +46,7 @@ All clients but VS Code should use the short form.
 ## Build
 
 <a id='buildFlags'></a>
-### `buildFlags` *[]string*
+### `buildFlags []string`
 
 buildFlags is the set of flags passed on to the build system when invoked.
 It is applied to queries like `go list`, which is used when discovering files.
@@ -57,14 +55,14 @@ The most common use is to set `-tags`.
 Default: `[]`.
 
 <a id='env'></a>
-### `env` *map[string]string*
+### `env map[string]string`
 
 env adds environment variables to external commands run by `gopls`, most notably `go list`.
 
 Default: `{}`.
 
 <a id='directoryFilters'></a>
-### `directoryFilters` *[]string*
+### `directoryFilters []string`
 
 directoryFilters can be used to exclude unwanted directories from the
 workspace. By default, all directories are included. Filters are an
@@ -88,16 +86,16 @@ Include only project_a, but not node_modules inside it: `-`, `+project_a`, `-pro
 Default: `["-**/node_modules"]`.
 
 <a id='templateExtensions'></a>
-### `templateExtensions` *[]string*
+### `templateExtensions []string`
 
-templateExtensions gives the extensions of file names that are treateed
+templateExtensions gives the extensions of file names that are treated
 as template files. (The extension
 is the part of the file name after the final dot.)
 
 Default: `[]`.
 
 <a id='memoryMode'></a>
-### `memoryMode` *string*
+### `memoryMode string`
 
 **This setting is experimental and may be deleted.**
 
@@ -106,7 +104,7 @@ obsolete, no effect
 Default: `""`.
 
 <a id='expandWorkspaceToModule'></a>
-### `expandWorkspaceToModule` *bool*
+### `expandWorkspaceToModule bool`
 
 **This setting is experimental and may be deleted.**
 
@@ -121,19 +119,8 @@ gopls has to do to keep your workspace up to date.
 
 Default: `true`.
 
-<a id='allowImplicitNetworkAccess'></a>
-### `allowImplicitNetworkAccess` *bool*
-
-**This setting is experimental and may be deleted.**
-
-allowImplicitNetworkAccess disables GOPROXY=off, allowing implicit module
-downloads rather than requiring user action. This option will eventually
-be removed.
-
-Default: `false`.
-
 <a id='standaloneTags'></a>
-### `standaloneTags` *[]string*
+### `standaloneTags []string`
 
 standaloneTags specifies a set of build constraints that identify
 individual Go source files that make up the entire main package of an
@@ -156,21 +143,38 @@ This setting is only supported when gopls is built with Go 1.16 or later.
 
 Default: `["ignore"]`.
 
+<a id='workspaceFiles'></a>
+### `workspaceFiles []string`
+
+workspaceFiles configures the set of globs that match files defining the
+logical build of the current workspace. Any on-disk changes to any files
+matching a glob specified here will trigger a reload of the workspace.
+
+This setting need only be customized in environments with a custom
+GOPACKAGESDRIVER.
+
+Default: `[]`.
+
 <a id='formatting'></a>
 ## Formatting
 
 <a id='local'></a>
-### `local` *string*
+### `local string`
 
 local is the equivalent of the `goimports -local` flag, which puts
 imports beginning with this string after third-party packages. It should
 be the prefix of the import path whose imports should be grouped
 separately.
 
+It is used when tidying imports (during an LSP Organize
+Imports request) or when inserting new ones (for example,
+during completion); an LSP Formatting request merely sorts the
+existing imports.
+
 Default: `""`.
 
 <a id='gofumpt'></a>
-### `gofumpt` *bool*
+### `gofumpt bool`
 
 gofumpt indicates if we should run gofumpt formatting.
 
@@ -180,7 +184,7 @@ Default: `false`.
 ## UI
 
 <a id='codelenses'></a>
-### `codelenses` *map[golang.org/x/tools/gopls/internal/protocol.CodeLensSource]bool*
+### `codelenses map[enum]bool`
 
 codelenses overrides the enabled/disabled state of each of gopls'
 sources of [Code Lenses](codelenses.md).
@@ -192,16 +196,15 @@ Example Usage:
 ...
   "codelenses": {
     "generate": false,  // Don't show the `go generate` lens.
-    "gc_details": true  // Show a code lens toggling the display of gc's choices.
   }
 ...
 }
 ```
 
-Default: `{"gc_details":false,"generate":true,"regenerate_cgo":true,"run_govulncheck":false,"tidy":true,"upgrade_dependency":true,"vendor":true}`.
+Default: `{"generate":true,"regenerate_cgo":true,"run_govulncheck":false,"tidy":true,"upgrade_dependency":true,"vendor":true}`.
 
 <a id='semanticTokens'></a>
-### `semanticTokens` *bool*
+### `semanticTokens bool`
 
 **This setting is experimental and may be deleted.**
 
@@ -211,28 +214,56 @@ semantic tokens to the client.
 Default: `false`.
 
 <a id='noSemanticString'></a>
-### `noSemanticString` *bool*
+### `noSemanticString bool`
 
 **This setting is experimental and may be deleted.**
 
 noSemanticString turns off the sending of the semantic token 'string'
 
+Deprecated: Use SemanticTokenTypes["string"] = false instead. See
+golang/vscode-go#3632
+
 Default: `false`.
 
 <a id='noSemanticNumber'></a>
-### `noSemanticNumber` *bool*
+### `noSemanticNumber bool`
 
 **This setting is experimental and may be deleted.**
 
-noSemanticNumber  turns off the sending of the semantic token 'number'
+noSemanticNumber turns off the sending of the semantic token 'number'
+
+Deprecated: Use SemanticTokenTypes["number"] = false instead. See
+golang/vscode-go#3632.
 
 Default: `false`.
+
+<a id='semanticTokenTypes'></a>
+### `semanticTokenTypes map[string]bool`
+
+**This setting is experimental and may be deleted.**
+
+semanticTokenTypes configures the semantic token types. It allows
+disabling types by setting each value to false.
+By default, all types are enabled.
+
+Default: `{}`.
+
+<a id='semanticTokenModifiers'></a>
+### `semanticTokenModifiers map[string]bool`
+
+**This setting is experimental and may be deleted.**
+
+semanticTokenModifiers configures the semantic token modifiers. It allows
+disabling modifiers by setting each value to false.
+By default, all modifiers are enabled.
+
+Default: `{}`.
 
 <a id='completion'></a>
 ## Completion
 
 <a id='usePlaceholders'></a>
-### `usePlaceholders` *bool*
+### `usePlaceholders bool`
 
 placeholders enables placeholders for function parameters or struct
 fields in completion responses.
@@ -240,7 +271,7 @@ fields in completion responses.
 Default: `false`.
 
 <a id='completionBudget'></a>
-### `completionBudget` *time.Duration*
+### `completionBudget time.Duration`
 
 **This setting is for debugging purposes only.**
 
@@ -253,7 +284,7 @@ results. Zero means unlimited.
 Default: `"100ms"`.
 
 <a id='matcher'></a>
-### `matcher` *enum*
+### `matcher enum`
 
 **This is an advanced setting and should not be configured by most `gopls` users.**
 
@@ -269,7 +300,7 @@ Must be one of:
 Default: `"Fuzzy"`.
 
 <a id='experimentalPostfixCompletions'></a>
-### `experimentalPostfixCompletions` *bool*
+### `experimentalPostfixCompletions bool`
 
 **This setting is experimental and may be deleted.**
 
@@ -279,7 +310,7 @@ such as "someSlice.sort!".
 Default: `true`.
 
 <a id='completeFunctionCalls'></a>
-### `completeFunctionCalls` *bool*
+### `completeFunctionCalls bool`
 
 completeFunctionCalls enables function call completion.
 
@@ -293,7 +324,7 @@ Default: `true`.
 ## Diagnostic
 
 <a id='analyses'></a>
-### `analyses` *map[string]bool*
+### `analyses map[string]bool`
 
 analyses specify analyses that the user would like to enable or disable.
 A map of the names of analysis passes that should be enabled/disabled.
@@ -314,7 +345,7 @@ Example Usage:
 Default: `{}`.
 
 <a id='staticcheck'></a>
-### `staticcheck` *bool*
+### `staticcheck bool`
 
 **This setting is experimental and may be deleted.**
 
@@ -324,25 +355,8 @@ These analyses are documented on
 
 Default: `false`.
 
-<a id='annotations'></a>
-### `annotations` *map[string]bool*
-
-**This setting is experimental and may be deleted.**
-
-annotations specifies the various kinds of optimization diagnostics
-that should be reported by the gc_details command.
-
-Can contain any of:
-
-* `"bounds"` controls bounds checking diagnostics.
-* `"escape"` controls diagnostics about escape choices.
-* `"inline"` controls diagnostics about inlining choices.
-* `"nil"` controls nil checks.
-
-Default: `{"bounds":true,"escape":true,"inline":true,"nil":true}`.
-
 <a id='vulncheck'></a>
-### `vulncheck` *enum*
+### `vulncheck enum`
 
 **This setting is experimental and may be deleted.**
 
@@ -357,7 +371,7 @@ directly and indirectly used by the analyzed main module.
 Default: `"Off"`.
 
 <a id='diagnosticsDelay'></a>
-### `diagnosticsDelay` *time.Duration*
+### `diagnosticsDelay time.Duration`
 
 **This is an advanced setting and should not be configured by most `gopls` users.**
 
@@ -371,7 +385,7 @@ This option must be set to a valid duration string, for example `"250ms"`.
 Default: `"1s"`.
 
 <a id='diagnosticsTrigger'></a>
-### `diagnosticsTrigger` *enum*
+### `diagnosticsTrigger enum`
 
 **This setting is experimental and may be deleted.**
 
@@ -386,7 +400,7 @@ or configuration change will still trigger diagnostics.
 Default: `"Edit"`.
 
 <a id='analysisProgressReporting'></a>
-### `analysisProgressReporting` *bool*
+### `analysisProgressReporting bool`
 
 analysisProgressReporting controls whether gopls sends progress
 notifications when construction of its index of analysis facts is taking a
@@ -404,28 +418,28 @@ Default: `true`.
 ## Documentation
 
 <a id='hoverKind'></a>
-### `hoverKind` *enum*
+### `hoverKind enum`
 
 hoverKind controls the information that appears in the hover text.
-SingleLine and Structured are intended for use only by authors of editor plugins.
+SingleLine is intended for use only by authors of editor plugins.
 
 Must be one of:
 
 * `"FullDocumentation"`
 * `"NoDocumentation"`
 * `"SingleLine"`
-* `"Structured"` is an experimental setting that returns a structured hover format.
-This format separates the signature from the documentation, so that the client
-can do more manipulation of these fields.\
-This should only be used by clients that support this behavior.
 * `"SynopsisDocumentation"`
 
 Default: `"FullDocumentation"`.
 
 <a id='linkTarget'></a>
-### `linkTarget` *string*
+### `linkTarget string`
 
-linkTarget controls where documentation links go.
+linkTarget is the base URL for links to Go package
+documentation returned by LSP operations such as Hover and
+DocumentLinks and in the CodeDescription field of each
+Diagnostic.
+
 It might be one of:
 
 * `"godoc.org"`
@@ -439,9 +453,15 @@ documentation links in hover.
 Default: `"pkg.go.dev"`.
 
 <a id='linksInHover'></a>
-### `linksInHover` *bool*
+### `linksInHover enum`
 
-linksInHover toggles the presence of links to documentation in hover.
+linksInHover controls the presence of documentation links in hover markdown.
+
+Must be one of:
+
+* false: do not show links
+* true: show links to the `linkTarget` domain
+* `"gopls"`: show links to gopls' internal documentation viewer
 
 Default: `true`.
 
@@ -449,7 +469,7 @@ Default: `true`.
 ## Inlayhint
 
 <a id='hints'></a>
-### `hints` *map[string]bool*
+### `hints map[enum]bool`
 
 **This setting is experimental and may be deleted.**
 
@@ -463,7 +483,7 @@ Default: `{}`.
 ## Navigation
 
 <a id='importShortcut'></a>
-### `importShortcut` *enum*
+### `importShortcut enum`
 
 importShortcut specifies whether import statements should link to
 documentation or go to definitions.
@@ -477,7 +497,7 @@ Must be one of:
 Default: `"Both"`.
 
 <a id='symbolMatcher'></a>
-### `symbolMatcher` *enum*
+### `symbolMatcher enum`
 
 **This is an advanced setting and should not be configured by most `gopls` users.**
 
@@ -493,7 +513,7 @@ Must be one of:
 Default: `"FastFuzzy"`.
 
 <a id='symbolStyle'></a>
-### `symbolStyle` *enum*
+### `symbolStyle enum`
 
 **This is an advanced setting and should not be configured by most `gopls` users.**
 
@@ -523,7 +543,7 @@ just "Foo.Field".
 Default: `"Dynamic"`.
 
 <a id='symbolScope'></a>
-### `symbolScope` *enum*
+### `symbolScope enum`
 
 symbolScope controls which packages are searched for workspace/symbol
 requests. When the scope is "workspace", gopls searches only workspace
@@ -539,7 +559,7 @@ dependencies.
 Default: `"all"`.
 
 <a id='verboseOutput'></a>
-### `verboseOutput` *bool*
+### `verboseOutput bool`
 
 **This setting is for debugging purposes only.**
 

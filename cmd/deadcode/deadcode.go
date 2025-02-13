@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build go1.20
-
 package main
 
 import (
@@ -26,13 +24,13 @@ import (
 	"strings"
 	"text/template"
 
+	"golang.org/x/telemetry"
 	"github.com/block/ftl-golang-tools/go/callgraph"
 	"github.com/block/ftl-golang-tools/go/callgraph/rta"
 	"github.com/block/ftl-golang-tools/go/packages"
 	"github.com/block/ftl-golang-tools/go/ssa"
 	"github.com/block/ftl-golang-tools/go/ssa/ssautil"
 	"github.com/block/ftl-golang-tools/internal/typesinternal"
-	"golang.org/x/telemetry"
 )
 
 //go:embed doc.go

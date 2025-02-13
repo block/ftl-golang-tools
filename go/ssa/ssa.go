@@ -37,8 +37,9 @@ type Program struct {
 	hasParamsMu sync.Mutex
 	hasParams   typeparams.Free
 
-	runtimeTypesMu sync.Mutex
-	runtimeTypes   typeutil.Map // set of runtime types (from MakeInterface)
+	// set of concrete types used as MakeInterface operands
+	makeInterfaceTypesMu sync.Mutex
+	makeInterfaceTypes   map[types.Type]unit // (may contain redundant identical types)
 
 	// objectMethods is a memoization of objectMethod
 	// to avoid creation of duplicate methods from type information.
@@ -69,7 +70,7 @@ type Package struct {
 	ninit       int32               // number of init functions
 	info        *types.Info         // package type information
 	files       []*ast.File         // package ASTs
-	created     creator             // members created as a result of building this package (includes declared functions, wrappers)
+	created     []*Function         // members created as a result of building this package (includes declared functions, wrappers)
 	initVersion map[ast.Expr]string // goversion to use for each global var init expr
 }
 
@@ -341,12 +342,14 @@ type Function struct {
 	// source information
 	Synthetic string      // provenance of synthetic function; "" for true source functions
 	syntax    ast.Node    // *ast.Func{Decl,Lit}, if from syntax (incl. generic instances) or (*ast.RangeStmt if a yield function)
-	info      *types.Info // type annotations (iff syntax != nil)
+	info      *types.Info // type annotations (if syntax != nil)
 	goversion string      // Go version of syntax (NB: init is special)
 
 	parent *Function // enclosing function if anon; nil if global
 	Pkg    *Package  // enclosing package; nil for shared funcs (wrappers and error.Error)
 	Prog   *Program  // enclosing program
+
+	buildshared *task // wait for a shared function to be done building (may be nil if <=1 builder ever needs to wait)
 
 	// These fields are populated only when the function body is built:
 
@@ -716,9 +719,8 @@ type Convert struct {
 //	t1 = multiconvert D <- S (t0) [*[2]rune <- []rune | string <- []rune]
 type MultiConvert struct {
 	register
-	X    Value
-	from []*types.Term
-	to   []*types.Term
+	X        Value
+	from, to types.Type
 }
 
 // ChangeInterface constructs a value of one interface type from a

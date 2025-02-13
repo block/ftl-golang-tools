@@ -21,9 +21,9 @@ import (
 	"strings"
 	"testing"
 
+	"golang.org/x/sync/errgroup"
 	"github.com/block/ftl-golang-tools/gopls/internal/filecache"
 	"github.com/block/ftl-golang-tools/internal/testenv"
-	"golang.org/x/sync/errgroup"
 )
 
 func TestBasics(t *testing.T) {

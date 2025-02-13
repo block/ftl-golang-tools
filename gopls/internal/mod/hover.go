@@ -11,6 +11,8 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/mod/modfile"
+	"golang.org/x/mod/semver"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
 	"github.com/block/ftl-golang-tools/gopls/internal/file"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
@@ -19,8 +21,6 @@ import (
 	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/govulncheck"
 	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/osv"
 	"github.com/block/ftl-golang-tools/internal/event"
-	"golang.org/x/mod/modfile"
-	"golang.org/x/mod/semver"
 )
 
 func Hover(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, position protocol.Position) (*protocol.Hover, error) {

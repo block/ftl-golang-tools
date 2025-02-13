@@ -26,10 +26,13 @@ import (
 	debuglog "github.com/block/ftl-golang-tools/gopls/internal/debug/log"
 	"github.com/block/ftl-golang-tools/gopls/internal/file"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/semtok"
 	"github.com/block/ftl-golang-tools/gopls/internal/settings"
+	"github.com/block/ftl-golang-tools/gopls/internal/telemetry"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/goversion"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/maps"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/moremaps"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/moreslices"
 	"github.com/block/ftl-golang-tools/internal/event"
 	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
 )
@@ -72,7 +75,11 @@ func (s *server) Initialize(ctx context.Context, params *protocol.ParamInitializ
 	// TODO(rfindley): eliminate this defer.
 	defer func() { s.SetOptions(options) }()
 
-	s.handleOptionErrors(ctx, options.Set(params.InitializationOptions))
+	// Process initialization options.
+	{
+		res, errs := options.Set(params.InitializationOptions)
+		s.handleOptionResult(ctx, res, errs)
+	}
 	options.ForClientCapabilities(params.ClientInfo, params.Capabilities)
 
 	if options.ShowBugReports {
@@ -108,6 +115,17 @@ func (s *server) Initialize(ctx context.Context, params *protocol.ParamInitializ
 			ResolveProvider: true,
 		}
 	}
+
+	var diagnosticProvider *protocol.Or_ServerCapabilities_diagnosticProvider
+	if options.PullDiagnostics {
+		diagnosticProvider = &protocol.Or_ServerCapabilities_diagnosticProvider{
+			Value: protocol.DiagnosticOptions{
+				InterFileDependencies: true,
+				WorkspaceDiagnostics:  false, // we don't support workspace/diagnostic
+			},
+		}
+	}
+
 	var renameOpts interface{} = true
 	if r := params.Capabilities.TextDocument.Rename; r != nil && r.PrepareSupport {
 		renameOpts = protocol.RenameOptions{
@@ -144,6 +162,7 @@ func (s *server) Initialize(ctx context.Context, params *protocol.ParamInitializ
 			DocumentHighlightProvider: &protocol.Or_ServerCapabilities_documentHighlightProvider{Value: true},
 			DocumentLinkProvider:      &protocol.DocumentLinkOptions{},
 			InlayHintProvider:         protocol.InlayHintOptions{},
+			DiagnosticProvider:        diagnosticProvider,
 			ReferencesProvider:        &protocol.Or_ServerCapabilities_referencesProvider{Value: true},
 			RenameProvider:            renameOpts,
 			SelectionRangeProvider:    &protocol.Or_ServerCapabilities_selectionRangeProvider{Value: true},
@@ -151,8 +170,8 @@ func (s *server) Initialize(ctx context.Context, params *protocol.ParamInitializ
 				Range: &protocol.Or_SemanticTokensOptions_range{Value: true},
 				Full:  &protocol.Or_SemanticTokensOptions_full{Value: true},
 				Legend: protocol.SemanticTokensLegend{
-					TokenTypes:     protocol.NonNilSlice(options.SemanticTypes),
-					TokenModifiers: protocol.NonNilSlice(options.SemanticMods),
+					TokenTypes:     moreslices.ConvertStrings[string](semtok.TokenTypes),
+					TokenModifiers: moreslices.ConvertStrings[string](semtok.TokenModifiers),
 				},
 			},
 			SignatureHelpProvider: &protocol.SignatureHelpOptions{
@@ -372,7 +391,7 @@ func (s *server) updateWatchedDirectories(ctx context.Context) error {
 	defer s.watchedGlobPatternsMu.Unlock()
 
 	// Nothing to do if the set of workspace directories is unchanged.
-	if maps.SameKeys(s.watchedGlobPatterns, patterns) {
+	if moremaps.SameKeys(s.watchedGlobPatterns, patterns) {
 		return nil
 	}
 
@@ -468,6 +487,30 @@ func (s *server) newFolder(ctx context.Context, folder protocol.DocumentURI, nam
 	if err != nil {
 		return nil, err
 	}
+
+	// Increment folder counters.
+	switch {
+	case env.GOTOOLCHAIN == "auto" || strings.Contains(env.GOTOOLCHAIN, "+auto"):
+		counter.Inc("gopls/gotoolchain:auto")
+	case env.GOTOOLCHAIN == "path" || strings.Contains(env.GOTOOLCHAIN, "+path"):
+		counter.Inc("gopls/gotoolchain:path")
+	case env.GOTOOLCHAIN == "local": // local+auto and local+path handled above
+		counter.Inc("gopls/gotoolchain:local")
+	default:
+		counter.Inc("gopls/gotoolchain:other")
+	}
+
+	// Record whether a driver is in use so that it appears in the
+	// user's telemetry upload. Although we can't correlate the
+	// driver information with the crash or bug.Report at the
+	// granularity of the process instance, users that use a
+	// driver tend to do so most of the time, so we'll get a
+	// strong clue. See #60890 for an example of an issue where
+	// this information would have been helpful.
+	if env.EffectiveGOPACKAGESDRIVER != "" {
+		counter.Inc("gopls/gopackagesdriver")
+	}
+
 	return &cache.Folder{
 		Dir:     folder,
 		Name:    name,
@@ -503,7 +546,8 @@ func (s *server) fetchFolderOptions(ctx context.Context, folder protocol.Documen
 
 	opts = opts.Clone()
 	for _, config := range configs {
-		s.handleOptionErrors(ctx, opts.Set(config))
+		res, errs := opts.Set(config)
+		s.handleOptionResult(ctx, res, errs)
 	}
 	return opts, nil
 }
@@ -517,7 +561,12 @@ func (s *server) eventuallyShowMessage(ctx context.Context, msg *protocol.ShowMe
 	s.notifications = append(s.notifications, msg)
 }
 
-func (s *server) handleOptionErrors(ctx context.Context, optionErrors []error) {
+func (s *server) handleOptionResult(ctx context.Context, applied []telemetry.CounterPath, optionErrors []error) {
+	for _, path := range applied {
+		path = append(settings.CounterPath{"gopls", "setting"}, path...)
+		counter.Inc(path.FullName())
+	}
+
 	var warnings, errs []string
 	for _, err := range optionErrors {
 		if err == nil {
@@ -574,7 +623,7 @@ func (s *server) fileOf(ctx context.Context, uri protocol.DocumentURI) (file.Han
 	return fh, snapshot, release, nil
 }
 
-// shutdown implements the 'shutdown' LSP handler. It releases resources
+// Shutdown implements the 'shutdown' LSP handler. It releases resources
 // associated with the server and waits for all ongoing work to complete.
 func (s *server) Shutdown(ctx context.Context) error {
 	ctx, done := event.Start(ctx, "lsp.Server.shutdown")

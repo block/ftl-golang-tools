@@ -5,14 +5,15 @@
 // The generate command updates the following files of documentation:
 //
 //	gopls/doc/settings.md   -- from linking gopls/internal/settings.DefaultOptions
-//	gopls/doc/commands.md   -- from loading gopls/internal/protocol/command
 //	gopls/doc/analyzers.md  -- from linking gopls/internal/settings.DefaultAnalyzers
-//	gopls/doc/inlayHints.md -- from linking gopls/internal/golang.AllInlayHints
+//	gopls/doc/inlayHints.md -- from loading gopls/internal/settings.InlayHint
 //	gopls/internal/doc/api.json -- all of the above in a single value, for 'gopls api-json'
 //
 // Run it with this command:
 //
-//	$ cd gopls/doc && go generate
+//	$ cd gopls/internal/doc && go generate
+//
+// TODO(adonovan): move this package to gopls/internal/doc/generate.
 package main
 
 import (
@@ -22,11 +23,13 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -39,11 +42,9 @@ import (
 	"github.com/block/ftl-golang-tools/gopls/internal/doc"
 	"github.com/block/ftl-golang-tools/gopls/internal/golang"
 	"github.com/block/ftl-golang-tools/gopls/internal/mod"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
-	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command/commandmeta"
 	"github.com/block/ftl-golang-tools/gopls/internal/settings"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/maps"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
+	internalastutil "github.com/block/ftl-golang-tools/internal/astutil"
 )
 
 func main() {
@@ -57,14 +58,6 @@ func main() {
 // - if write, it updates them;
 // - if !write, it reports whether they would change.
 func doMain(write bool) (bool, error) {
-	// TODO(adonovan): when we can rely on go1.23,
-	// switch to gotypesalias=1 behavior.
-	//
-	// (Since this program is run by 'go run',
-	// the gopls/go.mod file's go 1.19 directive doesn't
-	// have its usual effect of setting gotypesalias=0.)
-	os.Setenv("GODEBUG", "gotypesalias=0")
-
 	api, err := loadAPI()
 	if err != nil {
 		return false, err
@@ -87,7 +80,6 @@ func doMain(write bool) (bool, error) {
 		{"internal/doc/api.json", rewriteAPI},
 		{"doc/settings.md", rewriteSettings},
 		{"doc/codelenses.md", rewriteCodeLenses},
-		{"doc/commands.md", rewriteCommands},
 		{"doc/analyzers.md", rewriteAnalyzers},
 		{"doc/inlayHints.md", rewriteInlayHints},
 	} {
@@ -136,23 +128,12 @@ func loadAPI() (*doc.API, error) {
 		&packages.Config{
 			Mode: packages.NeedTypes | packages.NeedTypesInfo | packages.NeedSyntax | packages.NeedDeps,
 		},
-		"github.com/block/ftl-golang-tools/gopls/internal/settings", // for settings
-		"github.com/block/ftl-golang-tools/gopls/internal/protocol", // for lenses
+		"github.com/block/ftl-golang-tools/gopls/internal/settings",
 	)
 	if err != nil {
 		return nil, err
 	}
-	// TODO(adonovan): document at packages.Load that the result
-	// order does not match the pattern order.
-	var protocolPkg, settingsPkg *packages.Package
-	for _, pkg := range pkgs {
-		switch pkg.Types.Name() {
-		case "settings":
-			settingsPkg = pkg
-		case "protocol":
-			protocolPkg = pkg
-		}
-	}
+	settingsPkg := pkgs[0]
 
 	defaults := settings.DefaultOptions()
 	api := &doc.API{
@@ -160,16 +141,15 @@ func loadAPI() (*doc.API, error) {
 		Analyzers: loadAnalyzers(settings.DefaultAnalyzers), // no staticcheck analyzers
 	}
 
-	api.Commands, err = loadCommands()
+	api.Lenses, err = loadLenses(settingsPkg, defaults.Codelenses)
 	if err != nil {
 		return nil, err
 	}
-	api.Lenses, err = loadLenses(protocolPkg, defaults.Codelenses)
+	api.Hints, err = loadHints(settingsPkg)
 	if err != nil {
 		return nil, err
 	}
 
-	api.Hints = loadHints(golang.AllInlayHints)
 	for _, category := range []reflect.Value{
 		reflect.ValueOf(defaults.UserOptions),
 	} {
@@ -182,40 +162,14 @@ func loadAPI() (*doc.API, error) {
 		if err != nil {
 			return nil, err
 		}
-		catName := strings.TrimSuffix(category.Type().Name(), "Options")
-		api.Options[catName] = opts
 
-		// Hardcode the expected values for the analyses and code lenses
-		// settings, since their keys are not enums.
+		// Edge case for "analyses": populate its enum keys from
+		// the analyzer list, since its map keys are strings, not enums.
+		// Also, set its EnumKeys.ValueType for historical reasons.
 		for _, opt := range opts {
-			switch opt.Name {
-			case "analyses":
+			if opt.Name == "analyses" {
+				opt.EnumKeys.ValueType = "bool"
 				for _, a := range api.Analyzers {
-					opt.EnumKeys.Keys = append(opt.EnumKeys.Keys, doc.EnumKey{
-						Name:    fmt.Sprintf("%q", a.Name),
-						Doc:     a.Doc,
-						Default: strconv.FormatBool(a.Default),
-					})
-				}
-			case "codelenses":
-				// Hack: Lenses don't set default values, and we don't want to
-				// pass in the list of expected lenses to loadOptions. Instead,
-				// format the defaults using reflection here. The hackiest part
-				// is reversing lowercasing of the field name.
-				reflectField := category.FieldByName(upperFirst(opt.Name))
-				for _, l := range api.Lenses {
-					def, err := formatDefaultFromEnumBoolMap(reflectField, l.Lens)
-					if err != nil {
-						return nil, err
-					}
-					opt.EnumKeys.Keys = append(opt.EnumKeys.Keys, doc.EnumKey{
-						Name:    fmt.Sprintf("%q", l.Lens),
-						Doc:     l.Doc,
-						Default: def,
-					})
-				}
-			case "hints":
-				for _, a := range api.Hints {
 					opt.EnumKeys.Keys = append(opt.EnumKeys.Keys, doc.EnumKey{
 						Name:    fmt.Sprintf("%q", a.Name),
 						Doc:     a.Doc,
@@ -224,6 +178,9 @@ func loadAPI() (*doc.API, error) {
 				}
 			}
 		}
+
+		catName := strings.TrimSuffix(category.Type().Name(), "Options")
+		api.Options[catName] = opts
 	}
 	return api, nil
 }
@@ -236,7 +193,7 @@ func loadOptions(category reflect.Value, optsType types.Object, pkg *packages.Pa
 		return nil, err
 	}
 
-	enums, err := loadEnums(pkg)
+	enums, err := loadEnums(pkg) // TODO(adonovan): do this only once at toplevel.
 	if err != nil {
 		return nil, err
 	}
@@ -265,11 +222,13 @@ func loadOptions(category reflect.Value, optsType types.Object, pkg *packages.Pa
 		if len(path) < 2 {
 			return nil, fmt.Errorf("could not find AST node for field %v", typesField)
 		}
+
 		// The AST field gives us the doc.
 		astField, ok := path[1].(*ast.Field)
 		if !ok {
 			return nil, fmt.Errorf("unexpected AST path %v", path)
 		}
+		description, deprecation := astField.Doc.Text(), internalastutil.Deprecation(astField.Doc)
 
 		// The reflect field gives us the default value.
 		reflectField := category.FieldByName(typesField.Name())
@@ -282,24 +241,42 @@ func loadOptions(category reflect.Value, optsType types.Object, pkg *packages.Pa
 			return nil, err
 		}
 
+		// Derive the doc-and-api.json type from the Go field type.
+		//
+		// In principle, we should use JSON nomenclature here
+		// (number, array, object, etc; see #68057), but in
+		// practice we use the Go type string ([]T, map[K]V,
+		// etc) with only one tweak: enumeration types are
+		// replaced by "enum", including when they appear as
+		// map keys.
+		//
+		// Notable edge cases:
+		// - any (e.g. in linksInHover) is really a sum of false | true | "internal".
+		// - time.Duration is really a string with a particular syntax.
 		typ := typesField.Type().String()
 		if _, ok := enums[typesField.Type()]; ok {
 			typ = "enum"
 		}
 		name := lowerFirst(typesField.Name())
 
+		// enum-keyed maps
 		var enumKeys doc.EnumKeys
 		if m, ok := typesField.Type().Underlying().(*types.Map); ok {
-			e, ok := enums[m.Key()]
-			if ok {
-				typ = strings.Replace(typ, m.Key().String(), m.Key().Underlying().String(), 1)
-			}
-			keys, err := collectEnumKeys(name, m, reflectField, e)
-			if err != nil {
-				return nil, err
-			}
-			if keys != nil {
-				enumKeys = *keys
+			if values, ok := enums[m.Key()]; ok {
+				// Update type name: "map[CodeLensSource]T" -> "map[enum]T"
+				// hack: assumes key substring is unique!
+				typ = strings.Replace(typ, m.Key().String(), "enum", 1)
+
+				enumKeys.ValueType = m.Elem().String() // e.g. bool
+
+				// For map[enum]T fields, gather the set of valid
+				// EnumKeys (from type information). If T=bool, also
+				// record the default value (from reflection).
+				keys, err := collectEnumKeys(m, reflectField, values)
+				if err != nil {
+					return nil, err
+				}
+				enumKeys.Keys = keys
 			}
 		}
 
@@ -311,14 +288,15 @@ func loadOptions(category reflect.Value, optsType types.Object, pkg *packages.Pa
 		status := reflectStructField.Tag.Get("status")
 
 		opts = append(opts, &doc.Option{
-			Name:       name,
-			Type:       typ,
-			Doc:        lowerFirst(astField.Doc.Text()),
-			Default:    def,
-			EnumKeys:   enumKeys,
-			EnumValues: enums[typesField.Type()],
-			Status:     status,
-			Hierarchy:  hierarchy,
+			Name:               name,
+			Type:               typ,
+			Doc:                lowerFirst(description),
+			Default:            def,
+			EnumKeys:           enumKeys,
+			EnumValues:         enums[typesField.Type()],
+			Status:             status,
+			Hierarchy:          hierarchy,
+			DeprecationMessage: lowerFirst(strings.TrimPrefix(deprecation, "Deprecated: ")),
 		})
 	}
 	return opts, nil
@@ -326,7 +304,7 @@ func loadOptions(category reflect.Value, optsType types.Object, pkg *packages.Pa
 
 // loadEnums returns a description of gopls' settings enum types based on static analysis.
 func loadEnums(pkg *packages.Package) (map[types.Type][]doc.EnumValue, error) {
-	enums := map[types.Type][]doc.EnumValue{}
+	enums := make(map[types.Type][]doc.EnumValue)
 	for _, name := range pkg.Types.Scope().Names() {
 		obj := pkg.Types.Scope().Lookup(name)
 		cnst, ok := obj.(*types.Const)
@@ -347,23 +325,25 @@ func loadEnums(pkg *packages.Package) (map[types.Type][]doc.EnumValue, error) {
 		}
 		enums[obj.Type()] = append(enums[obj.Type()], v)
 	}
+
+	// linksInHover is a one-off edge case (true | false | "gopls")
+	// that doesn't warrant a general solution (e.g. struct tag).
+	enums[pkg.Types.Scope().Lookup("LinksInHoverEnum").Type()] = []doc.EnumValue{
+		{Value: "false", Doc: "false: do not show links"},
+		{Value: "true", Doc: "true: show links to the `linkTarget` domain"},
+		{Value: `"gopls"`, Doc: "`\"gopls\"`: show links to gopls' internal documentation viewer"},
+	}
+
 	return enums, nil
 }
 
-func collectEnumKeys(name string, m *types.Map, reflectField reflect.Value, enumValues []doc.EnumValue) (*doc.EnumKeys, error) {
-	// Make sure the value type gets set for analyses and codelenses
-	// too.
-	if len(enumValues) == 0 && !hardcodedEnumKeys(name) {
-		return nil, nil
-	}
-	keys := &doc.EnumKeys{
-		ValueType: m.Elem().String(),
-	}
+func collectEnumKeys(m *types.Map, reflectField reflect.Value, enumValues []doc.EnumValue) ([]doc.EnumKey, error) {
 	// We can get default values for enum -> bool maps.
 	var isEnumBoolMap bool
 	if basic, ok := m.Elem().Underlying().(*types.Basic); ok && basic.Kind() == types.Bool {
 		isEnumBoolMap = true
 	}
+	var keys []doc.EnumKey
 	for _, v := range enumValues {
 		var def string
 		if isEnumBoolMap {
@@ -373,7 +353,7 @@ func collectEnumKeys(name string, m *types.Map, reflectField reflect.Value, enum
 				return nil, err
 			}
 		}
-		keys.Keys = append(keys.Keys, doc.EnumKey{
+		keys = append(keys, doc.EnumKey{
 			Name:    v.Value,
 			Doc:     v.Doc,
 			Default: def,
@@ -434,7 +414,7 @@ func formatDefault(reflectField reflect.Value) (string, error) {
 	return string(defBytes), err
 }
 
-// valueDoc transforms a docstring documenting an constant identifier to a
+// valueDoc transforms a docstring documenting a constant identifier to a
 // docstring documenting its value.
 //
 // If doc is of the form "Foo is a bar", it returns '`"fooValue"` is a bar'. If
@@ -451,103 +431,25 @@ func valueDoc(name, value, doc string) string {
 	return fmt.Sprintf("`%s`: %s", value, doc)
 }
 
-func loadCommands() ([]*doc.Command, error) {
-	var commands []*doc.Command
-
-	cmds, err := commandmeta.Load()
-	if err != nil {
-		return nil, err
-	}
-	// Parse the objects it contains.
-	for _, cmd := range cmds {
-		cmdjson := &doc.Command{
-			Command: cmd.Name,
-			Title:   cmd.Title,
-			Doc:     cmd.Doc,
-			ArgDoc:  argsDoc(cmd.Args),
-		}
-		if cmd.Result != nil {
-			cmdjson.ResultDoc = typeDoc(cmd.Result, 0)
-		}
-		commands = append(commands, cmdjson)
-	}
-	return commands, nil
-}
-
-func argsDoc(args []*commandmeta.Field) string {
-	var b strings.Builder
-	for i, arg := range args {
-		b.WriteString(typeDoc(arg, 0))
-		if i != len(args)-1 {
-			b.WriteString(",\n")
-		}
-	}
-	return b.String()
-}
-
-func typeDoc(arg *commandmeta.Field, level int) string {
-	// Max level to expand struct fields.
-	const maxLevel = 3
-	if len(arg.Fields) > 0 {
-		if level < maxLevel {
-			return arg.FieldMod + structDoc(arg.Fields, level)
-		}
-		return "{ ... }"
-	}
-	under := arg.Type.Underlying()
-	switch u := under.(type) {
-	case *types.Slice:
-		return fmt.Sprintf("[]%s", u.Elem().Underlying().String())
-	}
-	// TODO(adonovan): use (*types.Package).Name qualifier.
-	return types.TypeString(under, nil)
-}
-
-// TODO(adonovan): this format is strange; it's not Go, nor JSON, nor LSP. Rethink.
-func structDoc(fields []*commandmeta.Field, level int) string {
-	var b strings.Builder
-	b.WriteString("{\n")
-	indent := strings.Repeat("\t", level)
-	for _, fld := range fields {
-		if fld.Doc != "" && level == 0 {
-			doclines := strings.Split(fld.Doc, "\n")
-			for _, line := range doclines {
-				text := ""
-				if line != "" {
-					text = " " + line
-				}
-				fmt.Fprintf(&b, "%s\t//%s\n", indent, text)
-			}
-		}
-		tag := strings.Split(fld.JSONTag, ",")[0]
-		if tag == "" {
-			tag = fld.Name
-		}
-		fmt.Fprintf(&b, "%s\t%q: %s,\n", indent, tag, typeDoc(fld, level+1))
-	}
-	fmt.Fprintf(&b, "%s}", indent)
-	return b.String()
-}
-
-// loadLenses combines the syntactic comments from the protocol
+// loadLenses combines the syntactic comments from the settings
 // package with the default values from settings.DefaultOptions(), and
 // returns a list of Code Lens descriptors.
-func loadLenses(protocolPkg *packages.Package, defaults map[protocol.CodeLensSource]bool) ([]*doc.Lens, error) {
+func loadLenses(settingsPkg *packages.Package, defaults map[settings.CodeLensSource]bool) ([]*doc.Lens, error) {
 	// Find the CodeLensSource enums among the files of the protocol package.
 	// Map each enum value to its doc comment.
 	enumDoc := make(map[string]string)
-	for _, f := range protocolPkg.Syntax {
+	for _, f := range settingsPkg.Syntax {
 		for _, decl := range f.Decls {
 			if decl, ok := decl.(*ast.GenDecl); ok && decl.Tok == token.CONST {
 				for _, spec := range decl.Specs {
 					spec := spec.(*ast.ValueSpec)
-					posn := safetoken.StartPosition(protocolPkg.Fset, spec.Pos())
+					posn := safetoken.StartPosition(settingsPkg.Fset, spec.Pos())
 					if id, ok := spec.Type.(*ast.Ident); ok && id.Name == "CodeLensSource" {
 						if len(spec.Names) != 1 || len(spec.Values) != 1 {
 							return nil, fmt.Errorf("%s: declare one CodeLensSource per line", posn)
 						}
 						lit, ok := spec.Values[0].(*ast.BasicLit)
-						if !ok && lit.Kind != token.STRING {
+						if !ok || lit.Kind != token.STRING {
 							return nil, fmt.Errorf("%s: CodeLensSource value is not a string literal", posn)
 						}
 						value, _ := strconv.Unquote(lit.Value) // ignore error: AST is well-formed
@@ -566,10 +468,8 @@ func loadLenses(protocolPkg *packages.Package, defaults map[protocol.CodeLensSou
 
 	// Build list of Lens descriptors.
 	var lenses []*doc.Lens
-	addAll := func(sources map[protocol.CodeLensSource]cache.CodeLensSourceFunc, fileType string) error {
-		slice := maps.Keys(sources)
-		sort.Slice(slice, func(i, j int) bool { return slice[i] < slice[j] })
-		for _, source := range slice {
+	addAll := func(sources map[settings.CodeLensSource]cache.CodeLensSourceFunc, fileType string) error {
+		for _, source := range slices.Sorted(maps.Keys(sources)) {
 			docText, ok := enumDoc[string(source)]
 			if !ok {
 				return fmt.Errorf("missing CodeLensSource declaration for %s", source)
@@ -609,21 +509,22 @@ func loadAnalyzers(m map[string]*settings.Analyzer) []*doc.Analyzer {
 	return json
 }
 
-func loadHints(m map[string]*golang.Hint) []*doc.Hint {
-	var sorted []string
-	for _, h := range m {
-		sorted = append(sorted, h.Name)
+// loadHints derives and returns the inlay hints metadata from the settings.InlayHint type.
+func loadHints(settingsPkg *packages.Package) ([]*doc.Hint, error) {
+	enums, err := loadEnums(settingsPkg) // TODO(adonovan): call loadEnums exactly once
+	if err != nil {
+		return nil, err
 	}
-	sort.Strings(sorted)
-	var json []*doc.Hint
-	for _, name := range sorted {
-		h := m[name]
-		json = append(json, &doc.Hint{
-			Name: h.Name,
-			Doc:  h.Doc,
+	inlayHint := settingsPkg.Types.Scope().Lookup("InlayHint").Type()
+	var hints []*doc.Hint
+	for _, enumVal := range enums[inlayHint] {
+		name, _ := strconv.Unquote(enumVal.Value)
+		hints = append(hints, &doc.Hint{
+			Name: name,
+			Doc:  enumVal.Doc,
 		})
 	}
-	return json
+	return hints, nil
 }
 
 func lowerFirst(x string) string {
@@ -633,17 +534,10 @@ func lowerFirst(x string) string {
 	return strings.ToLower(x[:1]) + x[1:]
 }
 
-func upperFirst(x string) string {
-	if x == "" {
-		return x
-	}
-	return strings.ToUpper(x[:1]) + x[1:]
-}
-
 func fileForPos(pkg *packages.Package, pos token.Pos) (*ast.File, error) {
 	fset := pkg.Fset
 	for _, f := range pkg.Syntax {
-		if safetoken.StartPosition(fset, f.Pos()).Filename == safetoken.StartPosition(fset, pos).Filename {
+		if safetoken.StartPosition(fset, f.FileStart).Filename == safetoken.StartPosition(fset, pos).Filename {
 			return f, nil
 		}
 	}
@@ -703,17 +597,9 @@ func rewriteSettings(prevContent []byte, api *doc.API) ([]byte, error) {
 
 				// heading
 				//
-				// TODO(adonovan): We should display not the Go type (e.g.
-				// `time.Duration`, `map[Enum]bool`) for each setting,
-				// but its JSON type, since that's the actual interface.
-				// We need a better way to derive accurate JSON type descriptions
-				// from Go types. eg. "a string parsed as if by
-				// `time.Duration.Parse`". (`time.Duration` is an integer, not
-				// a string!)
-				//
 				// We do not display the undocumented dotted-path alias
 				// (h.title + "." + opt.Name) used by VS Code only.
-				fmt.Fprintf(&buf, "### `%s` *%v*\n\n", opt.Name, opt.Type)
+				fmt.Fprintf(&buf, "### `%s %s`\n\n", opt.Name, opt.Type)
 
 				// status
 				switch opt.Status {
@@ -732,10 +618,6 @@ func rewriteSettings(prevContent []byte, api *doc.API) ([]byte, error) {
 				buf.WriteString(opt.Doc)
 
 				// enums
-				//
-				// TODO(adonovan): `CodeLensSource` should be treated as an enum,
-				// but loadEnums considers only the `settings` package,
-				// not `protocol`.
 				write := func(name, doc string) {
 					if doc != "" {
 						unbroken := parBreakRE.ReplaceAllString(doc, "\\\n")
@@ -745,12 +627,14 @@ func rewriteSettings(prevContent []byte, api *doc.API) ([]byte, error) {
 					}
 				}
 				if len(opt.EnumValues) > 0 && opt.Type == "enum" {
+					// enum as top-level type constructor
 					buf.WriteString("\nMust be one of:\n\n")
 					for _, val := range opt.EnumValues {
 						write(val.Value, val.Doc)
 					}
 				} else if len(opt.EnumKeys.Keys) > 0 && shouldShowEnumKeysInSettings(opt.Name) {
-					buf.WriteString("\nCan contain any of:\n\n")
+					// enum as map key (currently just "annotations")
+					buf.WriteString("\nEach enum must be one of:\n\n")
 					for _, val := range opt.EnumKeys.Keys {
 						write(val.Name, val.Doc)
 					}
@@ -772,7 +656,9 @@ func rewriteSettings(prevContent []byte, api *doc.API) ([]byte, error) {
 var parBreakRE = regexp.MustCompile("\n{2,}")
 
 func shouldShowEnumKeysInSettings(name string) bool {
-	// These fields have too many possible options to print.
+	// These fields have too many possible options,
+	// or too voluminous documentation, to render as enums.
+	// Instead they each get their own page in the manual.
 	return !(name == "analyses" || name == "codelenses" || name == "hints")
 }
 
@@ -830,10 +716,6 @@ func collectGroups(opts []*doc.Option) []optionsGroup {
 	return groups
 }
 
-func hardcodedEnumKeys(name string) bool {
-	return name == "analyses" || name == "codelenses"
-}
-
 func capitalize(s string) string {
 	return string(unicode.ToUpper(rune(s[0]))) + s[1:]
 }
@@ -847,20 +729,6 @@ func rewriteCodeLenses(prevContent []byte, api *doc.API) ([]byte, error) {
 		fmt.Fprintf(&buf, "File type: %s\n\n", lens.FileType)
 	}
 	return replaceSection(prevContent, "Lenses", buf.Bytes())
-}
-
-func rewriteCommands(prevContent []byte, api *doc.API) ([]byte, error) {
-	var buf bytes.Buffer
-	for _, command := range api.Commands {
-		fmt.Fprintf(&buf, "## `%s`: **%s**\n\n%v\n\n", command.Command, command.Title, command.Doc)
-		if command.ArgDoc != "" {
-			fmt.Fprintf(&buf, "Args:\n\n```\n%s\n```\n\n", command.ArgDoc)
-		}
-		if command.ResultDoc != "" {
-			fmt.Fprintf(&buf, "Result:\n\n```\n%s\n```\n\n", command.ResultDoc)
-		}
-	}
-	return replaceSection(prevContent, "Commands", buf.Bytes())
 }
 
 func rewriteAnalyzers(prevContent []byte, api *doc.API) ([]byte, error) {

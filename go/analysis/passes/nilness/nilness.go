@@ -14,7 +14,6 @@ import (
 	"github.com/block/ftl-golang-tools/go/analysis/passes/buildssa"
 	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
 	"github.com/block/ftl-golang-tools/go/ssa"
-	"github.com/block/ftl-golang-tools/internal/aliases"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
@@ -187,7 +186,7 @@ func runFunc(pass *analysis.Pass, fn *ssa.Function) {
 					// t successor learns y is nil.
 					newFacts = expandFacts(fact{binop.Y, isnil})
 				} else {
-					// x is nil, y is unknown:
+					// y is nil, x is unknown:
 					// t successor learns x is nil.
 					newFacts = expandFacts(fact{binop.X, isnil})
 				}
@@ -300,7 +299,7 @@ func nilnessOf(stack []fact, v ssa.Value) nilness {
 		}
 	case *ssa.MakeInterface:
 		// A MakeInterface is non-nil unless its operand is a type parameter.
-		tparam, ok := aliases.Unalias(v.X.Type()).(*types.TypeParam)
+		tparam, ok := types.Unalias(v.X.Type()).(*types.TypeParam)
 		if !ok {
 			return isnonnil
 		}

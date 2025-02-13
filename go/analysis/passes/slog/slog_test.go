@@ -8,11 +8,9 @@ import (
 	"testing"
 
 	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
-	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 func Test(t *testing.T) {
-	testenv.NeedsGo1Point(t, 21)
 	testdata := analysistest.TestData()
 	analysistest.Run(t, testdata, Analyzer, "a", "b")
 }

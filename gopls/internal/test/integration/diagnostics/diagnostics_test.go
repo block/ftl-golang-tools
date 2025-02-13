@@ -72,15 +72,22 @@ module mod.com
 
 go 1.12
 `
-	Run(t, onlyMod, func(t *testing.T, env *Env) {
+	WithOptions(
+		Settings{
+			"pullDiagnostics": true,
+		},
+	).Run(t, onlyMod, func(t *testing.T, env *Env) {
 		env.CreateBuffer("main.go", `package main
 
-func m() {
+func _() {
 	log.Println()
 }
 `)
 		env.AfterChange(Diagnostics(env.AtRegexp("main.go", "log")))
 		env.SaveBuffer("main.go")
+		if got := env.Diagnostics("main.go"); len(got) != 0 {
+			t.Errorf("got %d diagnostics, want 0", len(got))
+		}
 		env.AfterChange(NoDiagnostics(ForFile("main.go")))
 	})
 }
@@ -121,8 +128,18 @@ const a = 2
 `
 
 func TestDiagnosticClearingOnEdit(t *testing.T) {
-	Run(t, badPackage, func(t *testing.T, env *Env) {
+	WithOptions(
+		Settings{
+			"pullDiagnostics": true,
+		},
+	).Run(t, badPackage, func(t *testing.T, env *Env) {
 		env.OpenFile("b.go")
+
+		for _, f := range []string{"a.go", "b.go"} {
+			if got := env.Diagnostics(f); len(got) != 1 {
+				t.Errorf("textDocument/diagnostic(%s) returned %d diagnostics, want 1. Got %v", f, len(got), got)
+			}
+		}
 		env.AfterChange(
 			Diagnostics(env.AtRegexp("a.go", "a = 1")),
 			Diagnostics(env.AtRegexp("b.go", "a = 2")),
@@ -130,6 +147,11 @@ func TestDiagnosticClearingOnEdit(t *testing.T) {
 
 		// Fix the error by editing the const name in b.go to `b`.
 		env.RegexpReplace("b.go", "(a) = 2", "b")
+		for _, f := range []string{"a.go", "b.go"} {
+			if got := env.Diagnostics(f); len(got) != 0 {
+				t.Errorf("textDocument/diagnostic(%s) returned %d diagnostics, want 0. Got %v", f, len(got), got)
+			}
+		}
 		env.AfterChange(
 			NoDiagnostics(ForFile("a.go")),
 			NoDiagnostics(ForFile("b.go")),
@@ -313,7 +335,7 @@ func Hello() {
 				InitialWorkspaceLoad,
 				Diagnostics(env.AtRegexp("main.go", `"mod.com/bob"`)),
 			)
-			if err := env.Sandbox.RunGoCommand(env.Ctx, "", "mod", []string{"init", "mod.com"}, nil, true); err != nil {
+			if _, err := env.Sandbox.RunGoCommand(env.Ctx, "", "mod", []string{"init", "mod.com"}, nil, true); err != nil {
 				t.Fatal(err)
 			}
 			env.AfterChange(
@@ -399,9 +421,6 @@ module mod.com
 go 1.12
 
 require foo.test v1.2.3
--- go.sum --
-foo.test v1.2.3 h1:TMA+lyd1ck0TqjSFpNe4T6cf/K6TYkoHwOOcMBMjaEw=
-foo.test v1.2.3/go.mod h1:Ij3kyLIe5lzjycjh13NL8I2gX0quZuTdW0MnmlwGBL4=
 -- print.go --
 package lib
 
@@ -429,6 +448,7 @@ const Answer = 42
 
 func TestResolveDiagnosticWithDownload(t *testing.T) {
 	WithOptions(
+		WriteGoSum("."),
 		ProxyFiles(testPackageWithRequireProxy),
 	).Run(t, testPackageWithRequire, func(t *testing.T, env *Env) {
 		env.OpenFile("print.go")
@@ -1731,9 +1751,6 @@ module mod.com
 go 1.12
 
 require nested.com v1.0.0
--- go.sum --
-nested.com v1.0.0 h1:I6spLE4CgFqMdBPc+wTV2asDO2QJ3tU0YAT+jkLeN1I=
-nested.com v1.0.0/go.mod h1:ly53UzXQgVjSlV7wicdBB4p8BxfytuGT1Xcyv0ReJfI=
 -- main.go --
 package main
 
@@ -1757,6 +1774,7 @@ package hello
 func helloHelper() {}
 `
 	WithOptions(
+		WriteGoSum("."),
 		ProxyFiles(proxy),
 		Modes(Default),
 	).Run(t, nested, func(t *testing.T, env *Env) {

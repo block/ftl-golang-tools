@@ -118,6 +118,10 @@ func TestLoad_NoInitialPackages(t *testing.T) {
 }
 
 func TestLoad_MissingInitialPackage(t *testing.T) {
+	if runtime.GOOS == "wasip1" {
+		t.Skip("Skipping due to golang/go#64725: fails with EBADF errors")
+	}
+
 	var conf loader.Config
 	conf.Import("nosuchpkg")
 	conf.Import("errors")
@@ -554,7 +558,7 @@ func TestVendorCwdIssue16580(t *testing.T) {
 // - TypeCheckFuncBodies hook
 
 func TestTransitivelyErrorFreeFlag(t *testing.T) {
-	// Create an minimal custom build.Context
+	// Create a minimal custom build.Context
 	// that fakes the following packages:
 	//
 	// a --> b --> c!   c has an error

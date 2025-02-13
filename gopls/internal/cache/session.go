@@ -8,9 +8,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -22,9 +23,9 @@ import (
 	"github.com/block/ftl-golang-tools/gopls/internal/file"
 	"github.com/block/ftl-golang-tools/gopls/internal/label"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/persistent"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/slices"
 	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck"
 	"github.com/block/ftl-golang-tools/internal/event"
 	"github.com/block/ftl-golang-tools/internal/event/keys"
@@ -191,7 +192,7 @@ func (s *Session) createView(ctx context.Context, def *viewDefinition) (*View, *
 		} else {
 			dirs = append(dirs, def.folder.Env.GOMODCACHE)
 			for m := range def.workspaceModFiles {
-				dirs = append(dirs, filepath.Dir(m.Path()))
+				dirs = append(dirs, m.DirPath())
 			}
 		}
 		ignoreFilter = newIgnoreFilter(dirs)
@@ -218,7 +219,7 @@ func (s *Session) createView(ctx context.Context, def *viewDefinition) (*View, *
 			ModCache:       s.cache.modCache.dirCache(def.folder.Env.GOMODCACHE),
 		}
 		if def.folder.Options.VerboseOutput {
-			pe.Logf = func(format string, args ...interface{}) {
+			pe.Logf = func(format string, args ...any) {
 				event.Log(ctx, fmt.Sprintf(format, args...))
 			}
 		}
@@ -230,36 +231,39 @@ func (s *Session) createView(ctx context.Context, def *viewDefinition) (*View, *
 		initialWorkspaceLoad: make(chan struct{}),
 		initializationSema:   make(chan struct{}, 1),
 		baseCtx:              baseCtx,
+		pkgIndex:             typerefs.NewPackageIndex(),
 		parseCache:           s.parseCache,
 		ignoreFilter:         ignoreFilter,
 		fs:                   s.overlayFS,
 		viewDefinition:       def,
 		importsState:         newImportsState(backgroundCtx, s.cache.modCache, pe),
 	}
+	if def.folder.Options.ImportsSource != settings.ImportsSourceOff {
+		v.modcacheState = newModcacheState(def.folder.Env.GOMODCACHE)
+	}
 
 	s.snapshotWG.Add(1)
 	v.snapshot = &Snapshot{
-		view:             v,
-		backgroundCtx:    backgroundCtx,
-		cancel:           cancel,
-		store:            s.cache.store,
-		refcount:         1, // Snapshots are born referenced.
-		done:             s.snapshotWG.Done,
-		packages:         new(persistent.Map[PackageID, *packageHandle]),
-		meta:             new(metadata.Graph),
-		files:            newFileMap(),
-		activePackages:   new(persistent.Map[PackageID, *Package]),
-		symbolizeHandles: new(persistent.Map[protocol.DocumentURI, *memoize.Promise]),
-		shouldLoad:       new(persistent.Map[PackageID, []PackagePath]),
-		unloadableFiles:  new(persistent.Set[protocol.DocumentURI]),
-		parseModHandles:  new(persistent.Map[protocol.DocumentURI, *memoize.Promise]),
-		parseWorkHandles: new(persistent.Map[protocol.DocumentURI, *memoize.Promise]),
-		modTidyHandles:   new(persistent.Map[protocol.DocumentURI, *memoize.Promise]),
-		modVulnHandles:   new(persistent.Map[protocol.DocumentURI, *memoize.Promise]),
-		modWhyHandles:    new(persistent.Map[protocol.DocumentURI, *memoize.Promise]),
-		pkgIndex:         typerefs.NewPackageIndex(),
-		moduleUpgrades:   new(persistent.Map[protocol.DocumentURI, map[string]string]),
-		vulns:            new(persistent.Map[protocol.DocumentURI, *vulncheck.Result]),
+		view:              v,
+		backgroundCtx:     backgroundCtx,
+		cancel:            cancel,
+		store:             s.cache.store,
+		refcount:          1, // Snapshots are born referenced.
+		done:              s.snapshotWG.Done,
+		packages:          new(persistent.Map[PackageID, *packageHandle]),
+		fullAnalysisKeys:  new(persistent.Map[PackageID, file.Hash]),
+		factyAnalysisKeys: new(persistent.Map[PackageID, file.Hash]),
+		meta:              new(metadata.Graph),
+		files:             newFileMap(),
+		shouldLoad:        new(persistent.Map[PackageID, []PackagePath]),
+		unloadableFiles:   new(persistent.Set[protocol.DocumentURI]),
+		parseModHandles:   new(persistent.Map[protocol.DocumentURI, *memoize.Promise]),
+		parseWorkHandles:  new(persistent.Map[protocol.DocumentURI, *memoize.Promise]),
+		modTidyHandles:    new(persistent.Map[protocol.DocumentURI, *memoize.Promise]),
+		modVulnHandles:    new(persistent.Map[protocol.DocumentURI, *memoize.Promise]),
+		modWhyHandles:     new(persistent.Map[protocol.DocumentURI, *memoize.Promise]),
+		moduleUpgrades:    new(persistent.Map[protocol.DocumentURI, map[string]string]),
+		vulns:             new(persistent.Map[protocol.DocumentURI, *vulncheck.Result]),
 	}
 
 	// Snapshots must observe all open files, as there are some caching
@@ -348,7 +352,7 @@ func (s *Session) View(id string) (*View, error) {
 // SnapshotOf returns a Snapshot corresponding to the given URI.
 //
 // In the case where the file can be  can be associated with a View by
-// bestViewForURI (based on directory information alone, without package
+// [RelevantViews] (based on directory information alone, without package
 // metadata), SnapshotOf returns the current Snapshot for that View. Otherwise,
 // it awaits loading package metadata and returns a Snapshot for the first View
 // containing a real (=not command-line-arguments) package for the file.
@@ -551,13 +555,12 @@ checkFiles:
 		}
 		def, err = defineView(ctx, fs, folder, fh)
 		if err != nil {
-			// We should never call selectViewDefs with a cancellable context, so
-			// this should never fail.
-			return nil, bug.Errorf("failed to define view for open file: %v", err)
+			// e.g. folder path is invalid?
+			return nil, fmt.Errorf("failed to define view for open file: %v", err)
 		}
 		// It need not strictly be the case that the best view for a file is
 		// distinct from other views, as the logic of getViewDefinition and
-		// bestViewForURI does not align perfectly. This is not necessarily a bug:
+		// [RelevantViews] does not align perfectly. This is not necessarily a bug:
 		// there may be files for which we can't construct a valid view.
 		//
 		// Nevertheless, we should not create redundant views.
@@ -572,7 +575,7 @@ checkFiles:
 	return defs, nil
 }
 
-// The viewDefiner interface allows the bestView algorithm to operate on both
+// The viewDefiner interface allows the [RelevantViews] algorithm to operate on both
 // Views and viewDefinitions.
 type viewDefiner interface{ definition() *viewDefinition }
 
@@ -773,6 +776,25 @@ func (s *Session) DidModifyFiles(ctx context.Context, modifications []file.Modif
 	// changed on disk.
 	checkViews := false
 
+	// Hack: collect folders from existing views.
+	// TODO(golang/go#57979): we really should track folders independent of
+	// Views, but since we always have a default View for each folder, this
+	// works for now.
+	var folders []*Folder // preserve folder order
+	workspaceFileGlobsSet := make(map[string]bool)
+	seen := make(map[*Folder]unit)
+	for _, v := range s.views {
+		if _, ok := seen[v.folder]; ok {
+			continue
+		}
+		seen[v.folder] = unit{}
+		folders = append(folders, v.folder)
+		for _, glob := range v.folder.Options.WorkspaceFiles {
+			workspaceFileGlobsSet[glob] = true
+		}
+	}
+	workspaceFileGlobs := slices.Collect(maps.Keys(workspaceFileGlobsSet))
+
 	changed := make(map[protocol.DocumentURI]file.Handle)
 	for _, c := range modifications {
 		fh := mustReadFile(ctx, s, c.URI)
@@ -788,7 +810,7 @@ func (s *Session) DidModifyFiles(ctx context.Context, modifications []file.Modif
 		// TODO(rfindley): go.work files need not be named "go.work" -- we need to
 		// check each view's source to handle the case of an explicit GOWORK value.
 		// Write a test that fails, and fix this.
-		if (isGoWork(c.URI) || isGoMod(c.URI)) && (c.Action == file.Save || c.OnDisk) {
+		if (isGoWork(c.URI) || isGoMod(c.URI) || isWorkspaceFile(c.URI, workspaceFileGlobs)) && (c.Action == file.Save || c.OnDisk) {
 			checkViews = true
 		}
 
@@ -815,28 +837,12 @@ func (s *Session) DidModifyFiles(ctx context.Context, modifications []file.Modif
 	}
 
 	if checkViews {
-		// Hack: collect folders from existing views.
-		// TODO(golang/go#57979): we really should track folders independent of
-		// Views, but since we always have a default View for each folder, this
-		// works for now.
-		var folders []*Folder // preserve folder order
-		seen := make(map[*Folder]unit)
-		for _, v := range s.views {
-			if _, ok := seen[v.folder]; ok {
-				continue
-			}
-			seen[v.folder] = unit{}
-			folders = append(folders, v.folder)
-		}
-
 		var openFiles []protocol.DocumentURI
 		for _, o := range s.Overlays() {
 			openFiles = append(openFiles, o.URI())
 		}
 		// Sort for determinism.
-		sort.Slice(openFiles, func(i, j int) bool {
-			return openFiles[i] < openFiles[j]
-		})
+		slices.Sort(openFiles)
 
 		// TODO(rfindley): can we avoid running the go command (go env)
 		// synchronously to change processing? Can we assume that the env did not
@@ -1085,11 +1091,12 @@ func (b brokenFile) Content() ([]byte, error)  { return nil, b.err }
 //
 // This set includes
 //  1. all go.mod and go.work files in the workspace; and
-//  2. for each Snapshot, its modules (or directory for ad-hoc views). In
+//  2. all files defined by the WorkspaceFiles option in BuildOptions (to support custom GOPACKAGESDRIVERS); and
+//  3. for each Snapshot, its modules (or directory for ad-hoc views). In
 //     module mode, this is the set of active modules (and for VS Code, all
 //     workspace directories within them, due to golang/go#42348).
 //
-// The watch for workspace go.work and go.mod files in (1) is sufficient to
+// The watch for workspace files in (1) is sufficient to
 // capture changes to the repo structure that may affect the set of views.
 // Whenever this set changes, we reload the workspace and invalidate memoized
 // files.
@@ -1125,9 +1132,7 @@ func (s *Session) FileWatchingGlobPatterns(ctx context.Context) map[protocol.Rel
 		if err != nil {
 			continue // view is shut down; continue with others
 		}
-		for k, v := range snapshot.fileWatchingGlobPatterns() {
-			patterns[k] = v
-		}
+		maps.Copy(patterns, snapshot.fileWatchingGlobPatterns())
 		release()
 	}
 	return patterns

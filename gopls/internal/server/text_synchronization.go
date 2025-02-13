@@ -61,9 +61,9 @@ const (
 	// ResetGoModDiagnostics command.
 	FromResetGoModDiagnostics
 
-	// FromToggleGCDetails refers to state changes resulting from toggling
-	// gc_details on or off for a package.
-	FromToggleGCDetails
+	// FromToggleCompilerOptDetails refers to state changes resulting from toggling
+	// a package's compiler optimization details flag.
+	FromToggleCompilerOptDetails
 )
 
 func (m ModificationSource) String() string {
@@ -105,7 +105,7 @@ func (s *server) DidOpen(ctx context.Context, params *protocol.DidOpenTextDocume
 	// file is opened, and we can't do that inside didModifyFiles because we
 	// don't want to request configuration while holding a lock.
 	if len(s.session.Views()) == 0 {
-		dir := filepath.Dir(uri.Path())
+		dir := uri.DirPath()
 		s.addFolders(ctx, []protocol.WorkspaceFolder{{
 			URI:  string(protocol.URIFromPath(dir)),
 			Name: filepath.Base(dir),

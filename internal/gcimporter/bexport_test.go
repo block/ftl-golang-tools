@@ -18,7 +18,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/internal/aliases"
 	"github.com/block/ftl-golang-tools/internal/gcimporter"
 )
 
@@ -31,8 +30,8 @@ func fileLine(fset *token.FileSet, obj types.Object) string {
 }
 
 func equalType(x, y types.Type) error {
-	x = aliases.Unalias(x)
-	y = aliases.Unalias(y)
+	x = types.Unalias(x)
+	y = types.Unalias(y)
 	if reflect.TypeOf(x) != reflect.TypeOf(y) {
 		return fmt.Errorf("unequal kinds: %T vs %T", x, y)
 	}

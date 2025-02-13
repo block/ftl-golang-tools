@@ -13,6 +13,8 @@ import (
 	"strings"
 	"sync"
 
+	"golang.org/x/mod/semver"
+	"golang.org/x/sync/errgroup"
 	"github.com/block/ftl-golang-tools/go/packages"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
@@ -21,8 +23,6 @@ import (
 	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/osv"
 	isem "github.com/block/ftl-golang-tools/gopls/internal/vulncheck/semver"
 	"github.com/block/ftl-golang-tools/internal/memoize"
-	"golang.org/x/mod/semver"
-	"golang.org/x/sync/errgroup"
 	"golang.org/x/vuln/scan"
 )
 

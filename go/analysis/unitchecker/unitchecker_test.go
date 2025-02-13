@@ -17,7 +17,7 @@ import (
 	"github.com/block/ftl-golang-tools/go/analysis/passes/findcall"
 	"github.com/block/ftl-golang-tools/go/analysis/passes/printf"
 	"github.com/block/ftl-golang-tools/go/analysis/unitchecker"
-	"github.com/block/ftl-golang-tools/go/packages/packagestest"
+	"github.com/block/ftl-golang-tools/internal/packagestest"
 )
 
 func TestMain(m *testing.M) {
@@ -133,7 +133,7 @@ func _() {
 				"message": "self-assignment of i to i",
 				"suggested_fixes": \[
 					\{
-						"message": "Remove",
+						"message": "Remove self-assignment",
 						"edits": \[
 							\{
 								"filename": "([/._\-a-zA-Z0-9]+[\\/]fake[\\/])?c/c.go",

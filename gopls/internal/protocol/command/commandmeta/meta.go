@@ -4,6 +4,9 @@
 
 // Package commandmeta provides metadata about LSP commands, by
 // statically analyzing the command.Interface type.
+//
+// It is used to generate JSONRPC dispatch and marshaling.
+// TODO(adonovan): combine with gopls/internal/protocol/command/gen.
 package commandmeta
 
 import (
@@ -17,7 +20,6 @@ import (
 
 	"github.com/block/ftl-golang-tools/go/ast/astutil"
 	"github.com/block/ftl-golang-tools/go/packages"
-	"github.com/block/ftl-golang-tools/internal/aliases"
 	// (does not depend on gopls itself)
 )
 
@@ -122,7 +124,7 @@ func (l *fieldLoader) loadMethod(pkg *packages.Package, m *types.Func) (*Command
 		if i == 0 {
 			// Lazy check that the first argument is a context. We could relax this,
 			// but then the generated code gets more complicated.
-			if named, ok := aliases.Unalias(fld.Type).(*types.Named); !ok || named.Obj().Name() != "Context" || named.Obj().Pkg().Path() != "context" {
+			if named, ok := types.Unalias(fld.Type).(*types.Named); !ok || named.Obj().Name() != "Context" || named.Obj().Pkg().Path() != "context" {
 				return nil, fmt.Errorf("first method parameter must be context.Context")
 			}
 			// Skip the context argument, as it is implied.
@@ -143,6 +145,12 @@ func (l *fieldLoader) loadField(pkg *packages.Package, obj *types.Var, doc, tag 
 		Type:    obj.Type(),
 		JSONTag: reflect.StructTag(tag).Get("json"),
 	}
+
+	// This must be done here to handle nested types, such as:
+	//
+	//    type Test struct { Subtests []Test }
+	l.loaded[obj] = fld
+
 	under := fld.Type.Underlying()
 	// Quick-and-dirty handling for various underlying types.
 	switch p := under.(type) {
@@ -211,8 +219,8 @@ func lspName(methodName string) string {
 //
 // For example:
 //
-//	"RunTests" -> []string{"Run", "Tests"}
-//	"GCDetails" -> []string{"GC", "Details"}
+//	"RunTests"      -> []string{"Run", "Tests"}
+//	"ClientOpenURL" -> []string{"Client", "Open", "URL"}
 func splitCamel(s string) []string {
 	var words []string
 	for len(s) > 0 {
@@ -240,7 +248,7 @@ func findField(pkg *packages.Package, pos token.Pos) (*ast.Field, error) {
 	fset := pkg.Fset
 	var file *ast.File
 	for _, f := range pkg.Syntax {
-		if fset.File(f.Pos()).Name() == fset.File(pos).Name() {
+		if fset.File(f.FileStart).Name() == fset.File(pos).Name() {
 			file = f
 			break
 		}

@@ -21,7 +21,6 @@ import (
 	"text/scanner"
 	"unicode/utf8"
 
-	"github.com/block/ftl-golang-tools/internal/aliases"
 	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
@@ -256,7 +255,7 @@ func (p *parser) parseField(pkg *types.Package) (field *types.Var, tag string) {
 		if aname, ok := p.aliases[n]; ok {
 			name = aname
 		} else {
-			switch typ := aliases.Unalias(typesinternal.Unpointer(typ)).(type) {
+			switch typ := types.Unalias(typesinternal.Unpointer(typ)).(type) {
 			case *types.Basic:
 				name = typ.Name()
 			case *types.Named:
@@ -310,6 +309,7 @@ func (p *parser) parseParam(pkg *types.Package) (param *types.Var, isVariadic bo
 func (p *parser) parseVar(pkg *types.Package) *types.Var {
 	name := p.parseName()
 	v := types.NewVar(token.NoPos, pkg, name, p.parseType(pkg))
+	typesinternal.SetVarKind(v, typesinternal.PackageVar)
 	if name[0] == '.' || name[0] == '<' {
 		// This is an unexported variable,
 		// or a variable defined in a different package.
@@ -575,7 +575,7 @@ func (p *parser) parseNamedType(nlist []interface{}) types.Type {
 	t := obj.Type()
 	p.update(t, nlist)
 
-	nt, ok := aliases.Unalias(t).(*types.Named)
+	nt, ok := types.Unalias(t).(*types.Named)
 	if !ok {
 		// This can happen for unsafe.Pointer, which is a TypeName holding a Basic type.
 		pt := p.parseType(pkg)
@@ -619,7 +619,7 @@ func (p *parser) parseNamedType(nlist []interface{}) types.Type {
 			p.skipInlineBody()
 			p.expectEOL()
 
-			sig := types.NewSignature(receiver, params, results, isVariadic)
+			sig := types.NewSignatureType(receiver, nil, nil, params, results, isVariadic)
 			nt.AddMethod(types.NewFunc(token.NoPos, pkg, name, sig))
 		}
 	}
@@ -800,7 +800,7 @@ func (p *parser) parseFunctionType(pkg *types.Package, nlist []interface{}) *typ
 	params, isVariadic := p.parseParamList(pkg)
 	results := p.parseResultList(pkg)
 
-	*t = *types.NewSignature(nil, params, results, isVariadic)
+	*t = *types.NewSignatureType(nil, nil, nil, params, results, isVariadic)
 	return t
 }
 
@@ -1330,7 +1330,7 @@ func (p *parser) parsePackage() *types.Package {
 	}
 	p.fixups = nil
 	for _, typ := range p.typeList {
-		if it, ok := aliases.Unalias(typ).(*types.Interface); ok {
+		if it, ok := types.Unalias(typ).(*types.Interface); ok {
 			it.Complete()
 		}
 	}

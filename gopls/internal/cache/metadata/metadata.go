@@ -45,10 +45,11 @@ type Package struct {
 	PkgPath PackagePath
 	Name    PackageName
 
-	// these three fields are as defined by go/packages.Package
+	// These fields are as defined by go/packages.Package
 	GoFiles         []protocol.DocumentURI
 	CompiledGoFiles []protocol.DocumentURI
 	IgnoredFiles    []protocol.DocumentURI
+	OtherFiles      []protocol.DocumentURI
 
 	ForTest       PackagePath // q in a "p [q.test]" package, else ""
 	TypesSizes    types.Sizes
@@ -166,9 +167,6 @@ func (mp *Package) IsIntermediateTestVariant() bool {
 }
 
 // A Source maps package IDs to metadata for the packages.
-//
-// TODO(rfindley): replace this with a concrete metadata graph, once it is
-// exposed from the snapshot.
 type Source interface {
 	// Metadata returns the [Package] for the given package ID, or nil if it does
 	// not exist.

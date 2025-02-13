@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/golang"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
 	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
 )
@@ -42,12 +42,12 @@ const (
 		},
 		{
 			label:         "enable const",
-			enabled:       map[string]bool{golang.ConstantValues: true},
+			enabled:       map[string]bool{string(settings.ConstantValues): true},
 			wantInlayHint: true,
 		},
 		{
 			label:         "enable parameter names",
-			enabled:       map[string]bool{golang.ParameterNames: true},
+			enabled:       map[string]bool{string(settings.ParameterNames): true},
 			wantInlayHint: false,
 		},
 	}

@@ -13,7 +13,6 @@ import (
 	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
 	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
-	"github.com/block/ftl-golang-tools/internal/versions"
 )
 
 const Doc = `check for unnecessary type arguments in call expressions
@@ -91,9 +90,9 @@ func diagnose(fset *token.FileSet, inspect *inspector.Inspector, start, end toke
 				Rparen:   call.Rparen,
 			}
 			info := &types.Info{
-				Instances: make(map[*ast.Ident]types.Instance),
+				Instances:    make(map[*ast.Ident]types.Instance),
+				FileVersions: make(map[*ast.File]string),
 			}
-			versions.InitFileVersions(info)
 			if err := types.CheckExpr(fset, pkg, call.Pos(), newCall, info); err != nil {
 				// Most likely inference failed.
 				break

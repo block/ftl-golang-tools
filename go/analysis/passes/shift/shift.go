@@ -19,9 +19,8 @@ import (
 
 	"github.com/block/ftl-golang-tools/go/analysis"
 	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
 	"github.com/block/ftl-golang-tools/go/ast/inspector"
-	"github.com/block/ftl-golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
@@ -100,7 +99,7 @@ func checkLongShift(pass *analysis.Pass, node ast.Node, x, y ast.Expr) {
 		return
 	}
 	var structuralTypes []types.Type
-	switch t := aliases.Unalias(t).(type) {
+	switch t := types.Unalias(t).(type) {
 	case *types.TypeParam:
 		terms, err := typeparams.StructuralTerms(t)
 		if err != nil {
@@ -124,7 +123,7 @@ func checkLongShift(pass *analysis.Pass, node ast.Node, x, y ast.Expr) {
 		}
 	}
 	if amt >= minSize {
-		ident := analysisutil.Format(pass.Fset, x)
+		ident := analysisinternal.Format(pass.Fset, x)
 		qualifier := ""
 		if len(sizes) > 1 {
 			qualifier = "may be "

@@ -21,8 +21,8 @@ import (
 
 // TestFreeRefs is a unit test of the free-references algorithm.
 func TestFreeRefs(t *testing.T) {
-	if runtime.GOOS == "js" {
-		t.Skip("some test imports are unsupported on js")
+	if runtime.GOOS == "js" || runtime.GOARCH == "wasm" {
+		t.Skip("some test imports are unsupported on js or wasm")
 	}
 
 	for i, test := range []struct {
@@ -98,7 +98,7 @@ func TestFreeRefs(t *testing.T) {
 				test.src[startOffset+len("«"):endOffset] +
 				" " +
 				test.src[endOffset+len("»"):]
-			f, err := parser.ParseFile(fset, name, src, 0)
+			f, err := parser.ParseFile(fset, name, src, parser.SkipObjectResolution)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	"github.com/block/ftl-golang-tools/go/packages"
-	"github.com/block/ftl-golang-tools/go/packages/packagestest"
+	"github.com/block/ftl-golang-tools/internal/packagestest"
 	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 

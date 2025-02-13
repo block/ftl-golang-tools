@@ -8,10 +8,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"slices"
 
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 	"github.com/block/ftl-golang-tools/gopls/internal/settings"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/slices"
 )
 
 // check implements the check verb for gopls.

@@ -1,4 +1,4 @@
-# Analyzers
+# Gopls: Analyzers
 
 <!-- No Table of Contents: GitHub's Markdown renderer synthesizes it. -->
 
@@ -15,18 +15,19 @@ before you run your tests, or even before you save your files.
 This document describes the suite of analyzers available in gopls,
 which aggregates analyzers from a variety of sources:
 
-- all the usual bug-finding analyzers from the `go vet` suite;
-- a number of analyzers with more substantial dependencies that prevent them from being used in `go vet`;
-- analyzers that augment compilation errors by suggesting quick fixes to common mistakes; and
-- a handful of analyzers that suggest possible style improvements.
+- all the usual bug-finding analyzers from the `go vet` suite (e.g. `printf`; see [`go tool vet help`](https://pkg.go.dev/cmd/vet) for the complete list);
+- a number of analyzers with more substantial dependencies that prevent them from being used in `go vet` (e.g. `nilness`);
+- analyzers that augment compilation errors by suggesting quick fixes to common mistakes (e.g. `fillreturns`); and
+- a handful of analyzers that suggest possible style improvements (e.g. `simplifyrange`).
 
-More details about how to enable and disable analyzers can be found
-[here](settings.md#analyses).
+To enable or disable analyzers, use the [analyses](settings.md#analyses) setting.
 
 In addition, gopls includes the [`staticcheck` suite](https://staticcheck.dev/docs/checks),
 though these analyzers are off by default.
 Use the [`staticcheck`](settings.md#staticcheck`) setting to enable them,
 and consult staticcheck's documentation for analyzer details.
+
+<!-- When staticcheck=true, we currently use the {S SA ST QF} suites, sans {SA5009, SA5011} -->
 
 
 <!-- BEGIN Analyzers: DO NOT MANUALLY EDIT THIS SECTION -->
@@ -257,40 +258,6 @@ Default: on.
 
 Package documentation: [errorsas](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/errorsas)
 
-<a id='fieldalignment'></a>
-## `fieldalignment`: find structs that would use less memory if their fields were sorted
-
-
-This analyzer find structs that can be rearranged to use less memory, and provides
-a suggested edit with the most compact order.
-
-Note that there are two different diagnostics reported. One checks struct size,
-and the other reports "pointer bytes" used. Pointer bytes is how many bytes of the
-object that the garbage collector has to potentially scan for pointers, for example:
-
-	struct { uint32; string }
-
-have 16 pointer bytes because the garbage collector has to scan up through the string's
-inner pointer.
-
-	struct { string; *uint32 }
-
-has 24 pointer bytes because it has to scan further through the *uint32.
-
-	struct { string; uint32 }
-
-has 8 because it can stop immediately after the string pointer.
-
-Be aware that the most compact order is not always the most efficient.
-In rare cases it may cause two variables each updated by its own goroutine
-to occupy the same CPU cache line, inducing a form of memory contention
-known as "false sharing" that slows down both goroutines.
-
-
-Default: off. Enable by setting `"analyses": {"fieldalignment": true}`.
-
-Package documentation: [fieldalignment](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/fieldalignment)
-
 <a id='fillreturns'></a>
 ## `fillreturns`: suggest fixes for errors due to an incorrect number of return values
 
@@ -322,6 +289,41 @@ Package documentation: [fillreturns](https://pkg.go.dev/github.com/block/ftl-gol
 Default: on.
 
 Package documentation: [framepointer](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/framepointer)
+
+<a id='gofix'></a>
+## `gofix`: apply fixes based on go:fix comment directives
+
+
+The gofix analyzer inlines functions and constants that are marked for inlining.
+
+Default: on.
+
+Package documentation: [gofix](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/gofix)
+
+<a id='hostport'></a>
+## `hostport`: check format of addresses passed to net.Dial
+
+
+This analyzer flags code that produce network address strings using
+fmt.Sprintf, as in this example:
+
+    addr := fmt.Sprintf("%s:%d", host, 12345) // "will not work with IPv6"
+    ...
+    conn, err := net.Dial("tcp", addr)       // "when passed to dial here"
+
+The analyzer suggests a fix to use the correct approach, a call to
+net.JoinHostPort:
+
+    addr := net.JoinHostPort(host, "12345")
+    ...
+    conn, err := net.Dial("tcp", addr)
+
+A similar diagnostic and fix are produced for a format string of "%s:%s".
+
+
+Default: on.
+
+Package documentation: [hostport](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/hostport)
 
 <a id='httpresponse'></a>
 ## `httpresponse`: check for mistakes using HTTP responses
@@ -461,13 +463,46 @@ Package documentation: [loopclosure](https://pkg.go.dev/github.com/block/ftl-gol
 
 
 The cancellation function returned by context.WithCancel, WithTimeout,
-and WithDeadline must be called or the new context will remain live
-until its parent context is cancelled.
+WithDeadline and variants such as WithCancelCause must be called,
+or the new context will remain live until its parent context is cancelled.
 (The background context is never cancelled.)
 
 Default: on.
 
 Package documentation: [lostcancel](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/lostcancel)
+
+<a id='modernize'></a>
+## `modernize`: simplify code by using modern constructs
+
+
+This analyzer reports opportunities for simplifying and clarifying
+existing code by using more modern features of Go, such as:
+
+  - replacing an if/else conditional assignment by a call to the
+    built-in min or max functions added in go1.21;
+  - replacing sort.Slice(x, func(i, j int) bool) { return s[i] < s[j] }
+    by a call to slices.Sort(s), added in go1.21;
+  - replacing interface{} by the 'any' type added in go1.18;
+  - replacing append([]T(nil), s...) by slices.Clone(s) or
+    slices.Concat(s), added in go1.21;
+  - replacing a loop around an m[k]=v map update by a call
+    to one of the Collect, Copy, Clone, or Insert functions
+    from the maps package, added in go1.21;
+  - replacing []byte(fmt.Sprintf...) by fmt.Appendf(nil, ...),
+    added in go1.19;
+  - replacing uses of context.WithCancel in tests with t.Context, added in
+    go1.24;
+  - replacing omitempty by omitzero on structs, added in go1.24;
+  - replacing append(s[:i], s[i+1]...) by slices.Delete(s, i, i+1),
+    added in go1.21
+  - replacing a 3-clause for i := 0; i < n; i++ {} loop by
+    for i := range n {}, added in go1.22;
+  - replacing Split in "for range strings.Split(...)" by go1.24's
+    more efficient SplitSeq;
+
+Default: on.
+
+Package documentation: [modernize](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/modernize)
 
 <a id='nilfunc'></a>
 ## `nilfunc`: check for useless comparisons between functions and nil
@@ -669,6 +704,8 @@ will be simplified to:
 
 This is one of the simplifications that "gofmt -s" applies.
 
+This analyzer ignores generated code.
+
 Default: on.
 
 Package documentation: [simplifycompositelit](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/simplifycompositelit)
@@ -695,6 +732,8 @@ will be simplified to:
 
 This is one of the simplifications that "gofmt -s" applies.
 
+This analyzer ignores generated code.
+
 Default: on.
 
 Package documentation: [simplifyrange](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/simplifyrange)
@@ -712,6 +751,8 @@ will be simplified to:
 	s[a:]
 
 This is one of the simplifications that "gofmt -s" applies.
+
+This analyzer ignores generated code.
 
 Default: on.
 
@@ -823,42 +864,6 @@ Default: on.
 
 Package documentation: [structtag](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/structtag)
 
-<a id='stubmethods'></a>
-## `stubmethods`: detect missing methods and fix with stub implementations
-
-
-This analyzer detects type-checking errors due to missing methods
-in assignments from concrete types to interface types, and offers
-a suggested fix that will create a set of stub methods so that
-the concrete type satisfies the interface.
-
-For example, this function will not compile because the value
-NegativeErr{} does not implement the "error" interface:
-
-	func sqrt(x float64) (float64, error) {
-		if x < 0 {
-			return 0, NegativeErr{} // error: missing method
-		}
-		...
-	}
-
-	type NegativeErr struct{}
-
-This analyzer will suggest a fix to declare this method:
-
-	// Error implements error.Error.
-	func (NegativeErr) Error() string {
-		panic("unimplemented")
-	}
-
-(At least, it appears to behave that way, but technically it
-doesn't use the SuggestedFix mechanism and the stub is created by
-logic in gopls's golang.stub function.)
-
-Default: on.
-
-Package documentation: [stubmethods](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/stubmethods)
-
 <a id='testinggoroutine'></a>
 ## `testinggoroutine`: report calls to (*testing.T).Fatal from goroutines started by a test
 
@@ -905,26 +910,6 @@ Default: on.
 
 Package documentation: [timeformat](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/timeformat)
 
-<a id='undeclaredname'></a>
-## `undeclaredname`: suggested fixes for "undeclared name: <>"
-
-
-This checker provides suggested fixes for type errors of the
-type "undeclared name: <>". It will either insert a new statement,
-such as:
-
-	<> :=
-
-or a new function declaration, such as:
-
-	func <>(inferred parameters) {
-		panic("implement me!")
-	}
-
-Default: on.
-
-Package documentation: [undeclaredname](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/undeclaredname)
-
 <a id='unmarshal'></a>
 ## `unmarshal`: report passing non-pointer or non-interface values to unmarshal
 
@@ -941,7 +926,7 @@ Package documentation: [unmarshal](https://pkg.go.dev/github.com/block/ftl-golan
 
 
 The unreachable analyzer finds statements that execution can never reach
-because they are preceded by an return statement, a call to panic, an
+because they are preceded by a return statement, a call to panic, an
 infinite loop, or similar constructs.
 
 Default: on.
@@ -961,6 +946,37 @@ invisible to stack copying and to the garbage collector.
 Default: on.
 
 Package documentation: [unsafeptr](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/unsafeptr)
+
+<a id='unusedfunc'></a>
+## `unusedfunc`: check for unused functions and methods
+
+
+The unusedfunc analyzer reports functions and methods that are
+never referenced outside of their own declaration.
+
+A function is considered unused if it is unexported and not
+referenced (except within its own declaration).
+
+A method is considered unused if it is unexported, not referenced
+(except within its own declaration), and its name does not match
+that of any method of an interface type declared within the same
+package.
+
+The tool may report a false positive for a declaration of an
+unexported function that is referenced from another package using
+the go:linkname mechanism, if the declaration's doc comment does
+not also have a go:linkname comment. (Such code is in any case
+strongly discouraged: linkname annotations, if they must be used at
+all, should be used on both the declaration and the alias.)
+
+The unusedfunc algorithm is not as precise as the
+github.com/block/ftl-golang-tools/cmd/deadcode tool, but it has the advantage that
+it runs within the modular analysis framework, enabling near
+real-time feedback within gopls.
+
+Default: on.
+
+Package documentation: [unusedfunc](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/unusedfunc)
 
 <a id='unusedparams'></a>
 ## `unusedparams`: check for unused parameters of functions
@@ -989,6 +1005,8 @@ arguments at call sites, while taking care to preserve any side
 effects in the argument expressions; see
 https://github.com/golang/tools/releases/tag/gopls%2Fv0.14.
 
+This analyzer ignores generated code.
+
 Default: on.
 
 Package documentation: [unusedparams](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/unusedparams)
@@ -1014,7 +1032,7 @@ Package documentation: [unusedresult](https://pkg.go.dev/github.com/block/ftl-go
 
 
 
-Default: off. Enable by setting `"analyses": {"unusedvariable": true}`.
+Default: on.
 
 Package documentation: [unusedvariable](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/unusedvariable)
 
@@ -1050,13 +1068,70 @@ Default: on.
 
 Package documentation: [unusedwrite](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/unusedwrite)
 
-<a id='useany'></a>
-## `useany`: check for constraints that could be simplified to "any"
+<a id='waitgroup'></a>
+## `waitgroup`: check for misuses of sync.WaitGroup
 
 
+This analyzer detects mistaken calls to the (*sync.WaitGroup).Add
+method from inside a new goroutine, causing Add to race with Wait:
 
-Default: off. Enable by setting `"analyses": {"useany": true}`.
+	// WRONG
+	var wg sync.WaitGroup
+	go func() {
+	        wg.Add(1) // "WaitGroup.Add called from inside new goroutine"
+	        defer wg.Done()
+	        ...
+	}()
+	wg.Wait() // (may return prematurely before new goroutine starts)
 
-Package documentation: [useany](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/useany)
+The correct code calls Add before starting the goroutine:
+
+	// RIGHT
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		...
+	}()
+	wg.Wait()
+
+Default: on.
+
+Package documentation: [waitgroup](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/waitgroup)
+
+<a id='yield'></a>
+## `yield`: report calls to yield where the result is ignored
+
+
+After a yield function returns false, the caller should not call
+the yield function again; generally the iterator should return
+promptly.
+
+This example fails to check the result of the call to yield,
+causing this analyzer to report a diagnostic:
+
+	yield(1) // yield may be called again (on L2) after returning false
+	yield(2)
+
+The corrected code is either this:
+
+	if yield(1) { yield(2) }
+
+or simply:
+
+	_ = yield(1) && yield(2)
+
+It is not always a mistake to ignore the result of yield.
+For example, this is a valid single-element iterator:
+
+	yield(1) // ok to ignore result
+	return
+
+It is only a mistake when the yield call that returned false may be
+followed by another call.
+
+Default: on.
+
+Package documentation: [yield](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/yield)
 
 <!-- END Analyzers: DO NOT MANUALLY EDIT THIS SECTION -->

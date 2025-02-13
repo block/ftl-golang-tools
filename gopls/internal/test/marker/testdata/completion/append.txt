@@ -1,10 +1,7 @@
 This test checks behavior of completion within append expressions.
 
-It requires go1.23 as the new "structs" package appears as a completion.
-
 -- flags --
 -ignore_extra_diags
--min_go=go1.23
 
 -- go.mod --
 module golang.org/lsptests/append
@@ -25,7 +22,7 @@ func _() {
 	)
 
 	append(aStrings, a)                     //@rank(")", appendString, appendInt)
-	var _ interface{} = append(aStrings, a) //@rank(")", appendString, appendInt)
+	var _ any = append(aStrings, a) //@rank(")", appendString, appendInt)
 	var _ []string = append(oops, a)        //@rank(")", appendString, appendInt)
 
 	foo(append())                  //@rank("))", appendStrings, appendInt),rank("))", appendStrings, appendString)

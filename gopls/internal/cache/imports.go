@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"testing"
 	"time"
 
 	"github.com/block/ftl-golang-tools/gopls/internal/file"
@@ -15,6 +16,7 @@ import (
 	"github.com/block/ftl-golang-tools/internal/event"
 	"github.com/block/ftl-golang-tools/internal/event/keys"
 	"github.com/block/ftl-golang-tools/internal/imports"
+	"github.com/block/ftl-golang-tools/internal/modindex"
 )
 
 // refreshTimer implements delayed asynchronous refreshing of state.
@@ -59,11 +61,8 @@ func (t *refreshTimer) schedule() {
 
 	if t.timer == nil {
 		// Don't refresh more than twice per minute.
-		delay := 30 * time.Second
 		// Don't spend more than ~2% of the time refreshing.
-		if adaptive := 50 * t.duration; adaptive > delay {
-			delay = adaptive
-		}
+		delay := max(30*time.Second, 50*t.duration)
 		t.timer = time.AfterFunc(delay, func() {
 			start := time.Now()
 			t.mu.Lock()
@@ -147,6 +146,71 @@ func newImportsState(backgroundCtx context.Context, modCache *sharedModCache, en
 	s.refreshTimer = newRefreshTimer(s.refreshProcessEnv)
 	s.refreshTimer.schedule()
 	return s
+}
+
+// modcacheState holds a modindex.Index and controls its updates
+type modcacheState struct {
+	dir          string // GOMODCACHE
+	refreshTimer *refreshTimer
+	mu           sync.Mutex
+	index        *modindex.Index
+}
+
+// newModcacheState constructs a new modcacheState for goimports.
+// The returned state is automatically updated until [modcacheState.stopTimer] is called.
+func newModcacheState(dir string) *modcacheState {
+	s := &modcacheState{
+		dir: dir,
+	}
+	s.index, _ = modindex.ReadIndex(dir)
+	s.refreshTimer = newRefreshTimer(s.refreshIndex)
+	go s.refreshIndex()
+	return s
+}
+
+func (s *modcacheState) GetIndex() (*modindex.Index, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	ix := s.index
+	if ix == nil || len(ix.Entries) == 0 {
+		var err error
+		// this should only happen near the beginning of a session
+		// (or in tests)
+		ix, err = modindex.ReadIndex(s.dir)
+		if err != nil {
+			return nil, fmt.Errorf("ReadIndex %w", err)
+		}
+		if !testing.Testing() {
+			return ix, nil
+		}
+		if ix == nil || len(ix.Entries) == 0 {
+			err = modindex.Create(s.dir)
+			if err != nil {
+				return nil, fmt.Errorf("creating index %w", err)
+			}
+			ix, err = modindex.ReadIndex(s.dir)
+			if err != nil {
+				return nil, fmt.Errorf("read index after create %w", err)
+			}
+			s.index = ix
+		}
+	}
+	return s.index, nil
+}
+
+func (s *modcacheState) refreshIndex() {
+	ok, err := modindex.Update(s.dir)
+	if err != nil || !ok {
+		return
+	}
+	// read the new index
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.index, _ = modindex.ReadIndex(s.dir)
+}
+
+func (s *modcacheState) stopTimer() {
+	s.refreshTimer.stop()
 }
 
 // stopTimer stops scheduled refreshes of this imports state.

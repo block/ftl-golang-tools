@@ -16,9 +16,9 @@ import (
 
 	"github.com/block/ftl-golang-tools/go/analysis"
 	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
-	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
 	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 )
 
 const Doc = "check for non-64-bits-aligned arguments to sync/atomic functions"
@@ -31,11 +31,11 @@ var Analyzer = &analysis.Analyzer{
 	Run:      run,
 }
 
-func run(pass *analysis.Pass) (interface{}, error) {
+func run(pass *analysis.Pass) (any, error) {
 	if 8*pass.TypesSizes.Sizeof(types.Typ[types.Uintptr]) == 64 {
 		return nil, nil // 64-bit platform
 	}
-	if !analysisutil.Imports(pass.Pkg, "sync/atomic") {
+	if !analysisinternal.Imports(pass.Pkg, "sync/atomic") {
 		return nil, nil // doesn't directly import sync/atomic
 	}
 
@@ -53,10 +53,10 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 	inspect.Preorder(nodeFilter, func(node ast.Node) {
 		call := node.(*ast.CallExpr)
-		fn := typeutil.StaticCallee(pass.TypesInfo, call)
-		if analysisutil.IsFunctionNamed(fn, "sync/atomic", funcNames...) {
+		obj := typeutil.Callee(pass.TypesInfo, call)
+		if analysisinternal.IsFunctionNamed(obj, "sync/atomic", funcNames...) {
 			// For all the listed functions, the expression to check is always the first function argument.
-			check64BitAlignment(pass, fn.Name(), call.Args[0])
+			check64BitAlignment(pass, obj.Name(), call.Args[0])
 		}
 	})
 

@@ -15,6 +15,7 @@ import (
 	"strings"
 	"sync"
 
+	"golang.org/x/mod/modfile"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
@@ -24,7 +25,6 @@ import (
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
 	"github.com/block/ftl-golang-tools/internal/event"
-	"golang.org/x/mod/modfile"
 	"mvdan.cc/xurls/v2"
 )
 

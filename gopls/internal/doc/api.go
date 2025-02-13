@@ -10,7 +10,7 @@ package doc
 
 import _ "embed"
 
-// API is a JSON value of type API.
+// JSON is a JSON encoding of value of type API.
 // The 'gopls api-json' command prints it.
 //
 //go:embed api.json
@@ -21,21 +21,21 @@ var JSON string
 // TODO(adonovan): document these data types.
 type API struct {
 	Options   map[string][]*Option
-	Commands  []*Command
 	Lenses    []*Lens
 	Analyzers []*Analyzer
 	Hints     []*Hint
 }
 
 type Option struct {
-	Name       string
-	Type       string
-	Doc        string
-	EnumKeys   EnumKeys
-	EnumValues []EnumValue
-	Default    string
-	Status     string
-	Hierarchy  string
+	Name               string
+	Type               string // T = bool | string | int | enum | any | []T | map[T]T | time.Duration
+	Doc                string
+	EnumKeys           EnumKeys
+	EnumValues         []EnumValue
+	Default            string
+	Status             string
+	Hierarchy          string
+	DeprecationMessage string
 }
 
 type EnumKeys struct {
@@ -44,22 +44,14 @@ type EnumKeys struct {
 }
 
 type EnumKey struct {
-	Name    string
+	Name    string // in JSON syntax (quoted)
 	Doc     string
 	Default string
 }
 
 type EnumValue struct {
-	Value string
-	Doc   string
-}
-
-type Command struct {
-	Command   string // e.g. "gopls.run_tests"
-	Title     string
-	Doc       string
-	ArgDoc    string
-	ResultDoc string
+	Value string // in JSON syntax (quoted)
+	Doc   string // doc comment; always starts with `Value`
 }
 
 type Lens struct {

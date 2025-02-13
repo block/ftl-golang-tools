@@ -14,6 +14,7 @@ import (
 	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
 	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 	"github.com/block/ftl-golang-tools/internal/typesinternal"
 	"github.com/block/ftl-golang-tools/internal/versions"
 )
@@ -368,5 +369,5 @@ func isMethodCall(info *types.Info, expr ast.Expr, pkgPath, typeName, method str
 	// Check that the receiver is a <pkgPath>.<typeName> or
 	// *<pkgPath>.<typeName>.
 	_, named := typesinternal.ReceiverNamed(recv)
-	return analysisutil.IsNamedType(named, pkgPath, typeName)
+	return analysisinternal.IsTypeNamed(named, pkgPath, typeName)
 }

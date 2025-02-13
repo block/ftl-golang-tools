@@ -14,7 +14,6 @@ import (
 	"go/parser"
 	"go/scanner"
 	"go/token"
-	"log"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -135,15 +134,11 @@ func goGetQuickFixes(haveModule bool, uri protocol.DocumentURI, pkg string) []Su
 		return nil
 	}
 	title := fmt.Sprintf("go get package %v", pkg)
-	cmd, err := command.NewGoGetPackageCommand(title, command.GoGetPackageArgs{
+	cmd := command.NewGoGetPackageCommand(title, command.GoGetPackageArgs{
 		URI:        uri,
 		AddRequire: true,
 		Pkg:        pkg,
 	})
-	if err != nil {
-		bug.Reportf("internal error building 'go get package' fix: %v", err)
-		return nil
-	}
 	return []SuggestedFix{SuggestedFixFromCommand(cmd, protocol.QuickFix)}
 }
 
@@ -153,14 +148,10 @@ func editGoDirectiveQuickFix(haveModule bool, uri protocol.DocumentURI, version 
 		return nil
 	}
 	title := fmt.Sprintf("go mod edit -go=%s", version)
-	cmd, err := command.NewEditGoDirectiveCommand(title, command.EditGoDirectiveArgs{
+	cmd := command.NewEditGoDirectiveCommand(title, command.EditGoDirectiveArgs{
 		URI:     uri,
 		Version: version,
 	})
-	if err != nil {
-		bug.Reportf("internal error constructing 'edit go directive' fix: %v", err)
-		return nil
-	}
 	return []SuggestedFix{SuggestedFixFromCommand(cmd, protocol.QuickFix)}
 }
 
@@ -279,15 +270,10 @@ func toSourceDiagnostic(srcAnalyzer *settings.Analyzer, gobDiag *gobDiagnostic) 
 		related = append(related, protocol.DiagnosticRelatedInformation(gobRelated))
 	}
 
-	severity := srcAnalyzer.Severity()
-	if severity == 0 {
-		severity = protocol.SeverityWarning
-	}
-
 	diag := &Diagnostic{
 		URI:      gobDiag.Location.URI,
 		Range:    gobDiag.Location.Range,
-		Severity: severity,
+		Severity: srcAnalyzer.Severity(),
 		Code:     gobDiag.Code,
 		CodeHref: gobDiag.CodeHref,
 		Source:   DiagnosticSource(gobDiag.Source),
@@ -332,15 +318,10 @@ func toSourceDiagnostic(srcAnalyzer *settings.Analyzer, gobDiag *gobDiagnostic) 
 			// by logic "adjacent to" the analyzer.
 			//
 			// The analysis.Diagnostic.Category is used as the fix name.
-			cmd, err := command.NewApplyFixCommand(fix.Message, command.ApplyFixArgs{
-				Fix:   diag.Code,
-				URI:   gobDiag.Location.URI,
-				Range: gobDiag.Location.Range,
+			cmd := command.NewApplyFixCommand(fix.Message, command.ApplyFixArgs{
+				Fix:      diag.Code,
+				Location: gobDiag.Location,
 			})
-			if err != nil {
-				// JSON marshalling of these argument values cannot fail.
-				log.Fatalf("internal error in NewApplyFixCommand: %v", err)
-			}
 			for _, kind := range kinds {
 				fixes = append(fixes, SuggestedFixFromCommand(cmd, kind))
 			}
@@ -388,7 +369,7 @@ func typesCodeHref(linkTarget string, code typesinternal.ErrorCode) string {
 }
 
 // BuildLink constructs a URL with the given target, path, and anchor.
-func BuildLink(target, path, anchor string) string {
+func BuildLink(target, path, anchor string) protocol.URI {
 	link := fmt.Sprintf("https://%s/%s", target, path)
 	if anchor == "" {
 		return link
@@ -472,14 +453,14 @@ func parseGoListImportCycleError(ctx context.Context, e packages.Error, mp *meta
 		// Search file imports for the import that is causing the import cycle.
 		for _, imp := range pgf.File.Imports {
 			if imp.Path.Value == circImp {
-				rng, err := pgf.NodeMappedRange(imp)
+				rng, err := pgf.NodeRange(imp)
 				if err != nil {
 					return nil, nil
 				}
 
 				return &Diagnostic{
 					URI:      pgf.URI,
-					Range:    rng.Range(),
+					Range:    rng,
 					Severity: protocol.SeverityError,
 					Source:   ListError,
 					Message:  msg,

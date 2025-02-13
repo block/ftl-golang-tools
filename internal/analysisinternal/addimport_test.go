@@ -16,10 +16,14 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 func TestAddImport(t *testing.T) {
+	testenv.NeedsDefaultImporter(t)
+
 	descr := func(s string) string {
 		if _, _, line, ok := runtime.Caller(1); ok {
 			return fmt.Sprintf("L%d %s", line, s)
@@ -184,6 +188,64 @@ func _() {
 	foo
 }`,
 		},
+		{
+			descr: descr("dot import unshadowed"),
+			src: `package a
+
+import . "fmt"
+
+func _() {
+	«. fmt»
+}`,
+			want: `package a
+
+import . "fmt"
+
+func _() {
+	.
+}`,
+		},
+		{
+			descr: descr("dot import shadowed"),
+			src: `package a
+
+import . "fmt"
+
+func _(Print fmt.Stringer) {
+	«fmt fmt»
+}`,
+			want: `package a
+
+import "fmt"
+
+import . "fmt"
+
+func _(Print fmt.Stringer) {
+	fmt
+}`,
+		},
+		{
+			descr: descr("add import to group"),
+			src: `package a
+
+import (
+	"io"
+)
+
+func _(io.Reader) {
+	«fmt fmt»
+}`,
+			want: `package a
+
+import (
+	"io"
+	"fmt"
+)
+
+func _(io.Reader) {
+	fmt
+}`,
+		},
 	} {
 		t.Run(test.descr, func(t *testing.T) {
 			// splice marker
@@ -201,7 +263,7 @@ func _() {
 			if err != nil {
 				t.Log(err)
 			}
-			pos := fset.File(f.Pos()).Pos(len(before))
+			pos := fset.File(f.FileStart).Pos(len(before))
 
 			// type-check
 			info := &types.Info{
@@ -211,13 +273,35 @@ func _() {
 				Implicits: make(map[ast.Node]types.Object),
 			}
 			conf := &types.Config{
+				// We don't want to fail if there is an error during type checking:
+				// the error may be because we're missing an import, and adding imports
+				// is the whole point of AddImport.
 				Error:    func(err error) { t.Log(err) },
 				Importer: importer.Default(),
 			}
 			conf.Check(f.Name.Name, fset, []*ast.File{f}, info)
 
 			// add import
-			name, edit := analysisinternal.AddImport(info, f, pos, path, name)
+			// The "Print" argument is only relevant for dot-import tests.
+			name, prefix, edits := analysisinternal.AddImport(info, f, name, path, "Print", pos)
+
+			var edit analysis.TextEdit
+			switch len(edits) {
+			case 0:
+			case 1:
+				edit = edits[0]
+			default:
+				t.Fatalf("expected at most one edit, got %d", len(edits))
+			}
+
+			// prefix is a simple function of name.
+			wantPrefix := name + "."
+			if name == "." {
+				wantPrefix = ""
+			}
+			if prefix != wantPrefix {
+				t.Errorf("got prefix %q, want %q", prefix, wantPrefix)
+			}
 
 			// apply patch
 			start := fset.Position(edit.Pos)

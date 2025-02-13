@@ -5,6 +5,7 @@
 package misc
 
 import (
+	"fmt"
 	"html"
 	"io"
 	"net/http"
@@ -15,8 +16,12 @@ import (
 
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
 	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 	"github.com/block/ftl-golang-tools/internal/testenv"
+)
+
+// TODO(adonovan): define marker test verbs for checking package docs.
 
 // TestWebServer exercises the web server created on demand
 // for code actions such as "Browse package documentation".
@@ -38,7 +43,8 @@ func (G[T]) F(int, int, int, int, int, int, int, ...int) {}
 	Run(t, files, func(t *testing.T, env *Env) {
 		// Assert that the HTML page contains the expected const declaration.
 		// (We may need to make allowances for HTML markup.)
-		uri1 := viewPkgDoc(t, env, "a/a.go")
+		env.OpenFile("a/a.go")
+		uri1 := viewPkgDoc(t, env, env.Sandbox.Workdir.EntireFile("a/a.go"))
 		doc1 := get(t, uri1)
 		checkMatch(t, true, doc1, "const A =.*1")
 
@@ -67,10 +73,11 @@ func (G[T]) F(int, int, int, int, int, int, int, ...int) {}
 		// downcall, this time for a "file:" URL, causing the
 		// client editor to navigate to the source file.
 		t.Log("extracted /src URL", srcURL)
+		collectDocs := env.Awaiter.ListenToShownDocuments()
 		get(t, srcURL)
 
 		// Check that that shown location is that of NewFunc.
-		shownSource := shownDocument(t, env, "file:")
+		shownSource := shownDocument(t, collectDocs(), "file:")
 		gotLoc := protocol.Location{
 			URI:   protocol.DocumentURI(shownSource.URI), // fishy conversion
 			Range: *shownSource.Selection,
@@ -83,7 +90,76 @@ func (G[T]) F(int, int, int, int, int, int, int, ...int) {}
 	})
 }
 
-func TestRenderNoPanic66449(t *testing.T) {
+func TestShowDocumentUnsupported(t *testing.T) {
+	const files = `
+-- go.mod --
+module example.com
+
+-- a.go --
+package a
+
+const A = 1
+`
+
+	for _, supported := range []bool{false, true} {
+		t.Run(fmt.Sprintf("supported=%v", supported), func(t *testing.T) {
+			opts := []RunOption{Modes(Default)}
+			if !supported {
+				opts = append(opts, CapabilitiesJSON([]byte(`
+{
+	"window": {
+		"showDocument": {
+			"support": false
+		}
+	}
+}`)))
+			}
+			WithOptions(opts...).Run(t, files, func(t *testing.T, env *Env) {
+				env.OpenFile("a.go")
+				// Invoke the "Browse package documentation" code
+				// action to start the server.
+				actions := env.CodeAction(env.Sandbox.Workdir.EntireFile("a.go"), nil, 0)
+				docAction, err := codeActionByKind(actions, settings.GoDoc)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// Execute the command.
+				// Its side effect should be a single showDocument request.
+				params := &protocol.ExecuteCommandParams{
+					Command:   docAction.Command.Command,
+					Arguments: docAction.Command.Arguments,
+				}
+				var result any
+				collectDocs := env.Awaiter.ListenToShownDocuments()
+				collectMessages := env.Awaiter.ListenToShownMessages()
+				env.ExecuteCommand(params, &result)
+
+				// golang/go#70342: just because the command has finished does not mean
+				// that we will have received the necessary notifications. Synchronize
+				// using progress reports.
+				env.Await(CompletedWork(params.Command, 1, false))
+
+				wantDocs, wantMessages := 0, 1
+				if supported {
+					wantDocs, wantMessages = 1, 0
+				}
+
+				docs := collectDocs()
+				messages := collectMessages()
+
+				if gotDocs := len(docs); gotDocs != wantDocs {
+					t.Errorf("gopls.doc: got %d showDocument requests, want %d", gotDocs, wantDocs)
+				}
+				if gotMessages := len(messages); gotMessages != wantMessages {
+					t.Errorf("gopls.doc: got %d showMessage requests, want %d", gotMessages, wantMessages)
+				}
+			})
+		})
+	}
+}
+
+func TestPkgDocNoPanic66449(t *testing.T) {
 	// This particular input triggered a latent bug in doc.New
 	// that would corrupt the AST while filtering out unexported
 	// symbols such as b, causing nodeHTML to panic.
@@ -116,7 +192,9 @@ func (tπ) Mπ() {}
 func (tπ) mπ() {}
 `
 	Run(t, files, func(t *testing.T, env *Env) {
-		uri1 := viewPkgDoc(t, env, "a/a.go")
+		env.OpenFile("a/a.go")
+		uri1 := viewPkgDoc(t, env, env.Sandbox.Workdir.EntireFile("a/a.go"))
+
 		doc := get(t, uri1)
 		// (Ideally our code rendering would also
 		// eliminate unexported symbols...)
@@ -147,9 +225,9 @@ func (tπ) mπ() {}
 	})
 }
 
-// TestRenderNavigation tests that the symbol selector and index of
+// TestPkgDocNavigation tests that the symbol selector and index of
 // symbols are well formed.
-func TestRenderNavigation(t *testing.T) {
+func TestPkgDocNavigation(t *testing.T) {
 	const files = `
 -- go.mod --
 module example.com
@@ -167,7 +245,8 @@ func (p *Type) PtrMethod() {}
 func Constructor() Type
 `
 	Run(t, files, func(t *testing.T, env *Env) {
-		uri1 := viewPkgDoc(t, env, "a/a.go")
+		env.OpenFile("a/a.go")
+		uri1 := viewPkgDoc(t, env, env.Sandbox.Workdir.EntireFile("a/a.go"))
 		doc := get(t, uri1)
 
 		q := regexp.QuoteMeta
@@ -190,25 +269,162 @@ func Constructor() Type
 	})
 }
 
-// viewPkgDoc invokes the "Browse package documentation" code action in
-// the specified file. It returns the URI of the document, or fails
-// the test.
-func viewPkgDoc(t *testing.T, env *Env, filename string) protocol.URI {
-	env.OpenFile(filename)
+// TestPkgDocContext tests that the gopls.doc command title and /pkg
+// URL are appropriate for the current selection. It is effectively a
+// test of golang.DocFragment.
+func TestPkgDocContext(t *testing.T) {
+	const files = `
+-- go.mod --
+module example.com
 
+-- a/a.go --
+package a
+
+import "fmt"
+import "bytes"
+
+func A() {
+	fmt.Println()
+	new(bytes.Buffer).Write(nil)
+}
+
+const K = 123
+
+type T int
+func (*T) M() { /*in T.M*/}
+
+`
+
+	viewRE := regexp.MustCompile("view=[0-9]*")
+	Run(t, files, func(t *testing.T, env *Env) {
+		env.OpenFile("a/a.go")
+		for _, test := range []struct {
+			re   string // regexp indicating selected portion of input file
+			want string // suffix of expected URL after /pkg/
+		}{
+			// current package
+			{"package a", "example.com/a?view=1"},  // outside any decl
+			{"in T.M", "example.com/a?view=1#T.M"}, // inside method (*T).M
+			{"123", "example.com/a?view=1#K"},      // inside const/var decl
+			{"T int", "example.com/a?view=1#T"},    // inside type decl
+
+			// imported
+			{"\"fmt\"", "fmt?view=1"},              // in import spec
+			{"fmt[.]", "fmt?view=1"},               // use of PkgName
+			{"Println", "fmt?view=1#Println"},      // use of imported pkg-level symbol
+			{"fmt.Println", "fmt?view=1#Println"},  // qualified identifier
+			{"Write", "bytes?view=1#Buffer.Write"}, // use of imported method
+
+			// TODO(adonovan):
+			// - xtest package -> ForTest
+			// - field of imported struct -> nope
+			// - exported method of nonexported type from another package
+			//   (e.g. types.Named.Obj) -> nope
+			// Also: assert that Command.Title looks nice.
+		} {
+			uri := viewPkgDoc(t, env, env.RegexpSearch("a/a.go", test.re))
+			_, got, ok := strings.Cut(uri, "/pkg/")
+			if !ok {
+				t.Errorf("pattern %q => %s (invalid /pkg URL)", test.re, uri)
+				continue
+			}
+
+			// Normalize the view ID, which varies by integration test mode.
+			got = viewRE.ReplaceAllString(got, "view=1")
+
+			if got != test.want {
+				t.Errorf("pattern %q => %s; want %s", test.re, got, test.want)
+			}
+		}
+	})
+}
+
+// TestPkgDocFileImports tests that the doc links are rendered
+// as URLs based on the correct import mapping for the file in
+// which they appear.
+func TestPkgDocFileImports(t *testing.T) {
+	const files = `
+-- go.mod --
+module mod.com
+go 1.20
+
+-- a/a1.go --
+// Package a refers to [b.T] [b.U] [alias.D] [d.D] [c.T] [c.U] [nope.Nope]
+package a
+
+import "mod.com/b"
+import alias "mod.com/d"
+
+// [b.T] indeed refers to b.T.
+//
+// [alias.D] refers to d.D
+// but [d.D] also refers to d.D.
+type A1 int
+
+-- a/a2.go --
+package a
+
+import b "mod.com/c"
+
+// [b.U] actually refers to c.U.
+type A2 int
+
+-- b/b.go --
+package b
+
+type T int
+type U int
+
+-- c/c.go --
+package c
+
+type T int
+type U int
+
+-- d/d.go --
+package d
+
+type D int
+`
+	Run(t, files, func(t *testing.T, env *Env) {
+		env.OpenFile("a/a1.go")
+		uri1 := viewPkgDoc(t, env, env.Sandbox.Workdir.EntireFile("a/a1.go"))
+		doc := get(t, uri1)
+
+		// Check that the doc links are resolved using the
+		// appropriate import mapping for the file in which
+		// they appear.
+		checkMatch(t, true, doc, `pkg/mod.com/b\?.*#T">b.T</a> indeed refers to b.T`)
+		checkMatch(t, true, doc, `pkg/mod.com/c\?.*#U">b.U</a> actually refers to c.U`)
+
+		// Check that doc links can be resolved using either
+		// the original or the local name when they refer to a
+		// renaming import. (Local names are preferred.)
+		checkMatch(t, true, doc, `pkg/mod.com/d\?.*#D">alias.D</a> refers to d.D`)
+		checkMatch(t, true, doc, `pkg/mod.com/d\?.*#D">d.D</a> also refers to d.D`)
+
+		// Check that links in the package doc comment are
+		// resolved, and relative to the correct file (a1.go).
+		checkMatch(t, true, doc, `Package a refers to.*pkg/mod.com/b\?.*#T">b.T</a>`)
+		checkMatch(t, true, doc, `Package a refers to.*pkg/mod.com/b\?.*#U">b.U</a>`)
+		checkMatch(t, true, doc, `Package a refers to.*pkg/mod.com/d\?.*#D">alias.D</a>`)
+		checkMatch(t, true, doc, `Package a refers to.*pkg/mod.com/d\?.*#D">d.D</a>`)
+		checkMatch(t, true, doc, `Package a refers to.*pkg/mod.com/c\?.*#T">c.T</a>`)
+		checkMatch(t, true, doc, `Package a refers to.*pkg/mod.com/c\?.*#U">c.U</a>`)
+		checkMatch(t, true, doc, `Package a refers to.* \[nope.Nope\]`)
+	})
+}
+
+// viewPkgDoc invokes the "Browse package documentation" code action
+// at the specified location. It returns the URI of the document, or
+// fails the test.
+func viewPkgDoc(t *testing.T, env *Env, loc protocol.Location) protocol.URI {
 	// Invoke the "Browse package documentation" code
 	// action to start the server.
-	var docAction *protocol.CodeAction
-	actions := env.CodeActionForFile(filename, nil)
-	for _, act := range actions {
-		if act.Title == "Browse package documentation" {
-			docAction = &act
-			break
-		}
-	}
-	if docAction == nil {
-		t.Fatalf("can't find action with Title 'Browse package documentation', only %#v",
-			actions)
+	actions := env.CodeAction(loc, nil, 0)
+	docAction, err := codeActionByKind(actions, settings.GoDoc)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	// Execute the command.
@@ -217,14 +433,17 @@ func viewPkgDoc(t *testing.T, env *Env, filename string) protocol.URI {
 		Command:   docAction.Command.Command,
 		Arguments: docAction.Command.Arguments,
 	}
-	var result command.DebuggingResult
+	var result any
+	collectDocs := env.Awaiter.ListenToShownDocuments()
 	env.ExecuteCommand(params, &result)
 
-	doc := shownDocument(t, env, "http:")
+	doc := shownDocument(t, collectDocs(), "http:")
 	if doc == nil {
 		t.Fatalf("no showDocument call had 'http:' prefix")
 	}
-	t.Log("showDocument(package doc) URL:", doc.URI)
+	if false {
+		t.Log("showDocument(package doc) URL:", doc.URI)
+	}
 	return doc.URI
 }
 
@@ -259,16 +478,9 @@ func f(buf bytes.Buffer, greeting string) {
 		if err != nil {
 			t.Fatalf("CodeAction: %v", err)
 		}
-		var action *protocol.CodeAction
-		for _, a := range actions {
-			if a.Title == "Browse free symbols" {
-				action = &a
-				break
-			}
-		}
-		if action == nil {
-			t.Fatalf("can't find action with Title 'Browse free symbols', only %#v",
-				actions)
+		action, err := codeActionByKind(actions, settings.GoFreeSymbols)
+		if err != nil {
+			t.Fatal(err)
 		}
 
 		// Execute the command.
@@ -278,8 +490,9 @@ func f(buf bytes.Buffer, greeting string) {
 			Arguments: action.Command.Arguments,
 		}
 		var result command.DebuggingResult
+		collectDocs := env.Awaiter.ListenToShownDocuments()
 		env.ExecuteCommand(params, &result)
-		doc := shownDocument(t, env, "http:")
+		doc := shownDocument(t, collectDocs(), "http:")
 		if doc == nil {
 			t.Fatalf("no showDocument call had 'file:' prefix")
 		}
@@ -298,7 +511,7 @@ func f(buf bytes.Buffer, greeting string) {
 
 // TestAssembly is a basic test of the web-based assembly listing.
 func TestAssembly(t *testing.T) {
-	testenv.NeedsGo1Point(t, 22) // for up-to-date assembly listing
+	testenv.NeedsGoCommand1Point(t, 22) // for up-to-date assembly listing
 
 	const files = `
 -- go.mod --
@@ -325,17 +538,9 @@ func g() {
 		if err != nil {
 			t.Fatalf("CodeAction: %v", err)
 		}
-		const wantTitle = "Browse " + runtime.GOARCH + " assembly for f"
-		var action *protocol.CodeAction
-		for _, a := range actions {
-			if a.Title == wantTitle {
-				action = &a
-				break
-			}
-		}
-		if action == nil {
-			t.Fatalf("can't find action with Title %s, only %#v",
-				wantTitle, actions)
+		action, err := codeActionByKind(actions, settings.GoAssembly)
+		if err != nil {
+			t.Fatal(err)
 		}
 
 		// Execute the command.
@@ -345,8 +550,9 @@ func g() {
 			Arguments: action.Command.Arguments,
 		}
 		var result command.DebuggingResult
+		collectDocs := env.Awaiter.ListenToShownDocuments()
 		env.ExecuteCommand(params, &result)
-		doc := shownDocument(t, env, "http:")
+		doc := shownDocument(t, collectDocs(), "http:")
 		if doc == nil {
 			t.Fatalf("no showDocument call had 'file:' prefix")
 		}
@@ -355,12 +561,16 @@ func g() {
 		// Get the report and do some minimal checks for sensible results.
 		//
 		// Use only portable instructions below! Remember that
-		// This is a test of plumbing, not compilation, so
+		// this is a test of plumbing, not compilation, so
 		// it's better to skip the tests, rather than refine
-		// them, on any architecture that gives us trouble.
+		// them, on any architecture that gives us trouble
+		// (e.g. uses JAL for CALL, or BL<cc> for RET).
+		// We conservatively test only on the two most popular
+		// architectures.
 		report := get(t, doc.URI)
 		checkMatch(t, true, report, `TEXT.*example.com/a.f`)
-		if runtime.GOARCH != "risc64" { // RISC-V uses JAL instead of CALL
+		switch runtime.GOARCH {
+		case "amd64", "arm64":
 			checkMatch(t, true, report, `CALL	runtime.printlock`)
 			checkMatch(t, true, report, `CALL	runtime.printstring`)
 			checkMatch(t, true, report, `CALL	runtime.printunlock`)
@@ -379,14 +589,9 @@ func g() {
 
 // shownDocument returns the first shown document matching the URI prefix.
 // It may be nil.
-//
-// TODO(adonovan): the integration test framework
-// needs a way to reset ShownDocuments so they don't
-// accumulate, necessitating the fragile prefix hack.
-func shownDocument(t *testing.T, env *Env, prefix string) *protocol.ShowDocumentParams {
+// As a side effect, it clears the list of accumulated shown documents.
+func shownDocument(t *testing.T, shown []*protocol.ShowDocumentParams, prefix string) *protocol.ShowDocumentParams {
 	t.Helper()
-	var shown []*protocol.ShowDocumentParams
-	env.Await(ShownDocuments(&shown))
 	var first *protocol.ShowDocumentParams
 	for _, sd := range shown {
 		if strings.HasPrefix(sd.URI, prefix) {
@@ -425,4 +630,14 @@ func checkMatch(t *testing.T, want bool, got []byte, pattern string) {
 			t.Errorf("input matched unwanted pattern %q; got:\n%s", pattern, got)
 		}
 	}
+}
+
+// codeActionByKind returns the first action of (exactly) the specified kind, or an error.
+func codeActionByKind(actions []protocol.CodeAction, kind protocol.CodeActionKind) (*protocol.CodeAction, error) {
+	for _, act := range actions {
+		if act.Kind == kind {
+			return &act, nil
+		}
+	}
+	return nil, fmt.Errorf("can't find action with kind %s, only %#v", kind, actions)
 }

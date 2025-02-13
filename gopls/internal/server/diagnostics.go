@@ -6,12 +6,12 @@ package server
 
 import (
 	"context"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -26,11 +26,55 @@ import (
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 	"github.com/block/ftl-golang-tools/gopls/internal/settings"
 	"github.com/block/ftl-golang-tools/gopls/internal/template"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/maps"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/moremaps"
 	"github.com/block/ftl-golang-tools/gopls/internal/work"
 	"github.com/block/ftl-golang-tools/internal/event"
 	"github.com/block/ftl-golang-tools/internal/event/keys"
+	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
 )
+
+// Diagnostic implements the textDocument/diagnostic LSP request, reporting
+// diagnostics for the given file.
+//
+// This is a work in progress.
+// TODO(rfindley):
+//   - support RelatedDocuments? If so, how? Maybe include other package diagnostics?
+//   - support resultID (=snapshot ID)
+//   - support multiple views
+//   - add orphaned file diagnostics
+//   - support go.mod, go.work files
+func (s *server) Diagnostic(ctx context.Context, params *protocol.DocumentDiagnosticParams) (*protocol.DocumentDiagnosticReport, error) {
+	ctx, done := event.Start(ctx, "server.Diagnostic")
+	defer done()
+
+	fh, snapshot, release, err := s.fileOf(ctx, params.TextDocument.URI)
+	if err != nil {
+		return nil, err
+	}
+	defer release()
+
+	jsonrpc2.Async(ctx) // allow asynchronous collection of diagnostics
+
+	uri := fh.URI()
+	kind := snapshot.FileKind(fh)
+	var diagnostics []*cache.Diagnostic
+	switch kind {
+	case file.Go:
+		diagnostics, err = golang.DiagnoseFile(ctx, snapshot, uri)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("pull diagnostics not supported for this file kind")
+	}
+	return &protocol.DocumentDiagnosticReport{
+		Value: protocol.RelatedFullDocumentDiagnosticReport{
+			FullDocumentDiagnosticReport: protocol.FullDocumentDiagnosticReport{
+				Items: toProtocolDiagnostics(diagnostics),
+			},
+		},
+	}, nil
+}
 
 // fileDiagnostics holds the current state of published diagnostics for a file.
 type fileDiagnostics struct {
@@ -62,31 +106,6 @@ type (
 	diagMap = map[protocol.DocumentURI][]*cache.Diagnostic
 )
 
-// hashDiagnostic computes a hash to identify a diagnostic.
-// The hash is for deduplicating within a file,
-// so it need not incorporate d.URI.
-func hashDiagnostic(d *cache.Diagnostic) file.Hash {
-	h := sha256.New()
-	for _, t := range d.Tags {
-		fmt.Fprintf(h, "tag: %s\n", t)
-	}
-	for _, r := range d.Related {
-		fmt.Fprintf(h, "related: %s %s %s\n", r.Location.URI, r.Message, r.Location.Range)
-	}
-	fmt.Fprintf(h, "code: %s\n", d.Code)
-	fmt.Fprintf(h, "codeHref: %s\n", d.CodeHref)
-	fmt.Fprintf(h, "message: %s\n", d.Message)
-	fmt.Fprintf(h, "range: %s\n", d.Range)
-	fmt.Fprintf(h, "severity: %s\n", d.Severity)
-	fmt.Fprintf(h, "source: %s\n", d.Source)
-	if d.BundledFixes != nil {
-		fmt.Fprintf(h, "fixes: %s\n", *d.BundledFixes)
-	}
-	var hash [sha256.Size]byte
-	h.Sum(hash[:0])
-	return hash
-}
-
 func sortDiagnostics(d []*cache.Diagnostic) {
 	sort.Slice(d, func(i int, j int) bool {
 		a, b := d[i], d[j]
@@ -103,7 +122,7 @@ func sortDiagnostics(d []*cache.Diagnostic) {
 func (s *server) diagnoseChangedViews(ctx context.Context, modID uint64, lastChange map[*cache.View][]protocol.DocumentURI, cause ModificationSource) {
 	// Collect views needing diagnosis.
 	s.modificationMu.Lock()
-	needsDiagnosis := maps.Keys(s.viewsToDiagnose)
+	needsDiagnosis := moremaps.KeySlice(s.viewsToDiagnose)
 	s.modificationMu.Unlock()
 
 	// Diagnose views concurrently.
@@ -192,17 +211,6 @@ func (s *server) diagnoseSnapshot(ctx context.Context, snapshot *cache.Snapshot,
 		// file modifications.
 		//
 		// The second phase runs after the delay, and does everything.
-		//
-		// We wait a brief delay before the first phase, to allow higher priority
-		// work such as autocompletion to acquire the type checking mutex (though
-		// typically both diagnosing changed files and performing autocompletion
-		// will be doing the same work: recomputing active packages).
-		const minDelay = 20 * time.Millisecond
-		select {
-		case <-time.After(minDelay):
-		case <-ctx.Done():
-			return
-		}
 
 		if len(changedURIs) > 0 {
 			diagnostics, err := s.diagnoseChangedFiles(ctx, snapshot, changedURIs)
@@ -213,12 +221,6 @@ func (s *server) diagnoseSnapshot(ctx context.Context, snapshot *cache.Snapshot,
 				return
 			}
 			s.updateDiagnostics(ctx, snapshot, diagnostics, false)
-		}
-
-		if delay < minDelay {
-			delay = 0
-		} else {
-			delay -= minDelay
 		}
 
 		select {
@@ -284,11 +286,11 @@ func (s *server) diagnoseChangedFiles(ctx context.Context, snapshot *cache.Snaps
 		// golang/go#65801: only diagnose changes to workspace packages. Otherwise,
 		// diagnostics will be unstable, as the slow-path diagnostics will erase
 		// them.
-		if snapshot.IsWorkspacePackage(ctx, meta.ID) {
+		if snapshot.IsWorkspacePackage(meta.ID) {
 			toDiagnose[meta.ID] = meta
 		}
 	}
-	diags, err := snapshot.PackageDiagnostics(ctx, maps.Keys(toDiagnose)...)
+	diags, err := snapshot.PackageDiagnostics(ctx, moremaps.KeySlice(toDiagnose)...)
 	if err != nil {
 		if ctx.Err() == nil {
 			event.Error(ctx, "warning: diagnostics failed", err, snapshot.Labels()...)
@@ -432,7 +434,7 @@ func (s *server) diagnose(ctx context.Context, snapshot *cache.Snapshot) (diagMa
 	// For analysis, we use the *widest* package for each open file,
 	// for two reasons:
 	//
-	// - Correctness: some analyzers (e.g. unusedparam) depend
+	// - Correctness: some analyzers (e.g. unused{param,func}) depend
 	//   on it. If applied to a non-test package for which a
 	//   corresponding test package exists, they make assumptions
 	//   that are falsified in the test package, for example that
@@ -483,8 +485,8 @@ func (s *server) diagnose(ctx context.Context, snapshot *cache.Snapshot) (diagMa
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		gcDetailsReports, err := s.gcDetailsDiagnostics(ctx, snapshot, toDiagnose)
-		store("collecting gc_details", gcDetailsReports, err)
+		compilerOptDetailsDiags, err := s.compilerOptDetailsDiagnostics(ctx, snapshot, toDiagnose)
+		store("collecting compiler optimization details", compilerOptDetailsDiags, err)
 	}()
 
 	// Package diagnostics and analysis diagnostics must both be computed and
@@ -495,7 +497,7 @@ func (s *server) diagnose(ctx context.Context, snapshot *cache.Snapshot) (diagMa
 	go func() {
 		defer wg.Done()
 		var err error
-		pkgDiags, err = snapshot.PackageDiagnostics(ctx, maps.Keys(toDiagnose)...)
+		pkgDiags, err = snapshot.PackageDiagnostics(ctx, moremaps.KeySlice(toDiagnose)...)
 		if err != nil {
 			event.Error(ctx, "warning: diagnostics failed", err, snapshot.Labels()...)
 		}
@@ -510,8 +512,26 @@ func (s *server) diagnose(ctx context.Context, snapshot *cache.Snapshot) (diagMa
 		// TODO(rfindley): here and above, we should avoid using the first result
 		// if err is non-nil (though as of today it's OK).
 		analysisDiags, err = golang.Analyze(ctx, snapshot, toAnalyze, s.progress)
+
+		// Filter out Hint diagnostics for closed files.
+		// VS Code already omits Hint diagnostics in the Problems tab, but other
+		// clients do not. This filter makes the visibility of Hints more similar
+		// across clients.
+		for uri, diags := range analysisDiags {
+			if !snapshot.IsOpen(uri) {
+				newDiags := slices.DeleteFunc(diags, func(diag *cache.Diagnostic) bool {
+					return diag.Severity == protocol.SeverityHint
+				})
+				if len(newDiags) == 0 {
+					delete(analysisDiags, uri)
+				} else {
+					analysisDiags[uri] = newDiags
+				}
+			}
+		}
+
 		if err != nil {
-			event.Error(ctx, "warning: analyzing package", err, append(snapshot.Labels(), label.Package.Of(keys.Join(maps.Keys(toDiagnose))))...)
+			event.Error(ctx, "warning: analyzing package", err, append(snapshot.Labels(), label.Package.Of(keys.Join(moremaps.KeySlice(toDiagnose))))...)
 			return
 		}
 	}()
@@ -520,96 +540,50 @@ func (s *server) diagnose(ctx context.Context, snapshot *cache.Snapshot) (diagMa
 
 	// Merge analysis diagnostics with package diagnostics, and store the
 	// resulting analysis diagnostics.
+	combinedDiags := make(diagMap)
 	for uri, adiags := range analysisDiags {
 		tdiags := pkgDiags[uri]
-		var tdiags2, adiags2 []*cache.Diagnostic
-		combineDiagnostics(tdiags, adiags, &tdiags2, &adiags2)
-		pkgDiags[uri] = tdiags2
-		analysisDiags[uri] = adiags2
+		combinedDiags[uri] = golang.CombineDiagnostics(tdiags, adiags)
 	}
-	store("type checking", pkgDiags, nil)           // error reported above
-	store("analyzing packages", analysisDiags, nil) // error reported above
+	for uri, tdiags := range pkgDiags {
+		if _, ok := combinedDiags[uri]; !ok {
+			combinedDiags[uri] = tdiags
+		}
+	}
+	store("type checking and analysing", combinedDiags, nil) // error reported above
 
 	return diagnostics, nil
 }
 
-func (s *server) gcDetailsDiagnostics(ctx context.Context, snapshot *cache.Snapshot, toDiagnose map[metadata.PackageID]*metadata.Package) (diagMap, error) {
-	// Process requested gc_details diagnostics.
+func (s *server) compilerOptDetailsDiagnostics(ctx context.Context, snapshot *cache.Snapshot, toDiagnose map[metadata.PackageID]*metadata.Package) (diagMap, error) {
+	// Process requested diagnostics about compiler optimization details.
 	//
 	// TODO(rfindley): This should memoize its results if the package has not changed.
 	// Consider that these points, in combination with the note below about
-	// races, suggest that gc_details should be tracked on the Snapshot.
-	var toGCDetail map[metadata.PackageID]*metadata.Package
-	for _, mp := range toDiagnose {
-		if snapshot.WantGCDetails(mp.ID) {
-			if toGCDetail == nil {
-				toGCDetail = make(map[metadata.PackageID]*metadata.Package)
-			}
-			toGCDetail[mp.ID] = mp
-		}
-	}
-
+	// races, suggest that compiler optimization details should be tracked on the Snapshot.
 	diagnostics := make(diagMap)
-	for _, mp := range toGCDetail {
-		gcReports, err := golang.GCOptimizationDetails(ctx, snapshot, mp)
-		if err != nil {
-			event.Error(ctx, "warning: gc details", err, append(snapshot.Labels(), label.Package.Of(string(mp.ID)))...)
+	seenDirs := make(map[protocol.DocumentURI]bool)
+	for _, mp := range toDiagnose {
+		if len(mp.CompiledGoFiles) == 0 {
 			continue
 		}
-		for uri, diags := range gcReports {
-			diagnostics[uri] = append(diagnostics[uri], diags...)
+		dir := mp.CompiledGoFiles[0].Dir()
+		if snapshot.WantCompilerOptDetails(dir) {
+			if !seenDirs[dir] {
+				seenDirs[dir] = true
+
+				perFileDiags, err := golang.CompilerOptDetails(ctx, snapshot, dir)
+				if err != nil {
+					event.Error(ctx, "warning: compiler optimization details", err, append(snapshot.Labels(), label.URI.Of(dir))...)
+					continue
+				}
+				for uri, diags := range perFileDiags {
+					diagnostics[uri] = append(diagnostics[uri], diags...)
+				}
+			}
 		}
 	}
 	return diagnostics, nil
-}
-
-// combineDiagnostics combines and filters list/parse/type diagnostics from
-// tdiags with adiags, and appends the two lists to *outT and *outA,
-// respectively.
-//
-// Type-error analyzers produce diagnostics that are redundant
-// with type checker diagnostics, but more detailed (e.g. fixes).
-// Rather than report two diagnostics for the same problem,
-// we combine them by augmenting the type-checker diagnostic
-// and discarding the analyzer diagnostic.
-//
-// If an analysis diagnostic has the same range and message as
-// a list/parse/type diagnostic, the suggested fix information
-// (et al) of the latter is merged into a copy of the former.
-// This handles the case where a type-error analyzer suggests
-// a fix to a type error, and avoids duplication.
-//
-// The use of out-slices, though irregular, allows the caller to
-// easily choose whether to keep the results separate or combined.
-//
-// The arguments are not modified.
-func combineDiagnostics(tdiags []*cache.Diagnostic, adiags []*cache.Diagnostic, outT, outA *[]*cache.Diagnostic) {
-
-	// Build index of (list+parse+)type errors.
-	type key struct {
-		Range   protocol.Range
-		message string
-	}
-	index := make(map[key]int) // maps (Range,Message) to index in tdiags slice
-	for i, diag := range tdiags {
-		index[key{diag.Range, diag.Message}] = i
-	}
-
-	// Filter out analysis diagnostics that match type errors,
-	// retaining their suggested fix (etc) fields.
-	for _, diag := range adiags {
-		if i, ok := index[key{diag.Range, diag.Message}]; ok {
-			copy := *tdiags[i]
-			copy.SuggestedFixes = diag.SuggestedFixes
-			copy.Tags = diag.Tags
-			tdiags[i] = &copy
-			continue
-		}
-
-		*outA = append(*outA, diag)
-	}
-
-	*outT = append(*outT, tdiags...)
 }
 
 // mustPublishDiagnostics marks the uri as needing publication, independent of
@@ -832,7 +806,7 @@ func (s *server) publishFileDiagnosticsLocked(ctx context.Context, views viewSet
 	// diagSuffixes records the set of view suffixes for a given diagnostic.
 	diagSuffixes := make(map[file.Hash][]diagSuffix)
 	add := func(diag *cache.Diagnostic, suffix string) {
-		h := hashDiagnostic(diag)
+		h := diag.Hash()
 		diagSuffixes[h] = append(diagSuffixes[h], diagSuffix{diag, suffix})
 	}
 
@@ -918,7 +892,7 @@ func (s *server) publishFileDiagnosticsLocked(ctx context.Context, views viewSet
 			diag2 := *first.diag // shallow copy
 			diag2.Message += first.suffix
 			first.diag = &diag2
-			h = hashDiagnostic(&diag2) // update the hash
+			h = diag2.Hash() // update the hash
 		}
 
 		hash.XORWith(h)
@@ -942,6 +916,9 @@ func (s *server) publishFileDiagnosticsLocked(ctx context.Context, views viewSet
 }
 
 func toProtocolDiagnostics(diagnostics []*cache.Diagnostic) []protocol.Diagnostic {
+	// TODO(rfindley): support bundling edits, and bundle all suggested fixes here.
+	// (see cache.bundleLazyFixes).
+
 	reports := []protocol.Diagnostic{}
 	for _, diag := range diagnostics {
 		pdiag := protocol.Diagnostic{

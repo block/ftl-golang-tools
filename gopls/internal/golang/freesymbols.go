@@ -13,6 +13,7 @@ import (
 	"go/token"
 	"go/types"
 	"html"
+	"slices"
 	"sort"
 	"strings"
 
@@ -20,9 +21,9 @@ import (
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/maps"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/moremaps"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/slices"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 // FreeSymbolsHTML returns an HTML document containing the report of
@@ -49,14 +50,7 @@ func FreeSymbolsHTML(viewID string, pkg *cache.Package, pgf *parsego.File, start
 		Local    []Symbol
 	}
 
-	// TODO(adonovan): factor with RenderPackageDoc.
-	qualifier := func(other *types.Package) string {
-		// (like types.RelativeTo but using Package.Name)
-		if other == pkg.Types() {
-			return "" // same package; unqualified
-		}
-		return other.Name()
-	}
+	qualifier := typesinternal.NameRelativeTo(pkg.Types())
 
 	// Populate model.
 	{
@@ -125,11 +119,7 @@ func FreeSymbolsHTML(viewID string, pkg *cache.Package, pgf *parsego.File, start
 
 		// Imported symbols.
 		// Produce one record per package, with a list of symbols.
-		pkgPaths := maps.Keys(imported)
-		sort.Strings(pkgPaths)
-		for _, pkgPath := range pkgPaths {
-			refs := imported[pkgPath]
-
+		for pkgPath, refs := range moremaps.Sorted(imported) {
 			var syms []string
 			for _, ref := range refs {
 				// strip package name (bytes.Buffer.Len -> Buffer.Len)
@@ -224,7 +214,7 @@ p { max-width: 6in; }
 	pos := start
 	emitTo := func(end token.Pos) {
 		if pos < end {
-			fileStart := pgf.Tok.Pos(0) // TODO(adonovan): use go1.20 pgf.File.FileStart
+			fileStart := pgf.File.FileStart
 			text := pgf.Mapper.Content[pos-fileStart : end-fileStart]
 			buf.WriteString(html.EscapeString(string(text)))
 			pos = end
@@ -307,7 +297,7 @@ func freeRefs(pkg *types.Package, info *types.Info, file *ast.File, start, end t
 
 		// Compute dotted path.
 		objects := append(suffix, obj)
-		if obj.Pkg() != nil && obj.Pkg() != pkg && isPackageLevel(obj) { // dot import
+		if obj.Pkg() != nil && obj.Pkg() != pkg && typesinternal.IsPackageLevel(obj) { // dot import
 			// Synthesize the implicit PkgName.
 			pkgName := types.NewPkgName(token.NoPos, pkg, obj.Pkg().Name(), obj.Pkg())
 			parent = fileScope
@@ -352,7 +342,7 @@ func freeRefs(pkg *types.Package, info *types.Info, file *ast.File, start, end t
 		for {
 			suffix = append(suffix, info.Uses[sel.Sel])
 
-			switch x := astutil.Unparen(sel.X).(type) {
+			switch x := ast.Unparen(sel.X).(type) {
 			case *ast.Ident:
 				return id(x, suffix)
 			default:
@@ -382,7 +372,11 @@ func freeRefs(pkg *types.Package, info *types.Info, file *ast.File, start, end t
 
 			if ref != nil {
 				ref.expr = n.(ast.Expr)
-				ref.typ = info.Types[n.(ast.Expr)].Type
+				if tv, ok := info.Types[ref.expr]; ok {
+					ref.typ = tv.Type
+				} else {
+					ref.typ = types.Typ[types.Invalid]
+				}
 				free = append(free, ref)
 			}
 

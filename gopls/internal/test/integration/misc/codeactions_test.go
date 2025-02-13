@@ -6,12 +6,13 @@ package misc
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
 	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
-	"github.com/block/ftl-golang-tools/gopls/internal/util/slices"
 )
 
 // This test exercises the filtering of code actions in generated files.
@@ -63,20 +64,34 @@ func g() {}
 		}
 
 		check("src/a.go",
-			protocol.GoAssembly,
-			protocol.GoDoc,
-			protocol.GoFreeSymbols,
-			protocol.RefactorExtract,
-			protocol.RefactorInline)
+			settings.AddTest,
+			settings.GoAssembly,
+			settings.GoDoc,
+			settings.GoFreeSymbols,
+			settings.GoToggleCompilerOptDetails,
+			settings.GoplsDocFeatures,
+			settings.RefactorInlineCall)
 		check("gen/a.go",
-			protocol.GoAssembly,
-			protocol.GoDoc,
-			protocol.GoFreeSymbols)
+			settings.GoAssembly,
+			settings.GoDoc,
+			settings.GoFreeSymbols,
+			settings.GoToggleCompilerOptDetails,
+			settings.GoplsDocFeatures)
 	})
 }
 
-// Test refactor.inline is not included in automatically triggered code action
+// Test refactor.inline.call is not included in automatically triggered code action
 // unless users want refactoring.
+//
+// (The mechanism behind this behavior has changed. It was added when
+// we used to interpret CodeAction(Only=[]) as "all kinds", which was
+// a distracting nuisance (too many lightbulbs); this was fixed by
+// adding special logic to refactor.inline.call to respect the trigger
+// kind; but now we do this for all actions (for similar reasons) and
+// interpret Only=[] as Only=[quickfix] unless triggerKind=invoked;
+// except that the test client always requests CodeAction(Only=[""]).
+// So, we should remove the special logic from refactorInlineCall
+// and vary the Only parameter used by the test client.)
 func TestVSCodeIssue65167(t *testing.T) {
 	const vim1 = `package main
 
@@ -105,9 +120,9 @@ func Func() int { return 0 }
 						actions := env.CodeAction(loc, nil, trigger)
 						want := trigger != protocol.CodeActionAutomatic || selectedRange
 						if got := slices.ContainsFunc(actions, func(act protocol.CodeAction) bool {
-							return act.Kind == protocol.RefactorInline
+							return act.Kind == settings.RefactorInlineCall
 						}); got != want {
-							t.Errorf("got refactor.inline = %t, want %t", got, want)
+							t.Errorf("got refactor.inline.call = %t, want %t", got, want)
 						}
 					})
 				}

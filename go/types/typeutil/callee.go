@@ -8,7 +8,6 @@ import (
 	"go/ast"
 	"go/types"
 
-	"github.com/block/ftl-golang-tools/go/ast/astutil"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
@@ -17,7 +16,7 @@ import (
 //
 // Functions and methods may potentially have type parameters.
 func Callee(info *types.Info, call *ast.CallExpr) types.Object {
-	fun := astutil.Unparen(call.Fun)
+	fun := ast.Unparen(call.Fun)
 
 	// Look through type instantiation if necessary.
 	isInstance := false

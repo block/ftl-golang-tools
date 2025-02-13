@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/osv"
 	"golang.org/x/mod/semver"
+	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/osv"
 	"gopkg.in/yaml.v3"
 )
 
@@ -104,7 +104,7 @@ type Package struct {
 	DerivedSymbols []string `yaml:"derived_symbols,omitempty"`
 }
 
-// Version is an SemVer 2.0.0 semantic version with no leading "v" prefix,
+// Version is a SemVer 2.0.0 semantic version with no leading "v" prefix,
 // as used by OSV.
 type Version string
 
@@ -126,30 +126,6 @@ func (v Version) Before(v2 Version) bool {
 // Canonical returns the canonical formatting of the version.
 func (v Version) Canonical() string {
 	return strings.TrimPrefix(semver.Canonical(v.V()), "v")
-}
-
-// Reference type is a reference (link) type.
-type ReferenceType string
-
-const (
-	ReferenceTypeAdvisory = ReferenceType("ADVISORY")
-	ReferenceTypeArticle  = ReferenceType("ARTICLE")
-	ReferenceTypeReport   = ReferenceType("REPORT")
-	ReferenceTypeFix      = ReferenceType("FIX")
-	ReferenceTypePackage  = ReferenceType("PACKAGE")
-	ReferenceTypeEvidence = ReferenceType("EVIDENCE")
-	ReferenceTypeWeb      = ReferenceType("WEB")
-)
-
-// ReferenceTypes is the set of reference types defined in OSV.
-var ReferenceTypes = []ReferenceType{
-	ReferenceTypeAdvisory,
-	ReferenceTypeArticle,
-	ReferenceTypeReport,
-	ReferenceTypeFix,
-	ReferenceTypePackage,
-	ReferenceTypeEvidence,
-	ReferenceTypeWeb,
 }
 
 // A Reference is a link to some external resource.

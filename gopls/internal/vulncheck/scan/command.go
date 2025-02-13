@@ -14,11 +14,11 @@ import (
 	"sort"
 	"time"
 
+	"golang.org/x/sync/errgroup"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
 	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck"
 	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/govulncheck"
 	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/osv"
-	"golang.org/x/sync/errgroup"
 	"golang.org/x/vuln/scan"
 )
 
@@ -91,7 +91,7 @@ func RunGovulncheck(ctx context.Context, pattern string, snapshot *cache.Snapsho
 		if stderr.Len() > 0 {
 			log.Write(stderr.Bytes())
 		}
-		return nil, fmt.Errorf("failed to read govulncheck output: %v", err)
+		return nil, fmt.Errorf("failed to read govulncheck output: %v: stderr:\n%s", err, stderr)
 	}
 
 	findings := handler.findings // sort so the findings in the result is deterministic.

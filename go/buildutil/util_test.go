@@ -13,7 +13,7 @@ import (
 	"testing"
 
 	"github.com/block/ftl-golang-tools/go/buildutil"
-	"github.com/block/ftl-golang-tools/go/packages/packagestest"
+	"github.com/block/ftl-golang-tools/internal/packagestest"
 )
 
 func TestContainingPackage(t *testing.T) {

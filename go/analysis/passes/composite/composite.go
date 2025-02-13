@@ -15,7 +15,6 @@ import (
 	"github.com/block/ftl-golang-tools/go/analysis"
 	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
 	"github.com/block/ftl-golang-tools/go/ast/inspector"
-	"github.com/block/ftl-golang-tools/internal/aliases"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
@@ -72,7 +71,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 		var structuralTypes []types.Type
-		switch typ := aliases.Unalias(typ).(type) {
+		switch typ := types.Unalias(typ).(type) {
 		case *types.TypeParam:
 			terms, err := typeparams.StructuralTerms(typ)
 			if err != nil {
@@ -146,7 +145,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 // isLocalType reports whether typ belongs to the same package as pass.
 // TODO(adonovan): local means "internal to a function"; rename to isSamePackageType.
 func isLocalType(pass *analysis.Pass, typ types.Type) bool {
-	switch x := aliases.Unalias(typ).(type) {
+	switch x := types.Unalias(typ).(type) {
 	case *types.Struct:
 		// struct literals are local types
 		return true
