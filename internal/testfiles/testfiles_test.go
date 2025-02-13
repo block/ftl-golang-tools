@@ -10,12 +10,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/internal/testenv"
-	"golang.org/x/tools/internal/testfiles"
-	"golang.org/x/tools/internal/versions"
-	"golang.org/x/tools/txtar"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
+	"github.com/block/ftl-golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/internal/testfiles"
+	"github.com/block/ftl-golang-tools/internal/versions"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 func TestTestDir(t *testing.T) {

@@ -17,9 +17,9 @@ import (
 	"sort"
 	"strings"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
 )
 
 // canSplitLines checks whether we can split lists of elements inside

@@ -20,8 +20,8 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/util/morestrings"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/morestrings"
 )
 
 // AssemblyHTML returns an HTML document containing an assembly listing of the selected function.

@@ -29,13 +29,13 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/checker"
-	"golang.org/x/tools/go/analysis/internal"
-	"golang.org/x/tools/go/analysis/internal/analysisflags"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/internal/analysisinternal"
-	"golang.org/x/tools/internal/diff"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/checker"
+	"github.com/block/ftl-golang-tools/go/analysis/internal"
+	"github.com/block/ftl-golang-tools/go/analysis/internal/analysisflags"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/internal/diff"
 )
 
 var (

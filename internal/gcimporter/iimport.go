@@ -19,9 +19,9 @@ import (
 	"sort"
 	"strings"
 
-	"golang.org/x/tools/go/types/objectpath"
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/go/types/objectpath"
+	"github.com/block/ftl-golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 type intReader struct {

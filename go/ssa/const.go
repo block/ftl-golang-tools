@@ -13,8 +13,8 @@ import (
 	"go/types"
 	"strconv"
 
-	"golang.org/x/tools/internal/typeparams"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 // NewConst returns a new constant of the specified value and type.
@@ -141,7 +141,7 @@ func nillable(t types.Type) bool {
 	}
 }
 
-// TODO(adonovan): move everything below into golang.org/x/tools/go/ssa/interp.
+// TODO(adonovan): move everything below into github.com/block/ftl-golang-tools/go/ssa/interp.
 
 // Int64 returns the numeric value of this constant truncated to fit
 // a signed 64-bit integer.

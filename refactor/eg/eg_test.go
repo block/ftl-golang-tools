@@ -23,11 +23,11 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/internal/testenv"
-	"golang.org/x/tools/internal/testfiles"
-	"golang.org/x/tools/refactor/eg"
-	"golang.org/x/tools/txtar"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/internal/testfiles"
+	"github.com/block/ftl-golang-tools/refactor/eg"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 // TODO(adonovan): more tests:

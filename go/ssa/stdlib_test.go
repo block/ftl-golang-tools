@@ -22,10 +22,10 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/go/ssa/ssautil"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/go/ssa"
+	"github.com/block/ftl-golang-tools/go/ssa/ssautil"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 func bytesAllocated() uint64 {

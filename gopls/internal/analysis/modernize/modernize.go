@@ -14,13 +14,13 @@ import (
 	"regexp"
 	"strings"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/gopls/internal/util/astutil"
-	"golang.org/x/tools/internal/analysisinternal"
-	"golang.org/x/tools/internal/astutil/cursor"
-	"golang.org/x/tools/internal/versions"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/astutil"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
+	"github.com/block/ftl-golang-tools/internal/versions"
 )
 
 //go:embed doc.go
@@ -31,7 +31,7 @@ var Analyzer = &analysis.Analyzer{
 	Doc:      analysisinternal.MustExtractDoc(doc, "modernize"),
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
-	URL:      "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/modernize",
+	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/modernize",
 }
 
 func run(pass *analysis.Pass) (any, error) {

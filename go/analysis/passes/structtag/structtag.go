@@ -16,9 +16,9 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
 )
 
 const Doc = `check that struct field tags conform to reflect.StructTag.Get
@@ -28,7 +28,7 @@ Also report certain struct tags (json, xml) used with unexported fields.`
 var Analyzer = &analysis.Analyzer{
 	Name:             "structtag",
 	Doc:              Doc,
-	URL:              "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/structtag",
+	URL:              "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/structtag",
 	Requires:         []*analysis.Analyzer{inspect.Analyzer},
 	RunDespiteErrors: true,
 	Run:              run,

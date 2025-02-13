@@ -8,10 +8,10 @@ import (
 	"runtime"
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/server"
-	"golang.org/x/tools/gopls/internal/settings"
-	. "golang.org/x/tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/server"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 )
 
 // TestCompilerOptDetails exercises the "{Show,Hide} compiler optimization details" code action.

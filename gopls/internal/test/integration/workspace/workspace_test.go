@@ -14,16 +14,16 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/test/integration/fake"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/goversion"
-	"golang.org/x/tools/internal/gocommand"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
+	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/goversion"
+	"github.com/block/ftl-golang-tools/internal/gocommand"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 
-	. "golang.org/x/tools/gopls/internal/test/integration"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 )
 
 func TestMain(m *testing.M) {

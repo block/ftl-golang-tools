@@ -7,8 +7,8 @@ package simplifycompositelit_test
 import (
 	"testing"
 
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/gopls/internal/analysis/simplifycompositelit"
+	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
+	"github.com/block/ftl-golang-tools/gopls/internal/analysis/simplifycompositelit"
 )
 
 func Test(t *testing.T) {

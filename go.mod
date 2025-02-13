@@ -1,10 +1,11 @@
-module golang.org/x/tools
+module github.com/block/ftl-golang-tools
 
 go 1.22.0 // => default GODEBUG has gotypesalias=0
 
 require (
 	github.com/google/go-cmp v0.6.0
 	github.com/yuin/goldmark v1.4.13
+	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac
 	golang.org/x/mod v0.23.0
 	golang.org/x/net v0.35.0
 	golang.org/x/sync v0.11.0

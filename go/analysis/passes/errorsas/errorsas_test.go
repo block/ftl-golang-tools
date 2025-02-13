@@ -10,8 +10,8 @@ package errorsas_test
 import (
 	"testing"
 
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/go/analysis/passes/errorsas"
+	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/errorsas"
 )
 
 func Test(t *testing.T) {

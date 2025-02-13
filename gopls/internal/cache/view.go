@@ -27,17 +27,17 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/cache/typerefs"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/gopls/internal/util/moremaps"
-	"golang.org/x/tools/gopls/internal/util/pathutil"
-	"golang.org/x/tools/gopls/internal/vulncheck"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/gocommand"
-	"golang.org/x/tools/internal/imports"
-	"golang.org/x/tools/internal/xcontext"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/typerefs"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/moremaps"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/pathutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck"
+	"github.com/block/ftl-golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/internal/gocommand"
+	"github.com/block/ftl-golang-tools/internal/imports"
+	"github.com/block/ftl-golang-tools/internal/xcontext"
 )
 
 // A Folder represents an LSP workspace folder, together with its per-folder

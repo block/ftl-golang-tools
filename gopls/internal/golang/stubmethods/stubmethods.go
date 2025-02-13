@@ -15,10 +15,10 @@ import (
 	"go/types"
 	"strings"
 
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/typesutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/typesutil"
 )
 
 // TODO(adonovan): eliminate the confusing Fset parameter; only the

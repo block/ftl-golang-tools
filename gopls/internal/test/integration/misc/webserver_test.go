@@ -14,11 +14,11 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/settings"
-	. "golang.org/x/tools/gopls/internal/test/integration"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 // TODO(adonovan): define marker test verbs for checking package docs.

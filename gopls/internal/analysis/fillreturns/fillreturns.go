@@ -14,11 +14,11 @@ import (
 	"regexp"
 	"strings"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/fuzzy"
-	"golang.org/x/tools/internal/analysisinternal"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/fuzzy"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 //go:embed doc.go
@@ -29,7 +29,7 @@ var Analyzer = &analysis.Analyzer{
 	Doc:              analysisinternal.MustExtractDoc(doc, "fillreturns"),
 	Run:              run,
 	RunDespiteErrors: true,
-	URL:              "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/fillreturns",
+	URL:              "https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/fillreturns",
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {

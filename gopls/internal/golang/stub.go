@@ -15,16 +15,16 @@ import (
 	pathpkg "path"
 	"strings"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/golang/stubmethods"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/diff"
-	"golang.org/x/tools/internal/tokeninternal"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
+	"github.com/block/ftl-golang-tools/gopls/internal/golang/stubmethods"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
+	"github.com/block/ftl-golang-tools/internal/diff"
+	"github.com/block/ftl-golang-tools/internal/tokeninternal"
 )
 
 // stubMissingInterfaceMethodsFixer returns a suggested fix to declare the missing

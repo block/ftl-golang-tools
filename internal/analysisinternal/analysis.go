@@ -19,8 +19,8 @@ import (
 	"slices"
 	"strings"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 func TypeErrorEndPos(fset *token.FileSet, src []byte, start token.Pos) token.Pos {

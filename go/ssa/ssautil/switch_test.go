@@ -13,10 +13,10 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/go/ssa/ssautil"
-	"golang.org/x/tools/internal/testfiles"
-	"golang.org/x/tools/txtar"
+	"github.com/block/ftl-golang-tools/go/ssa"
+	"github.com/block/ftl-golang-tools/go/ssa/ssautil"
+	"github.com/block/ftl-golang-tools/internal/testfiles"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 func TestSwitches(t *testing.T) {

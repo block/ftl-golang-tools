@@ -23,13 +23,13 @@ import (
 	"reflect"
 	"slices"
 
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/astutil"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/diff"
-	"golang.org/x/tools/internal/event"
+	"github.com/block/ftl-golang-tools/gopls/internal/label"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/astutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
+	"github.com/block/ftl-golang-tools/internal/diff"
+	"github.com/block/ftl-golang-tools/internal/event"
 )
 
 // Common parse modes; these should be reused wherever possible to increase

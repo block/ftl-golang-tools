@@ -92,7 +92,7 @@ func checkFile(toolsDir, filename string) (bool, error) {
 	return shouldAddCopyright, nil
 }
 
-// Copied from golang.org/x/tools/gopls/internal/golang/util.go.
+// Copied from github.com/block/ftl-golang-tools/gopls/internal/golang/util.go.
 // Matches cgo generated comment as well as the proposed standard:
 //
 //	https://golang.org/s/generatedcode

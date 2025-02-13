@@ -10,11 +10,11 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/diff"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
+	"github.com/block/ftl-golang-tools/internal/diff"
 )
 
 // convertStringLiteral reports whether we can convert between raw and interpreted

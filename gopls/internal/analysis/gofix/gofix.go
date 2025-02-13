@@ -12,17 +12,17 @@ import (
 
 	_ "embed"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/gopls/internal/util/moreiters"
-	"golang.org/x/tools/internal/analysisinternal"
-	"golang.org/x/tools/internal/astutil/cursor"
-	"golang.org/x/tools/internal/astutil/edge"
-	"golang.org/x/tools/internal/diff"
-	"golang.org/x/tools/internal/refactor/inline"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/moreiters"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
+	"github.com/block/ftl-golang-tools/internal/astutil/edge"
+	"github.com/block/ftl-golang-tools/internal/diff"
+	"github.com/block/ftl-golang-tools/internal/refactor/inline"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 //go:embed doc.go
@@ -31,7 +31,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:      "gofix",
 	Doc:       analysisinternal.MustExtractDoc(doc, "gofix"),
-	URL:       "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/gofix",
+	URL:       "https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/gofix",
 	Run:       run,
 	FactTypes: []analysis.Fact{new(goFixInlineFuncFact), new(goFixInlineConstFact)},
 	Requires:  []*analysis.Analyzer{inspect.Analyzer},

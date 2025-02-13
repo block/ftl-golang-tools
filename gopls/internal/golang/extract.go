@@ -18,13 +18,13 @@ import (
 	"strings"
 	"text/scanner"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/ast/astutil"
-	goplsastutil "golang.org/x/tools/gopls/internal/util/astutil"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/analysisinternal"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	goplsastutil "github.com/block/ftl-golang-tools/gopls/internal/util/astutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 // extractVariable implements the refactor.extract.{variable,constant} CodeAction command.

@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/go/analysis/passes/loopclosure"
-	"golang.org/x/tools/internal/testfiles"
+	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/loopclosure"
+	"github.com/block/ftl-golang-tools/internal/testfiles"
 )
 
 func TestVersions(t *testing.T) {

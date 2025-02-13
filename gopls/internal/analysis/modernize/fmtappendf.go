@@ -9,11 +9,11 @@ import (
 	"go/types"
 	"strings"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 )
 
 // The fmtappend function replaces []byte(fmt.Sprintf(...)) by

@@ -18,13 +18,13 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/filecache"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/settings"
-	bugpkg "golang.org/x/tools/gopls/internal/util/bug"
-	versionpkg "golang.org/x/tools/gopls/internal/version"
-	"golang.org/x/tools/internal/event"
+	"github.com/block/ftl-golang-tools/gopls/internal/filecache"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
+	bugpkg "github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	versionpkg "github.com/block/ftl-golang-tools/gopls/internal/version"
+	"github.com/block/ftl-golang-tools/internal/event"
 )
 
 type stats struct {

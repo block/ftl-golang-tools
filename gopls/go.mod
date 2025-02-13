@@ -1,4 +1,4 @@
-module golang.org/x/tools/gopls
+module github.com/block/ftl-golang-tools/gopls
 
 // go 1.23.1 fixes some bugs in go/types Alias support (golang/go#68894, golang/go#68905).
 // go 1.23.4 fixes a miscompilation of range-over-func (golang/go#70035).
@@ -12,7 +12,7 @@ require (
 	golang.org/x/sys v0.30.0
 	golang.org/x/telemetry v0.0.0-20241220003058-cc96b6e0d3d9
 	golang.org/x/text v0.22.0
-	golang.org/x/tools v0.28.0
+	github.com/block/ftl-golang-tools v0.28.0
 	golang.org/x/vuln v1.1.3
 	gopkg.in/yaml.v3 v3.0.1
 	honnef.co/go/tools v0.5.1
@@ -27,4 +27,4 @@ require (
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
 
-replace golang.org/x/tools => ../
+replace github.com/block/ftl-golang-tools => ../

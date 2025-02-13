@@ -16,11 +16,11 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/go/analysis/multichecker"
-	"golang.org/x/tools/go/analysis/singlechecker"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
+	"github.com/block/ftl-golang-tools/go/analysis/multichecker"
+	"github.com/block/ftl-golang-tools/go/analysis/singlechecker"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 var analyzer = &analysis.Analyzer{

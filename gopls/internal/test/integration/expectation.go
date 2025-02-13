@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/server"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/server"
 )
 
 var (

@@ -11,13 +11,13 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/go/analysis/passes/buildssa"
-	"golang.org/x/tools/go/callgraph/cha"
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/go/ssa/ssautil"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/buildssa"
+	"github.com/block/ftl-golang-tools/go/callgraph/cha"
+	"github.com/block/ftl-golang-tools/go/ssa"
+	"github.com/block/ftl-golang-tools/go/ssa/ssautil"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 func TestVTACallGraph(t *testing.T) {

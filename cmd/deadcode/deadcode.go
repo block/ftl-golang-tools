@@ -25,12 +25,12 @@ import (
 	"text/template"
 
 	"golang.org/x/telemetry"
-	"golang.org/x/tools/go/callgraph"
-	"golang.org/x/tools/go/callgraph/rta"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/go/ssa/ssautil"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/go/callgraph"
+	"github.com/block/ftl-golang-tools/go/callgraph/rta"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/go/ssa"
+	"github.com/block/ftl-golang-tools/go/ssa/ssautil"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 //go:embed doc.go
