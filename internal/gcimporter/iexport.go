@@ -240,8 +240,8 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/tools/go/types/objectpath"
-	"golang.org/x/tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/go/types/objectpath"
+	"github.com/block/ftl-golang-tools/internal/aliases"
 )
 
 // IExportShallow encodes "shallow" export data for the specified package.

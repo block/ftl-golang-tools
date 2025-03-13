@@ -8,12 +8,12 @@ import (
 	_ "embed"
 	"go/ast"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 )
 
 //go:embed doc.go
@@ -23,7 +23,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "defers",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
-	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/defers",
+	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/defers",
 	Doc:      analysisutil.MustExtractDoc(doc, "defers"),
 	Run:      run,
 }
