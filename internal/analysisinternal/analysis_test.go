@@ -10,8 +10,8 @@ import (
 	"go/token"
 	"testing"
 
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/internal/astutil/cursor"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
 )
 
 func TestCanImport(t *testing.T) {

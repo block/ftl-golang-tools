@@ -12,7 +12,7 @@ import (
 	"slices"
 	"testing"
 
-	"golang.org/x/tools/internal/expect"
+	"github.com/block/ftl-golang-tools/internal/expect"
 )
 
 func TestMarker(t *testing.T) {

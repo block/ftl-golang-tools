@@ -13,14 +13,14 @@ import (
 	"strconv"
 	"strings"
 
-	astutil "golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	goplsastutil "golang.org/x/tools/gopls/internal/util/astutil"
-	internalastutil "golang.org/x/tools/internal/astutil"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/fmtstr"
+	astutil "github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	goplsastutil "github.com/block/ftl-golang-tools/gopls/internal/util/astutil"
+	internalastutil "github.com/block/ftl-golang-tools/internal/astutil"
+	"github.com/block/ftl-golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/internal/fmtstr"
 )
 
 func Highlight(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, position protocol.Position) ([]protocol.DocumentHighlight, error) {
