@@ -9,7 +9,7 @@
 //
 // See https://github.com/golang/tools/blob/master/gopls/README.md
 // for the most up-to-date documentation.
-package main // import "golang.org/x/tools/gopls"
+package main // import "github.com/block/ftl-golang-tools/gopls"
 
 import (
 	"context"
@@ -18,10 +18,10 @@ import (
 
 	"golang.org/x/telemetry"
 	"golang.org/x/telemetry/counter"
-	"golang.org/x/tools/gopls/internal/cmd"
-	"golang.org/x/tools/gopls/internal/filecache"
-	versionpkg "golang.org/x/tools/gopls/internal/version"
-	"golang.org/x/tools/internal/tool"
+	"github.com/block/ftl-golang-tools/gopls/internal/cmd"
+	"github.com/block/ftl-golang-tools/gopls/internal/filecache"
+	versionpkg "github.com/block/ftl-golang-tools/gopls/internal/version"
+	"github.com/block/ftl-golang-tools/internal/tool"
 )
 
 var version = "" // if set by the linker, overrides the gopls version

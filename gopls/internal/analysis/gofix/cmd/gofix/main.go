@@ -9,8 +9,8 @@
 package main
 
 import (
-	"golang.org/x/tools/go/analysis/singlechecker"
-	"golang.org/x/tools/gopls/internal/analysis/gofix"
+	"github.com/block/ftl-golang-tools/go/analysis/singlechecker"
+	"github.com/block/ftl-golang-tools/gopls/internal/analysis/gofix"
 )
 
 func main() { singlechecker.Main(gofix.Analyzer) }

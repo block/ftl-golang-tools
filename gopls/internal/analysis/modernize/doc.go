@@ -23,7 +23,7 @@
 // To apply all modernization fixes en masse, you can use the
 // following command:
 //
-//	$ go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test ./...
+//	$ go run github.com/block/ftl-golang-tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test ./...
 //
 // If the tool warns of conflicting fixes, you may need to run it more
 // than once until it has applied all fixes cleanly. This command is

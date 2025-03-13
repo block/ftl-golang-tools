@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/semtok"
-	"golang.org/x/tools/gopls/internal/telemetry"
-	"golang.org/x/tools/gopls/internal/util/frob"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/semtok"
+	"github.com/block/ftl-golang-tools/gopls/internal/telemetry"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/frob"
 )
 
 // An Annotation is a category of Go compiler optimization diagnostic.

@@ -11,13 +11,13 @@ import (
 	"fmt"
 	"go/token"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/asm"
-	"golang.org/x/tools/gopls/internal/util/morestrings"
-	"golang.org/x/tools/internal/event"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/asm"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/morestrings"
+	"github.com/block/ftl-golang-tools/internal/event"
 )
 
 // Definition handles the textDocument/definition request for Go assembly files.

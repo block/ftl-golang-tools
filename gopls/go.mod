@@ -1,4 +1,4 @@
-module golang.org/x/tools/gopls
+module github.com/block/ftl-golang-tools/gopls
 
 go 1.24.0
 
@@ -10,7 +10,7 @@ require (
 	golang.org/x/sys v0.31.0
 	golang.org/x/telemetry v0.0.0-20250220152412-165e2f84edbc
 	golang.org/x/text v0.23.0
-	golang.org/x/tools v0.30.0
+	github.com/block/ftl-golang-tools v0.30.0
 	golang.org/x/vuln v1.1.4
 	gopkg.in/yaml.v3 v3.0.1
 	honnef.co/go/tools v0.6.0
@@ -25,4 +25,4 @@ require (
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
 
-replace golang.org/x/tools => ../
+replace github.com/block/ftl-golang-tools => ../

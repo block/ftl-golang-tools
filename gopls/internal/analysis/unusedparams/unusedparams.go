@@ -10,14 +10,14 @@ import (
 	"go/ast"
 	"go/types"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/gopls/internal/util/moreslices"
-	"golang.org/x/tools/internal/analysisinternal"
-	"golang.org/x/tools/internal/astutil/cursor"
-	"golang.org/x/tools/internal/astutil/edge"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/moreslices"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
+	"github.com/block/ftl-golang-tools/internal/astutil/edge"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 //go:embed doc.go
@@ -28,7 +28,7 @@ var Analyzer = &analysis.Analyzer{
 	Doc:      analysisinternal.MustExtractDoc(doc, "unusedparams"),
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
-	URL:      "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/unusedparams",
+	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/unusedparams",
 }
 
 const FixCategory = "unusedparams" // recognized by gopls ApplyFix

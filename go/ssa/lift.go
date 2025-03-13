@@ -45,7 +45,7 @@ import (
 	"os"
 	"slices"
 
-	"golang.org/x/tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
 // If true, show diagnostic information at each step of lifting.
