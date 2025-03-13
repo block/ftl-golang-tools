@@ -9,6 +9,9 @@ on:
 jobs:
   sync-upstream:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,6 +53,7 @@ jobs:
           git push origin $SYNC_BRANCH
 
       - name: Create Pull Request
+        id: create-pr
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -67,10 +71,9 @@ jobs:
           draft: false
 
       - name: Enable auto-merge
-        run: |
-          PR_NUMBER=$(gh pr list --json number --jq '.[0].number')
-          if [ ! -z "$PR_NUMBER" ]; then
-            gh pr merge $PR_NUMBER --auto --merge
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        if: steps.create-pr.outputs.pull-request-number
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ steps.create-pr.outputs.pull-request-number }}
+          merge-method: merge 
