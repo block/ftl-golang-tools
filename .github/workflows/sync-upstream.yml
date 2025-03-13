@@ -76,47 +76,54 @@ jobs:
         run: |
           git push origin $SYNC_BRANCH
 
-      - name: Setup GitHub CLI
-        if: steps.check_changes.outputs.has_changes == 'true'
-        run: |
-          # GitHub CLI is pre-installed on GitHub-hosted runners
-          gh --version
-          # Authenticate GitHub CLI
-          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
-
       - name: Create Pull Request
         if: steps.check_changes.outputs.has_changes == 'true'
         id: create-pr
-        run: |
-          # Create PR using GitHub CLI
-          PR_URL=$(gh pr create --title "Sync with upstream golang/tools" \
-            --body "This PR syncs changes from the upstream repository (golang/tools) and updates all module paths.
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { repo, owner } = context.repo;
+            const result = await github.rest.pulls.create({
+              owner,
+              repo,
+              title: "Sync with upstream golang/tools",
+              body: `This PR syncs changes from the upstream repository (golang/tools) and updates all module paths.
+              
+              - Synced with latest upstream changes
+              - Replaced all occurrences of \`golang.org/x/tools\` with \`github.com/block/ftl-golang-tools\`
+              
+              This PR was created automatically by the sync-upstream workflow.`,
+              head: "${{ env.SYNC_BRANCH }}",
+              base: "master"
+            });
             
-            - Synced with latest upstream changes
-            - Replaced all occurrences of \`golang.org/x/tools\` with \`github.com/block/ftl-golang-tools\`
+            console.log(`PR created: ${result.data.html_url}`);
+            core.setOutput('pr_number', result.data.number);
+            core.setOutput('pr_url', result.data.html_url);
             
-            This PR was created automatically by the sync-upstream workflow." \
-            --base master \
-            --head $SYNC_BRANCH)
-          
-          echo "PR created: $PR_URL"
-          PR_NUMBER=$(echo $PR_URL | grep -o '[0-9]*$')
-          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
-
-      - name: Enable auto-merge
-        if: steps.check_changes.outputs.has_changes == 'true' && steps.create-pr.outputs.pr_number
-        run: |
-          gh pr merge ${{ steps.create-pr.outputs.pr_number }} --auto --merge
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            // Enable auto-merge if PR was created successfully
+            if (result.data.number) {
+              try {
+                await github.rest.pulls.updateBranch({
+                  owner,
+                  repo,
+                  pull_number: result.data.number
+                });
+                
+                // Note: Auto-merge requires additional permissions and may not work in all repositories
+                // You may need to configure repository settings to allow auto-merge
+              } catch (e) {
+                console.log(`Note: Could not update branch: ${e.message}`);
+              }
+            }
 
       - name: Output sync status
         run: |
           if [ "${{ steps.check_changes.outputs.has_changes }}" == "true" ]; then
             echo "Created PR to sync with upstream changes"
             if [ -n "${{ steps.create-pr.outputs.pr_number }}" ]; then
-              echo "PR #${{ steps.create-pr.outputs.pr_number }} created and auto-merge enabled"
+              echo "PR #${{ steps.create-pr.outputs.pr_number }} created"
               echo "PR URL: ${{ steps.create-pr.outputs.pr_url }}"
               echo "This PR was created in repository: $GITHUB_REPOSITORY"
             fi
