@@ -76,6 +76,14 @@ jobs:
         run: |
           git push origin $SYNC_BRANCH
 
+      - name: Setup GitHub CLI
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          # GitHub CLI is pre-installed on GitHub-hosted runners
+          gh --version
+          # Authenticate GitHub CLI
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
       - name: Create Pull Request
         if: steps.check_changes.outputs.has_changes == 'true'
         id: create-pr
@@ -89,26 +97,17 @@ jobs:
             
             This PR was created automatically by the sync-upstream workflow." \
             --base master \
-            --head $SYNC_BRANCH \
-            --repo $GITHUB_REPOSITORY)
+            --head $SYNC_BRANCH)
           
           echo "PR created: $PR_URL"
           PR_NUMBER=$(echo $PR_URL | grep -o '[0-9]*$')
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
 
-      - name: Setup GitHub CLI
-        if: steps.check_changes.outputs.has_changes == 'true'
-        run: |
-          # Ensure GitHub CLI is installed
-          gh --version || (echo "Installing GitHub CLI" && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null && sudo apt update && sudo apt install gh -y)
-          # Authenticate GitHub CLI
-          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
-
       - name: Enable auto-merge
         if: steps.check_changes.outputs.has_changes == 'true' && steps.create-pr.outputs.pr_number
         run: |
-          gh pr merge ${{ steps.create-pr.outputs.pr_number }} --auto --merge --repo $GITHUB_REPOSITORY
+          gh pr merge ${{ steps.create-pr.outputs.pr_number }} --auto --merge
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
