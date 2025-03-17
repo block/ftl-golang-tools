@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/gopls/internal/protocol"
-	. "golang.org/x/tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 )
 
 func TestStandaloneFiles(t *testing.T) {

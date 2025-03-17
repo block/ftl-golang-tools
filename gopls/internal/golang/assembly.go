@@ -12,7 +12,7 @@ package golang
 // - ../server/server.go - handles the HTTP request and calls this function.
 //
 // For language-server behavior in Go assembly language files,
-// see [golang.org/x/tools/gopls/internal/goasm].
+// see [github.com/block/ftl-golang-tools/gopls/internal/goasm].
 
 import (
 	"bytes"
@@ -25,8 +25,8 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/util/morestrings"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/morestrings"
 )
 
 // AssemblyHTML returns an HTML document containing an assembly listing of the selected function.

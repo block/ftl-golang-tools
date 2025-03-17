@@ -15,8 +15,8 @@ import (
 	"strings"
 	"unsafe"
 
-	"golang.org/x/tools/go/ssa"
-	"golang.org/x/tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/go/ssa"
+	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
 // If the target program panics, the interpreter panics with this type.

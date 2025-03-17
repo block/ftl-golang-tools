@@ -14,9 +14,9 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
-	"golang.org/x/tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 )
 
 //go:embed doc.go
@@ -25,7 +25,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name: "tests",
 	Doc:  analysisutil.MustExtractDoc(doc, "tests"),
-	URL:  "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/tests",
+	URL:  "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/tests",
 	Run:  run,
 }
 

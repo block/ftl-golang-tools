@@ -11,11 +11,11 @@ import (
 	"go/token"
 	"go/types"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 )
 
 const Doc = "check for common mistakes involving boolean operators"
@@ -23,7 +23,7 @@ const Doc = "check for common mistakes involving boolean operators"
 var Analyzer = &analysis.Analyzer{
 	Name:     "bools",
 	Doc:      Doc,
-	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/bools",
+	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/bools",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

@@ -8,11 +8,11 @@ import (
 	"go/types"
 	"testing"
 
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/gopls/internal/util/fingerprint"
-	"golang.org/x/tools/internal/testfiles"
-	"golang.org/x/tools/txtar"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/fingerprint"
+	"github.com/block/ftl-golang-tools/internal/testfiles"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 // Test runs the fingerprint encoder, decoder, and printer
@@ -24,7 +24,7 @@ func Test(t *testing.T) {
 	}
 
 	cfg := &packages.Config{Mode: packages.NeedTypes}
-	pkgs, err := packages.Load(cfg, "std", "golang.org/x/tools/gopls/...")
+	pkgs, err := packages.Load(cfg, "std", "github.com/block/ftl-golang-tools/gopls/...")
 	if err != nil {
 		t.Fatal(err)
 	}
