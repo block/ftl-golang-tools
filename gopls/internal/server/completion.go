@@ -9,16 +9,16 @@ import (
 	"fmt"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/golang/completion"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/gopls/internal/telemetry"
-	"golang.org/x/tools/gopls/internal/template"
-	"golang.org/x/tools/gopls/internal/work"
-	"golang.org/x/tools/internal/event"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/golang"
+	"github.com/block/ftl-golang-tools/gopls/internal/golang/completion"
+	"github.com/block/ftl-golang-tools/gopls/internal/label"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
+	"github.com/block/ftl-golang-tools/gopls/internal/telemetry"
+	"github.com/block/ftl-golang-tools/gopls/internal/template"
+	"github.com/block/ftl-golang-tools/gopls/internal/work"
+	"github.com/block/ftl-golang-tools/internal/event"
 )
 
 func (s *server) Completion(ctx context.Context, params *protocol.CompletionParams) (_ *protocol.CompletionList, rerr error) {
@@ -158,7 +158,7 @@ func toProtocolCompletionItems(candidates []completion.CompletionItem, surroundi
 			// Insert and Replace ranges share the same start position and
 			// the same text edit but the end position may differ.
 			// See the comment for the CompletionItem's TextEdit field.
-			// https://pkg.go.dev/golang.org/x/tools/gopls/internal/protocol#CompletionItem
+			// https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/protocol#CompletionItem
 			edits = &protocol.Or_CompletionItem_textEdit{
 				Value: protocol.InsertReplaceEdit{
 					NewText: insertText,

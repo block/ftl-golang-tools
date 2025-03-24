@@ -22,8 +22,8 @@ import (
 	"reflect"
 	"slices"
 
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/internal/astutil/edge"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/internal/astutil/edge"
 )
 
 // A Cursor represents an [ast.Node]. It is immutable.

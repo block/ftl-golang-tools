@@ -10,7 +10,7 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"golang.org/x/tools/txtar"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 func TestFS(t *testing.T) {

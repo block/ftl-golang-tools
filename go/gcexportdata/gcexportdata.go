@@ -37,7 +37,7 @@
 //
 // Under that proposal, this package would ultimately provide only the
 // Read operation for compiler export data, which must be defined in
-// this module (golang.org/x/tools), not in the standard library, to
+// this module (github.com/block/ftl-golang-tools), not in the standard library, to
 // avoid version skew for developer tools that need to read compiler
 // export data both before and after a Go release, such as from Go
 // 1.23 to Go 1.24. Because this package lives in the tools module,
@@ -71,7 +71,7 @@ import (
 	"io"
 	"os/exec"
 
-	"golang.org/x/tools/internal/gcimporter"
+	"github.com/block/ftl-golang-tools/internal/gcimporter"
 )
 
 // Find returns the name of an object (.o) or archive (.a) file
@@ -84,7 +84,7 @@ import (
 // Find also returns the package's resolved (canonical) import path,
 // reflecting the effects of srcDir and vendoring on importPath.
 //
-// Deprecated: Use the higher-level API in golang.org/x/tools/go/packages,
+// Deprecated: Use the higher-level API in github.com/block/ftl-golang-tools/go/packages,
 // which is more efficient.
 func Find(importPath, srcDir string) (filename, path string) {
 	cmd := exec.Command("go", "list", "-json", "-export", "--", importPath)

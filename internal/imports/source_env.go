@@ -11,7 +11,7 @@ import (
 	"sync"
 
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/tools/internal/gopathwalk"
+	"github.com/block/ftl-golang-tools/internal/gopathwalk"
 )
 
 // ProcessEnvSource implements the [Source] interface using the legacy

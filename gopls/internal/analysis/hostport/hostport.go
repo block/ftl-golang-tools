@@ -12,13 +12,13 @@ import (
 	"go/constant"
 	"go/types"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/analysisinternal"
-	"golang.org/x/tools/internal/astutil/cursor"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
 )
 
 const Doc = `check format of addresses passed to net.Dial
@@ -43,7 +43,7 @@ A similar diagnostic and fix are produced for a format string of "%s:%s".
 var Analyzer = &analysis.Analyzer{
 	Name:     "hostport",
 	Doc:      Doc,
-	URL:      "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/hostport",
+	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/hostport",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

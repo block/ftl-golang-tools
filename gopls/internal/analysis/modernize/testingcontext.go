@@ -13,13 +13,13 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/internal/analysisinternal"
-	"golang.org/x/tools/internal/astutil/cursor"
-	"golang.org/x/tools/internal/astutil/edge"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
+	"github.com/block/ftl-golang-tools/internal/astutil/edge"
 )
 
 // The testingContext pass replaces calls to context.WithCancel from within

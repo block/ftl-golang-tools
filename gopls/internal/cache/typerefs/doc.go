@@ -88,7 +88,7 @@
 //
 // This approach was inspired by the Hash-Value Numbering (HVN)
 // optimization described by Hardekopf and Lin. See
-// golang.org/x/tools/go/pointer/hvn.go for an implementation. (Like
+// github.com/block/ftl-golang-tools/go/pointer/hvn.go for an implementation. (Like
 // pointer analysis, this problem is fundamentally one of graph
 // reachability.) The HVN algorithm takes the compression a step
 // further by preserving the topology of the SCC DAG, in which edges
@@ -111,7 +111,7 @@
 // The [BuildPackageGraph] constructor implements a whole-graph analysis similar
 // to that which will be implemented by gopls, but for various reasons the
 // logic for this analysis will eventually live in the
-// [golang.org/x/tools/gopls/internal/cache] package. Nevertheless,
+// [github.com/block/ftl-golang-tools/gopls/internal/cache] package. Nevertheless,
 // BuildPackageGraph and its test serve to verify the syntactic analysis, and
 // may serve as a proving ground for new optimizations of the whole-graph analysis.
 //
