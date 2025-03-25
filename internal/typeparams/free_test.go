@@ -13,7 +13,7 @@ import (
 	"go/types"
 	"testing"
 
-	"golang.org/x/tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 func TestFree(t *testing.T) {
