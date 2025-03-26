@@ -19,7 +19,7 @@
 //
 // To install gonew:
 //
-//	go install golang.org/x/tools/cmd/gonew@latest
+//	go install github.com/block/ftl-golang-tools/cmd/gonew@latest
 //
 // To clone the basic command-line program template golang.org/x/example/hello
 // as your.domain/myprog, in the directory ./myprog:
@@ -50,12 +50,12 @@ import (
 
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/module"
-	"golang.org/x/tools/internal/edit"
+	"github.com/block/ftl-golang-tools/internal/edit"
 )
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "usage: gonew srcmod[@version] [dstmod [dir]]\n")
-	fmt.Fprintf(os.Stderr, "See https://pkg.go.dev/golang.org/x/tools/cmd/gonew.\n")
+	fmt.Fprintf(os.Stderr, "See https://pkg.go.dev/github.com/block/ftl-golang-tools/cmd/gonew.\n")
 	os.Exit(2)
 }
 
