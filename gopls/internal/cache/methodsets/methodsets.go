@@ -50,12 +50,12 @@ import (
 	"slices"
 	"sync/atomic"
 
-	"golang.org/x/tools/go/types/objectpath"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/fingerprint"
-	"golang.org/x/tools/gopls/internal/util/frob"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/go/types/objectpath"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/fingerprint"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/frob"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 // An Index records the non-empty method sets of all package-level

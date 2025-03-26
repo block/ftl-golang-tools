@@ -39,7 +39,7 @@ import (
 	"go/ast"
 	_ "unsafe"
 
-	"golang.org/x/tools/internal/astutil/edge"
+	"github.com/block/ftl-golang-tools/internal/astutil/edge"
 )
 
 // An Inspector provides methods for inspecting

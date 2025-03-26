@@ -17,12 +17,12 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/gcexportdata"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/go/types/objectpath"
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/testfiles"
-	"golang.org/x/tools/txtar"
+	"github.com/block/ftl-golang-tools/go/gcexportdata"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/go/types/objectpath"
+	"github.com/block/ftl-golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/internal/testfiles"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 func TestPaths(t *testing.T) {

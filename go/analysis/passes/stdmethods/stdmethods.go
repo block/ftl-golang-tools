@@ -10,10 +10,10 @@ import (
 	"go/types"
 	"strings"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/analysis/passes/internal/analysisutil"
-	"golang.org/x/tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/internal/analysisutil"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
 )
 
 //go:embed doc.go
@@ -22,7 +22,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "stdmethods",
 	Doc:      analysisutil.MustExtractDoc(doc, "stdmethods"),
-	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/stdmethods",
+	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/stdmethods",
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }

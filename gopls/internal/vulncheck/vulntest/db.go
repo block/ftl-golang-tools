@@ -16,9 +16,9 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/vulncheck/osv"
-	"golang.org/x/tools/txtar"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/osv"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 // NewDatabase returns a read-only DB containing the provided

@@ -7,7 +7,7 @@ package diff_test
 import (
 	"testing"
 
-	"golang.org/x/tools/internal/diff"
+	"github.com/block/ftl-golang-tools/internal/diff"
 )
 
 func TestMerge(t *testing.T) {

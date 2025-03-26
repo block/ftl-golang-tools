@@ -10,14 +10,14 @@ import (
 	"go/ast"
 	"go/types"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/gopls/internal/util/moreiters"
-	"golang.org/x/tools/internal/analysisinternal"
-	typeindexanalyzer "golang.org/x/tools/internal/analysisinternal/typeindex"
-	"golang.org/x/tools/internal/astutil/cursor"
-	"golang.org/x/tools/internal/astutil/edge"
-	"golang.org/x/tools/internal/typesinternal/typeindex"
-	"golang.org/x/tools/internal/versions"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/moreiters"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	typeindexanalyzer "github.com/block/ftl-golang-tools/internal/analysisinternal/typeindex"
+	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
+	"github.com/block/ftl-golang-tools/internal/astutil/edge"
+	"github.com/block/ftl-golang-tools/internal/typesinternal/typeindex"
+	"github.com/block/ftl-golang-tools/internal/versions"
 )
 
 //go:embed doc.go
@@ -26,7 +26,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "maprange",
 	Doc:      analysisinternal.MustExtractDoc(doc, "maprange"),
-	URL:      "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/maprange",
+	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/maprange",
 	Requires: []*analysis.Analyzer{typeindexanalyzer.Analyzer},
 	Run:      run,
 }
