@@ -88,7 +88,17 @@ jobs:
         if: steps.check_changes.outputs.has_changes == 'true'
         id: create-pr
         run: |
-          # Create PR using GitHub CLI
+          # Debug token permissions
+          echo "Checking token permissions..."
+          TOKEN_INFO=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/user)
+          if echo "$TOKEN_INFO" | grep -q "login"; then
+            echo "Token is valid and authenticated"
+          else
+            echo "Token authentication issue"
+          fi
+          
+          # Create PR using GitHub CLI with verbose output
+          set -x  # Enable command echo
           PR_URL=$(gh pr create --title "Sync with upstream golang/tools" \
             --body "This PR syncs changes from the upstream repository (golang/tools) and updates all module paths.
             
@@ -98,11 +108,23 @@ jobs:
             This PR was created automatically by the sync-upstream workflow." \
             --base master \
             --head $SYNC_BRANCH)
+          set +x  # Disable command echo
           
-          echo "PR created: $PR_URL"
-          PR_NUMBER=$(echo $PR_URL | grep -o '[0-9]*$')
-          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "PR creation attempt completed"
+          if [ -n "$PR_URL" ]; then
+            echo "PR created: $PR_URL"
+            PR_NUMBER=$(echo $PR_URL | grep -o '[0-9]*$')
+            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+            echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          else
+            echo "Failed to create PR. No URL returned."
+            # Show recent GitHub CLI errors if any
+            if [ -f ~/.config/gh/state.yml ]; then
+              echo "Recent GitHub CLI state:"
+              cat ~/.config/gh/state.yml
+            fi
+            exit 1
+          fi
 
       - name: Enable auto-merge
         if: steps.check_changes.outputs.has_changes == 'true' && steps.create-pr.outputs.pr_number
