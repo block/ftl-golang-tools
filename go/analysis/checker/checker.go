@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // Package checker provides an analysis driver based on the
-// [golang.org/x/tools/go/packages] representation of a set of
+// [github.com/block/ftl-golang-tools/go/packages] representation of a set of
 // packages and all their dependencies, as produced by
 // [packages.Load].
 //
@@ -42,19 +42,20 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/internal"
-	"golang.org/x/tools/go/analysis/internal/analysisflags"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/internal"
+	"github.com/block/ftl-golang-tools/go/analysis/internal/analysisflags"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 )
 
 // Options specifies options that control the analysis driver.
 type Options struct {
 	// These options correspond to existing flags exposed by multichecker:
-	Sequential  bool      // disable parallelism
-	SanityCheck bool      // check fact encoding is ok and deterministic
-	FactLog     io.Writer // if non-nil, log each exported fact to it
+	Sequential                  bool      // disable parallelism
+	SanityCheck                 bool      // check fact encoding is ok and deterministic
+	FactLog                     io.Writer // if non-nil, log each exported fact to it
+	ReverseImportExecutionOrder bool      // reverse the order of import execution
 
 	// TODO(adonovan): expose ReadFile so that an Overlay specified
 	// in the [packages.Config] can be communicated via
@@ -187,14 +188,29 @@ func Analyze(analyzers []*analysis.Analyzer, pkgs []*packages.Package, opts *Opt
 			// An analysis that consumes/produces facts
 			// must run on the package's dependencies too.
 			if len(a.FactTypes) > 0 {
-				paths := make([]string, 0, len(pkg.Imports))
-				for path := range pkg.Imports {
-					paths = append(paths, path)
-				}
-				sort.Strings(paths) // for determinism
-				for _, path := range paths {
-					dep := mkAction(a, pkg.Imports[path])
-					act.Deps = append(act.Deps, dep)
+				if opts.ReverseImportExecutionOrder {
+					for _, p := range pkgs {
+						if p == pkg {
+							continue
+						}
+						for _, imp := range p.Imports {
+							if imp == pkg {
+								dep := mkAction(a, p)
+								act.Deps = append(act.Deps, dep)
+								break
+							}
+						}
+					}
+				} else {
+					paths := make([]string, 0, len(pkg.Imports))
+					for path := range pkg.Imports {
+						paths = append(paths, path)
+					}
+					sort.Strings(paths) // for determinism
+					for _, path := range paths {
+						dep := mkAction(a, pkg.Imports[path])
+						act.Deps = append(act.Deps, dep)
+					}
 				}
 			}
 
@@ -534,11 +550,6 @@ func (act *Action) ObjectFact(obj types.Object, ptr analysis.Fact) bool {
 func (act *Action) exportObjectFact(obj types.Object, fact analysis.Fact) {
 	if act.pass.ExportObjectFact == nil {
 		log.Panicf("%s: Pass.ExportObjectFact(%s, %T) called after Run", act, obj, fact)
-	}
-
-	if obj.Pkg() != act.Package.Types {
-		log.Panicf("internal error: in analysis %s of package %s: Fact.Set(%s, %T): can't set facts on objects belonging another package",
-			act.Analyzer, act.Package, obj, fact)
 	}
 
 	key := objectFactKey{obj, factType(fact)}

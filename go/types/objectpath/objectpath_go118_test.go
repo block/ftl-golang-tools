@@ -8,7 +8,7 @@ import (
 	"go/types"
 	"testing"
 
-	"golang.org/x/tools/go/types/objectpath"
+	"github.com/block/ftl-golang-tools/go/types/objectpath"
 )
 
 // TODO(adonovan): merge this back into objectpath_test.go.

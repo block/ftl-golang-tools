@@ -10,8 +10,8 @@ import (
 	"go/ast"
 	_ "unsafe" // for go:linkname
 
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/internal/astutil/edge"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/internal/astutil/edge"
 )
 
 // This file defines backdoor access to inspector.
@@ -25,16 +25,16 @@ type event struct {
 	parent int32  // index of parent's push node (push nodes only); or edge and index, bit packed (pop nodes only)
 }
 
-//go:linkname maskOf golang.org/x/tools/go/ast/inspector.maskOf
+//go:linkname maskOf github.com/block/ftl-golang-tools/go/ast/inspector.maskOf
 func maskOf(nodes []ast.Node) uint64
 
-//go:linkname events golang.org/x/tools/go/ast/inspector.events
+//go:linkname events github.com/block/ftl-golang-tools/go/ast/inspector.events
 func events(in *inspector.Inspector) []event
 
-//go:linkname packEdgeKindAndIndex golang.org/x/tools/go/ast/inspector.packEdgeKindAndIndex
+//go:linkname packEdgeKindAndIndex github.com/block/ftl-golang-tools/go/ast/inspector.packEdgeKindAndIndex
 func packEdgeKindAndIndex(edge.Kind, int) int32
 
-//go:linkname unpackEdgeKindAndIndex golang.org/x/tools/go/ast/inspector.unpackEdgeKindAndIndex
+//go:linkname unpackEdgeKindAndIndex github.com/block/ftl-golang-tools/go/ast/inspector.unpackEdgeKindAndIndex
 func unpackEdgeKindAndIndex(int32) (edge.Kind, int)
 
 func (c Cursor) events() []event { return events(c.in) }
