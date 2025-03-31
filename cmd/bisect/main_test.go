@@ -16,9 +16,9 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/internal/bisect"
-	"golang.org/x/tools/internal/diffp"
-	"golang.org/x/tools/txtar"
+	"github.com/block/ftl-golang-tools/internal/bisect"
+	"github.com/block/ftl-golang-tools/internal/diffp"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 var update = flag.Bool("update", false, "update testdata with new stdout/stderr")
