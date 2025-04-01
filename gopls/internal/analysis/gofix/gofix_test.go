@@ -14,8 +14,8 @@ import (
 	"testing"
 
 	gocmp "github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 func TestAnalyzer(t *testing.T) {

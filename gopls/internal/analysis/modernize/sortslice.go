@@ -9,10 +9,10 @@ import (
 	"go/token"
 	"go/types"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/internal/analysisinternal"
-	typeindexanalyzer "golang.org/x/tools/internal/analysisinternal/typeindex"
-	"golang.org/x/tools/internal/typesinternal/typeindex"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	typeindexanalyzer "github.com/block/ftl-golang-tools/internal/analysisinternal/typeindex"
+	"github.com/block/ftl-golang-tools/internal/typesinternal/typeindex"
 )
 
 // The sortslice pass replaces sort.Slice(slice, less) with

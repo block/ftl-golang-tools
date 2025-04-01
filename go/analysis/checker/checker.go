@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // Package checker provides an analysis driver based on the
-// [golang.org/x/tools/go/packages] representation of a set of
+// [github.com/block/ftl-golang-tools/go/packages] representation of a set of
 // packages and all their dependencies, as produced by
 // [packages.Load].
 //
@@ -42,11 +42,11 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/internal"
-	"golang.org/x/tools/go/analysis/internal/analysisflags"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/internal"
+	"github.com/block/ftl-golang-tools/go/analysis/internal/analysisflags"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 )
 
 // Options specifies options that control the analysis driver.
