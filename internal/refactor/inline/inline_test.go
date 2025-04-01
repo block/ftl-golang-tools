@@ -29,7 +29,6 @@ import (
 	"github.com/block/ftl-golang-tools/internal/expect"
 	"github.com/block/ftl-golang-tools/internal/refactor/inline"
 	"github.com/block/ftl-golang-tools/internal/testenv"
-	"github.com/block/ftl-golang-tools/internal/testfiles"
 	"github.com/block/ftl-golang-tools/txtar"
 )
 

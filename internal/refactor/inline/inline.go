@@ -22,6 +22,7 @@ import (
 
 	"github.com/block/ftl-golang-tools/go/ast/astutil"
 	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/imports"
 	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 	internalastutil "github.com/block/ftl-golang-tools/internal/astutil"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
@@ -369,6 +370,66 @@ func (st *state) inline() (*Result, error) {
 		return nil, err
 	}
 	newSrc := out.Bytes()
+
+	// Remove imports that are no longer referenced.
+	//
+	// It ought to be possible to compute the set of PkgNames used
+	// by the "old" code, compute the free identifiers of the
+	// "new" code using a syntax-only (no go/types) algorithm, and
+	// see if the reduction in the number of uses of any PkgName
+	// equals the number of times it appears in caller.Info.Uses,
+	// indicating that it is no longer referenced by res.new.
+	//
+	// However, the notorious ambiguity of resolving T{F: 0} makes this
+	// unreliable: without types, we can't tell whether F refers to
+	// a field of struct T, or a package-level const/var of a
+	// dot-imported (!) package.
+	//
+	// So, for now, we run imports.Process, which is
+	// unsatisfactory as it has to run the go command, and it
+	// looks at the user's module cache state--unnecessarily,
+	// since this step cannot add new imports.
+	//
+	// TODO(adonovan): replace with a simpler implementation since
+	// all the necessary imports are present but merely untidy.
+	// That will be faster, and also less prone to nondeterminism
+	// if there are bugs in our logic for import maintenance.
+	//
+	// However, github.com/block/ftl-golang-tools/internal/imports.ApplyFixes is
+	// too simple as it requires the caller to have figured out
+	// all the logical edits. In our case, we know all the new
+	// imports that are needed (see newImports), each of which can
+	// be specified as:
+	//
+	//   &imports.ImportFix{
+	//     StmtInfo: imports.ImportInfo{path, name,
+	//     IdentName: name,
+	//     FixType:   imports.AddImport,
+	//   }
+	//
+	// but we don't know which imports are made redundant by the
+	// inlining itself. For example, inlining a call to
+	// fmt.Println may make the "fmt" import redundant.
+	//
+	// Also, both imports.Process and internal/imports.ApplyFixes
+	// reformat the entire file, which is not ideal for clients
+	// such as gopls. (That said, the point of a canonical format
+	// is arguably that any tool can reformat as needed without
+	// this being inconvenient.)
+	//
+	// We could invoke imports.Process and parse its result,
+	// compare against the original AST, compute a list of import
+	// fixes, and return that too.
+
+	// Recompute imports only if there were existing ones.
+	if len(f.Imports) > 0 {
+		formatted, err := imports.Process("output", newSrc, nil)
+		if err != nil {
+			logf("cannot reformat: %v <<%s>>", err, &out)
+			return nil, err // cannot reformat (a bug?)
+		}
+		newSrc = formatted
+	}
 
 	literalized := false
 	if call, ok := res.new.(*ast.CallExpr); ok && is[*ast.FuncLit](call.Fun) {
