@@ -20,14 +20,14 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/test/integration/fake/glob"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/pathutil"
-	"golang.org/x/tools/internal/jsonrpc2"
-	"golang.org/x/tools/internal/jsonrpc2/servertest"
-	"golang.org/x/tools/internal/xcontext"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
+	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake/glob"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/pathutil"
+	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
+	"github.com/block/ftl-golang-tools/internal/jsonrpc2/servertest"
+	"github.com/block/ftl-golang-tools/internal/xcontext"
 )
 
 // Editor is a fake client editor.  It keeps track of client state and can be

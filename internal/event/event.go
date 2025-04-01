@@ -7,9 +7,9 @@ package event
 import (
 	"context"
 
-	"golang.org/x/tools/internal/event/core"
-	"golang.org/x/tools/internal/event/keys"
-	"golang.org/x/tools/internal/event/label"
+	"github.com/block/ftl-golang-tools/internal/event/core"
+	"github.com/block/ftl-golang-tools/internal/event/keys"
+	"github.com/block/ftl-golang-tools/internal/event/label"
 )
 
 // Exporter is a function that handles events.

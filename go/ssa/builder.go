@@ -84,8 +84,8 @@ import (
 
 	"slices"
 
-	"golang.org/x/tools/internal/typeparams"
-	"golang.org/x/tools/internal/versions"
+	"github.com/block/ftl-golang-tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/internal/versions"
 )
 
 type opaqueType struct{ name string }

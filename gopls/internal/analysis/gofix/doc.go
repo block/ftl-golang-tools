@@ -81,7 +81,7 @@ The proposal https://go.dev/issue/32816 introduces the "//go:fix" directives.
 
 You can use this (officially unsupported) command to apply gofix fixes en masse:
 
-	$ go run golang.org/x/tools/gopls/internal/analysis/gofix/cmd/gofix@latest -test ./...
+	$ go run github.com/block/ftl-golang-tools/gopls/internal/analysis/gofix/cmd/gofix@latest -test ./...
 
 # Analyzer gofixdirective
 
