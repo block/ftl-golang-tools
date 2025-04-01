@@ -271,12 +271,12 @@ func (st *state) inline() (*Result, error) {
 		}
 	}
 
-	// Add new imports.
-	//
+	// Add new imports that are still used.
+	newImports := trimNewImports(res.newImports, res.new)
 	// Insert new imports after last existing import,
 	// to avoid migration of pre-import comments.
 	// The imports will be organized below.
-	if len(res.newImports) > 0 {
+	if len(newImports) > 0 {
 		// If we have imports to add, do so independent of the rest of the file.
 		// Otherwise, the length of the new imports may consume floating comments,
 		// causing them to be printed inside the imports block.
@@ -329,7 +329,7 @@ func (st *state) inline() (*Result, error) {
 			}
 		}
 		// Add new imports.
-		for _, imp := range res.newImports {
+		for _, imp := range newImports {
 			// Check that the new imports are accessible.
 			path, _ := strconv.Unquote(imp.spec.Path.Value)
 			if !analysisinternal.CanImport(caller.Types.Path(), path) {
@@ -355,30 +355,14 @@ func (st *state) inline() (*Result, error) {
 	}
 
 	// Delete imports referenced only by caller.Call.Fun.
-	//
-	// (We can't let imports.Process take care of it as it may
-	// mistake obsolete imports for missing new imports when the
-	// names are similar, as is common during a package migration.)
 	for _, oldImport := range res.oldImports {
 		specToDelete := oldImport.spec
-		for _, decl := range f.Decls {
-			if decl, ok := decl.(*ast.GenDecl); ok && decl.Tok == token.IMPORT {
-				decl.Specs = slices.DeleteFunc(decl.Specs, func(spec ast.Spec) bool {
-					imp := spec.(*ast.ImportSpec)
-					// Since we re-parsed the file, we can't match by identity;
-					// instead look for syntactic equivalence.
-					return imp.Path.Value == specToDelete.Path.Value &&
-						(imp.Name != nil) == (specToDelete.Name != nil) &&
-						(imp.Name == nil || imp.Name.Name == specToDelete.Name.Name)
-				})
-
-				// Edge case: import "foo" => import ().
-				if !decl.Lparen.IsValid() {
-					decl.Lparen = decl.TokPos + token.Pos(len("import"))
-					decl.Rparen = decl.Lparen + 1
-				}
-			}
+		name := ""
+		if specToDelete.Name != nil {
+			name = specToDelete.Name.Name
 		}
+		path, _ := strconv.Unquote(specToDelete.Path.Value)
+		astutil.DeleteNamedImport(caller.Fset, f, name, path)
 	}
 
 	var out bytes.Buffer
@@ -468,6 +452,183 @@ type oldImport struct {
 type newImport struct {
 	pkgName string
 	spec    *ast.ImportSpec
+}
+
+// importState tracks information about imports.
+type importState struct {
+	logf       func(string, ...any)
+	caller     *Caller
+	importMap  map[string][]string // from package paths in the caller's file to local names
+	newImports []newImport         // for references to free names in callee; to be added to the file
+	oldImports []oldImport         // referenced only by caller.Call.Fun; to be removed from the file
+}
+
+// newImportState returns an importState with initial information about the caller's imports.
+func newImportState(logf func(string, ...any), caller *Caller, callee *gobCallee) *importState {
+	// For simplicity we ignore existing dot imports, so that a qualified
+	// identifier (QI) in the callee is always represented by a QI in the caller,
+	// allowing us to treat a QI like a selection on a package name.
+	is := &importState{
+		logf:      logf,
+		caller:    caller,
+		importMap: make(map[string][]string),
+	}
+
+	for _, imp := range caller.File.Imports {
+		if pkgName, ok := importedPkgName(caller.Info, imp); ok &&
+			pkgName.Name() != "." &&
+			pkgName.Name() != "_" {
+
+			// If the import's sole use is in caller.Call.Fun of the form p.F(...),
+			// where p.F is a qualified identifier, the p import may not be
+			// necessary.
+			//
+			// Only the qualified identifier case matters, as other references to
+			// imported package names in the Call.Fun expression (e.g.
+			// x.after(3*time.Second).f() or time.Second.String()) will remain after
+			// inlining, as arguments.
+			//
+			// If that is the case, proactively check if any of the callee FreeObjs
+			// need this import. Doing so eagerly simplifies the resulting logic.
+			needed := true
+			sel, ok := ast.Unparen(caller.Call.Fun).(*ast.SelectorExpr)
+			if ok && soleUse(caller.Info, pkgName) == sel.X {
+				needed = false // no longer needed by caller
+				// Check to see if any of the inlined free objects need this package.
+				for _, obj := range callee.FreeObjs {
+					if obj.PkgPath == pkgName.Imported().Path() && obj.Shadow[pkgName.Name()] == 0 {
+						needed = true // needed by callee
+						break
+					}
+				}
+			}
+
+			// Exclude imports not needed by the caller or callee after inlining; the second
+			// return value holds these.
+			if needed {
+				path := pkgName.Imported().Path()
+				is.importMap[path] = append(is.importMap[path], pkgName.Name())
+			} else {
+				is.oldImports = append(is.oldImports, oldImport{pkgName: pkgName, spec: imp})
+			}
+		}
+	}
+	return is
+}
+
+// importName finds an existing import name to use in a particular shadowing
+// context. It is used to determine the set of new imports in
+// localName, and is also used for writing out names in inlining
+// strategies below.
+func (i *importState) importName(pkgPath string, shadow shadowMap) string {
+	for _, name := range i.importMap[pkgPath] {
+		// Check that either the import preexisted, or that it was newly added
+		// (no PkgName) but is not shadowed, either in the callee (shadows) or
+		// caller (caller.lookup).
+		if shadow[name] == 0 {
+			found := i.caller.lookup(name)
+			if is[*types.PkgName](found) || found == nil {
+				return name
+			}
+		}
+	}
+	return ""
+}
+
+// localName returns the local name for a given imported package path,
+// adding one if it doesn't exists.
+func (i *importState) localName(pkgPath, pkgName string, shadow shadowMap) string {
+	// Does an import already exist that works in this shadowing context?
+	if name := i.importName(pkgPath, shadow); name != "" {
+		return name
+	}
+
+	newlyAdded := func(name string) bool {
+		return slices.ContainsFunc(i.newImports, func(n newImport) bool { return n.pkgName == name })
+	}
+
+	// shadowedInCaller reports whether a candidate package name
+	// already refers to a declaration in the caller.
+	shadowedInCaller := func(name string) bool {
+		obj := i.caller.lookup(name)
+		if obj == nil {
+			return false
+		}
+		// If obj will be removed, the name is available.
+		return !slices.ContainsFunc(i.oldImports, func(o oldImport) bool { return o.pkgName == obj })
+	}
+
+	// import added by callee
+	//
+	// Choose local PkgName based on last segment of
+	// package path plus, if needed, a numeric suffix to
+	// ensure uniqueness.
+	//
+	// "init" is not a legal PkgName.
+	//
+	// TODO(rfindley): is it worth preserving local package names for callee
+	// imports? Are they likely to be better or worse than the name we choose
+	// here?
+	base := pkgName
+	name := base
+	for n := 0; shadow[name] != 0 || shadowedInCaller(name) || newlyAdded(name) || name == "init"; n++ {
+		name = fmt.Sprintf("%s%d", base, n)
+	}
+	i.logf("adding import %s %q", name, pkgPath)
+	spec := &ast.ImportSpec{
+		Path: &ast.BasicLit{
+			Kind:  token.STRING,
+			Value: strconv.Quote(pkgPath),
+		},
+	}
+	// Use explicit pkgname (out of necessity) when it differs from the declared name,
+	// or (for good style) when it differs from base(pkgpath).
+	if name != pkgName || name != pathpkg.Base(pkgPath) {
+		spec.Name = makeIdent(name)
+	}
+	i.newImports = append(i.newImports, newImport{
+		pkgName: name,
+		spec:    spec,
+	})
+	i.importMap[pkgPath] = append(i.importMap[pkgPath], name)
+	return name
+}
+
+// trimNewImports removes imports that are no longer needed.
+//
+// The list of new imports as constructed by calls to [importState.localName]
+// includes all of the packages referenced by the callee.
+// But in the process of inlining, we may have dropped some of those references.
+// For example, if the callee looked like this:
+//
+//	func F(x int) (p.T) {... /* no mention of p */ ...}
+//
+// and we inlined by assignment:
+//
+//	v := ...
+//
+// then the reference to package p drops away.
+//
+// Remove the excess imports by seeing which remain in new, the expression
+// to be inlined.
+// We can find those by looking at the free names in new.
+// The list of free names cannot include spurious package names.
+// Free-name tracking is precise except for the case of an identifier
+// key in a composite literal, which names either a field or a value.
+// Neither fields nor values are package names.
+// Since they are not relevant to removing unused imports, we instruct
+// freeishNames to omit composite-literal keys that are identifiers.
+func trimNewImports(newImports []newImport, new ast.Node) []newImport {
+	free := map[string]bool{}
+	const omitComplitIdents = false
+	freeishNames(free, new, omitComplitIdents)
+	var res []newImport
+	for _, ni := range newImports {
+		if free[ni.pkgName] {
+			res = append(res, ni)
+		}
+	}
+	return res
 }
 
 type inlineCallResult struct {
@@ -586,144 +747,8 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 		assign1 = func(v *types.Var) bool { return !updatedLocals[v] }
 	}
 
-	// import map, initially populated with caller imports, and updated below
-	// with new imports necessary to reference free symbols in the callee.
-	//
-	// For simplicity we ignore existing dot imports, so that a qualified
-	// identifier (QI) in the callee is always represented by a QI in the caller,
-	// allowing us to treat a QI like a selection on a package name.
-	importMap := make(map[string][]string) // maps package path to local name(s)
-	var oldImports []oldImport             // imports referenced only by caller.Call.Fun
-
-	for _, imp := range caller.File.Imports {
-		if pkgName, ok := importedPkgName(caller.Info, imp); ok &&
-			pkgName.Name() != "." &&
-			pkgName.Name() != "_" {
-
-			// If the import's sole use is in caller.Call.Fun of the form p.F(...),
-			// where p.F is a qualified identifier, the p import may not be
-			// necessary.
-			//
-			// Only the qualified identifier case matters, as other references to
-			// imported package names in the Call.Fun expression (e.g.
-			// x.after(3*time.Second).f() or time.Second.String()) will remain after
-			// inlining, as arguments.
-			//
-			// If that is the case, proactively check if any of the callee FreeObjs
-			// need this import. Doing so eagerly simplifies the resulting logic.
-			needed := true
-			sel, ok := ast.Unparen(caller.Call.Fun).(*ast.SelectorExpr)
-			if ok && soleUse(caller.Info, pkgName) == sel.X {
-				needed = false // no longer needed by caller
-				// Check to see if any of the inlined free objects need this package.
-				for _, obj := range callee.FreeObjs {
-					if obj.PkgPath == pkgName.Imported().Path() && obj.Shadow[pkgName.Name()] == 0 {
-						needed = true // needed by callee
-						break
-					}
-				}
-			}
-
-			if needed {
-				path := pkgName.Imported().Path()
-				importMap[path] = append(importMap[path], pkgName.Name())
-			} else {
-				oldImports = append(oldImports, oldImport{pkgName: pkgName, spec: imp})
-			}
-		}
-	}
-
-	// importName finds an existing import name to use in a particular shadowing
-	// context. It is used to determine the set of new imports in
-	// getOrMakeImportName, and is also used for writing out names in inlining
-	// strategies below.
-	importName := func(pkgPath string, shadow shadowMap) string {
-		for _, name := range importMap[pkgPath] {
-			// Check that either the import preexisted, or that it was newly added
-			// (no PkgName) but is not shadowed, either in the callee (shadows) or
-			// caller (caller.lookup).
-			if shadow[name] == 0 {
-				found := caller.lookup(name)
-				if is[*types.PkgName](found) || found == nil {
-					return name
-				}
-			}
-		}
-		return ""
-	}
-
-	// keep track of new imports that are necessary to reference any free names
-	// in the callee.
-	var newImports []newImport
-
-	// getOrMakeImportName returns the local name for a given imported package path,
-	// adding one if it doesn't exists.
-	getOrMakeImportName := func(pkgPath, pkgName string, shadow shadowMap) string {
-		// Does an import already exist that works in this shadowing context?
-		if name := importName(pkgPath, shadow); name != "" {
-			return name
-		}
-
-		newlyAdded := func(name string) bool {
-			for _, new := range newImports {
-				if new.pkgName == name {
-					return true
-				}
-			}
-			return false
-		}
-
-		// shadowedInCaller reports whether a candidate package name
-		// already refers to a declaration in the caller.
-		shadowedInCaller := func(name string) bool {
-			obj := caller.lookup(name)
-			if obj == nil {
-				return false
-			}
-			// If obj will be removed, the name is available.
-			for _, old := range oldImports {
-				if old.pkgName == obj {
-					return false
-				}
-			}
-			return true
-		}
-
-		// import added by callee
-		//
-		// Choose local PkgName based on last segment of
-		// package path plus, if needed, a numeric suffix to
-		// ensure uniqueness.
-		//
-		// "init" is not a legal PkgName.
-		//
-		// TODO(rfindley): is it worth preserving local package names for callee
-		// imports? Are they likely to be better or worse than the name we choose
-		// here?
-		base := pkgName
-		name := base
-		for n := 0; shadow[name] != 0 || shadowedInCaller(name) || newlyAdded(name) || name == "init"; n++ {
-			name = fmt.Sprintf("%s%d", base, n)
-		}
-		logf("adding import %s %q", name, pkgPath)
-		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{
-				Kind:  token.STRING,
-				Value: strconv.Quote(pkgPath),
-			},
-		}
-		// Use explicit pkgname (out of necessity) when it differs from the declared name,
-		// or (for good style) when it differs from base(pkgpath).
-		if name != pkgName || name != pathpkg.Base(pkgPath) {
-			spec.Name = makeIdent(name)
-		}
-		newImports = append(newImports, newImport{
-			pkgName: name,
-			spec:    spec,
-		})
-		importMap[pkgPath] = append(importMap[pkgPath], name)
-		return name
-	}
+	// Extract information about the caller's imports.
+	istate := newImportState(logf, caller, callee)
 
 	// Compute the renaming of the callee's free identifiers.
 	objRenames := make([]ast.Expr, len(callee.FreeObjs)) // nil => no change
@@ -751,7 +776,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 		var newName ast.Expr
 		if obj.Kind == "pkgname" {
 			// Use locally appropriate import, creating as needed.
-			n := getOrMakeImportName(obj.PkgPath, obj.PkgName, obj.Shadow)
+			n := istate.localName(obj.PkgPath, obj.PkgName, obj.Shadow)
 			newName = makeIdent(n) // imported package
 		} else if !obj.ValidPos {
 			// Built-in function, type, or value (e.g. nil, zero):
@@ -796,7 +821,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 
 			// Form a qualified identifier, pkg.Name.
 			if qualify {
-				pkgName := getOrMakeImportName(obj.PkgPath, obj.PkgName, obj.Shadow)
+				pkgName := istate.localName(obj.PkgPath, obj.PkgName, obj.Shadow)
 				newName = &ast.SelectorExpr{
 					X:   makeIdent(pkgName),
 					Sel: makeIdent(obj.Name),
@@ -807,8 +832,8 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 	}
 
 	res := &inlineCallResult{
-		newImports: newImports,
-		oldImports: oldImports,
+		newImports: istate.newImports,
+		oldImports: istate.oldImports,
 	}
 
 	// Parse callee function declaration.
@@ -1157,7 +1182,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 			(!needBindingDecl || (bindingDecl != nil && len(bindingDecl.names) == 0)) {
 
 			// Reduces to: { var (bindings); lhs... := rhs... }
-			if newStmts, ok := st.assignStmts(stmt, results, importName); ok {
+			if newStmts, ok := st.assignStmts(stmt, results, istate.importName); ok {
 				logf("strategy: reduce assign-context call to { return exprs }")
 
 				clearPositions(calleeDecl.Body)
@@ -2313,7 +2338,8 @@ func createBindingDecl(logf logger, caller *Caller, args []*argument, calleeDecl
 				free[name] = true
 			}
 		}
-		freeishNames(free, spec.Type)
+		const includeComplitIdents = true
+		freeishNames(free, spec.Type, includeComplitIdents)
 		for name := range free {
 			if names[name] {
 				logf("binding decl would shadow free name %q", name)
@@ -2442,36 +2468,6 @@ func freeVars(info *types.Info, e ast.Expr) map[string]bool {
 		return true
 	})
 	return free
-}
-
-// freeishNames computes an over-approximation to the free names
-// of the type syntax t, inserting values into the map.
-//
-// Because we don't have go/types annotations, we can't give an exact
-// result in all cases. In particular, an array type [n]T might have a
-// size such as unsafe.Sizeof(func() int{stmts...}()) and now the
-// precise answer depends upon all the statement syntax too. But that
-// never happens in practice.
-func freeishNames(free map[string]bool, t ast.Expr) {
-	var visit func(n ast.Node) bool
-	visit = func(n ast.Node) bool {
-		switch n := n.(type) {
-		case *ast.Ident:
-			free[n.Name] = true
-
-		case *ast.SelectorExpr:
-			ast.Inspect(n.X, visit)
-			return false // don't visit .Sel
-
-		case *ast.Field:
-			ast.Inspect(n.Type, visit)
-			// Don't visit .Names:
-			// FuncType parameters, interface methods, struct fields
-			return false
-		}
-		return true
-	}
-	ast.Inspect(t, visit)
 }
 
 // effects reports whether an expression might change the state of the
@@ -3016,13 +3012,13 @@ func replaceNode(root ast.Node, from, to ast.Node) {
 			}
 
 		case reflect.Struct:
-			for i := 0; i < v.Type().NumField(); i++ {
+			for i := range v.Type().NumField() {
 				visit(v.Field(i))
 			}
 
 		case reflect.Slice:
 			compact := false
-			for i := 0; i < v.Len(); i++ {
+			for i := range v.Len() {
 				visit(v.Index(i))
 				if v.Index(i).IsNil() {
 					compact = true
@@ -3033,7 +3029,7 @@ func replaceNode(root ast.Node, from, to ast.Node) {
 				// (Do this is a second pass to avoid
 				// unnecessary writes in the common case.)
 				j := 0
-				for i := 0; i < v.Len(); i++ {
+				for i := range v.Len() {
 					if !v.Index(i).IsNil() {
 						v.Index(j).Set(v.Index(i))
 						j++
@@ -3093,7 +3089,7 @@ func clearPositions(root ast.Node) {
 		if n != nil {
 			v := reflect.ValueOf(n).Elem() // deref the pointer to struct
 			fields := v.Type().NumField()
-			for i := 0; i < fields; i++ {
+			for i := range fields {
 				f := v.Field(i)
 				// Clearing Pos arbitrarily is destructive,
 				// as its presence may be semantically significant
@@ -3416,12 +3412,14 @@ func (st *state) assignStmts(callerStmt *ast.AssignStmt, returnOperands []ast.Ex
 		freeNames       = make(map[string]bool) // free(ish) names among rhs expressions
 		nonTrivial      = make(map[int]bool)    // indexes in rhs of nontrivial result conversions
 	)
+	const includeComplitIdents = true
+
 	for i, expr := range callerStmt.Rhs {
 		if expr == caller.Call {
 			assert(callIdx == -1, "malformed (duplicative) AST")
 			callIdx = i
 			for j, returnOperand := range returnOperands {
-				freeishNames(freeNames, returnOperand)
+				freeishNames(freeNames, returnOperand, includeComplitIdents)
 				rhs = append(rhs, returnOperand)
 				if resultInfo[j]&nonTrivialResult != 0 {
 					nonTrivial[i+j] = true
@@ -3434,7 +3432,7 @@ func (st *state) assignStmts(callerStmt *ast.AssignStmt, returnOperands []ast.Ex
 			// We must clone before clearing positions, since e came from the caller.
 			expr = internalastutil.CloneNode(expr)
 			clearPositions(expr)
-			freeishNames(freeNames, expr)
+			freeishNames(freeNames, expr, includeComplitIdents)
 			rhs = append(rhs, expr)
 		}
 	}

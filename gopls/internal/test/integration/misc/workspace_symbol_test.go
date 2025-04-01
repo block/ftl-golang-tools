@@ -103,12 +103,12 @@ const (
 }
 
 func checkSymbols(env *Env, query string, want ...string) {
-	env.T.Helper()
+	env.TB.Helper()
 	var got []string
 	for _, info := range env.Symbol(query) {
 		got = append(got, info.Name)
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
-		env.T.Errorf("unexpected Symbol(%q) result (+want -got):\n%s", query, diff)
+		env.TB.Errorf("unexpected Symbol(%q) result (+want -got):\n%s", query, diff)
 	}
 }

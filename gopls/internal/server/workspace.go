@@ -139,3 +139,31 @@ func (s *server) DidChangeConfiguration(ctx context.Context, _ *protocol.DidChan
 
 	return nil
 }
+
+func (s *server) DidCreateFiles(ctx context.Context, params *protocol.CreateFilesParams) error {
+	ctx, done := event.Start(ctx, "lsp.Server.didCreateFiles")
+	defer done()
+
+	var allChanges []protocol.DocumentChange
+	for _, createdFile := range params.Files {
+		uri := protocol.DocumentURI(createdFile.URI)
+		fh, snapshot, release, err := s.fileOf(ctx, uri)
+		if err != nil {
+			event.Error(ctx, "fail to call fileOf", err)
+			continue
+		}
+		defer release()
+
+		switch snapshot.FileKind(fh) {
+		case file.Go:
+			change, err := completion.NewFile(ctx, snapshot, fh)
+			if err != nil {
+				continue
+			}
+			allChanges = append(allChanges, *change)
+		default:
+		}
+	}
+
+	return applyChanges(ctx, s.client, allChanges)
+}
