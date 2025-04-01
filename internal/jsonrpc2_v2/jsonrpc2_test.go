@@ -12,9 +12,9 @@ import (
 	"reflect"
 	"testing"
 
-	"golang.org/x/tools/internal/event/export/eventtest"
-	jsonrpc2 "golang.org/x/tools/internal/jsonrpc2_v2"
-	"golang.org/x/tools/internal/stack/stacktest"
+	"github.com/block/ftl-golang-tools/internal/event/export/eventtest"
+	jsonrpc2 "github.com/block/ftl-golang-tools/internal/jsonrpc2_v2"
+	"github.com/block/ftl-golang-tools/internal/stack/stacktest"
 )
 
 var callTests = []invoker{
