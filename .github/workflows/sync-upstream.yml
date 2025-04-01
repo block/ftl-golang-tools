@@ -96,6 +96,7 @@ jobs:
             - Replaced all occurrences of \`golang.org/x/tools\` with \`github.com/block/ftl-golang-tools\`
             
             This PR was created automatically by the sync-upstream workflow." \
+            --repo ${{ github.repository }} \
             --base master \
             --head $SYNC_BRANCH)
           
