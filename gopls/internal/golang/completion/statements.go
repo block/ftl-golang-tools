@@ -11,11 +11,11 @@ import (
 	"go/types"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/golang/completion/snippet"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/golang"
+	"github.com/block/ftl-golang-tools/gopls/internal/golang/completion/snippet"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 // addStatementCandidates adds full statement completion candidates

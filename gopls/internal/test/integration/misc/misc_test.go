@@ -10,9 +10,9 @@ import (
 	"testing"
 
 	"golang.org/x/telemetry/counter/countertest"
-	"golang.org/x/tools/gopls/internal/protocol"
-	. "golang.org/x/tools/gopls/internal/test/integration"
-	"golang.org/x/tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
 )
 
 func TestMain(m *testing.M) {

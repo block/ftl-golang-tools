@@ -20,12 +20,12 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/internal/analysisinternal"
-	internalastutil "golang.org/x/tools/internal/astutil"
-	"golang.org/x/tools/internal/typeparams"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	internalastutil "github.com/block/ftl-golang-tools/internal/astutil"
+	"github.com/block/ftl-golang-tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 // A Caller describes the function call and its enclosing context.

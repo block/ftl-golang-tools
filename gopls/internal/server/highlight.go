@@ -7,12 +7,12 @@ package server
 import (
 	"context"
 
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/label"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/template"
-	"golang.org/x/tools/internal/event"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/golang"
+	"github.com/block/ftl-golang-tools/gopls/internal/label"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/template"
+	"github.com/block/ftl-golang-tools/internal/event"
 )
 
 func (s *server) DocumentHighlight(ctx context.Context, params *protocol.DocumentHighlightParams) ([]protocol.DocumentHighlight, error) {

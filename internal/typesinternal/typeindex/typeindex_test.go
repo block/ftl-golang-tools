@@ -11,12 +11,12 @@ import (
 	"slices"
 	"testing"
 
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/internal/astutil/cursor"
-	"golang.org/x/tools/internal/testenv"
-	"golang.org/x/tools/internal/typesinternal/typeindex"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
+	"github.com/block/ftl-golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/internal/typesinternal/typeindex"
 )
 
 func TestIndex(t *testing.T) {

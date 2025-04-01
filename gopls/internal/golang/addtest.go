@@ -22,15 +22,15 @@ import (
 	"text/template"
 	"unicode"
 
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/protocol"
-	goplsastutil "golang.org/x/tools/gopls/internal/util/astutil"
-	"golang.org/x/tools/gopls/internal/util/moremaps"
-	"golang.org/x/tools/internal/imports"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	goplsastutil "github.com/block/ftl-golang-tools/gopls/internal/util/astutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/moremaps"
+	"github.com/block/ftl-golang-tools/internal/imports"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 const testTmplString = `
