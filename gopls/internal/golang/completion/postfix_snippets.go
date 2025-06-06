@@ -334,7 +334,29 @@ if {{$errName | $a.SpecifiedPlaceholder 1}} != nil {
 	{{end}}
 }
 {{end}}`,
-}}
+},
+	{
+		label:   "tostring",
+		details: "[]byte to string",
+		body: `{{if (eq (.TypeName .Type) "[]byte") -}}
+	string({{.X}})
+	{{- end}}`,
+	},
+	{
+		label:   "tostring",
+		details: "int to string",
+		body: `{{if (eq (.TypeName .Type) "int") -}}
+		{{.Import "strconv"}}.Itoa({{.X}})
+		{{- end}}`,
+	},
+	{
+		label:   "tobytes",
+		details: "string to []byte",
+		body: `{{if (eq (.TypeName .Type) "string") -}}
+	[]byte({{.X}})
+	{{- end}}`,
+	},
+}
 
 // Cursor indicates where the client's cursor should end up after the
 // snippet is done.
@@ -414,7 +436,7 @@ func (a *postfixTmplArgs) Tuple() []*types.Var {
 	}
 
 	typs := make([]*types.Var, 0, tuple.Len())
-	for i := 0; i < tuple.Len(); i++ {
+	for i := range tuple.Len() {
 		typs = append(typs, tuple.At(i))
 	}
 	return typs
@@ -542,7 +564,7 @@ func (c *completer) addPostfixSnippetCandidates(ctx context.Context, sel *ast.Se
 		results := c.enclosingFunc.sig.Results()
 		if results != nil {
 			funcResults = make([]*types.Var, results.Len())
-			for i := 0; i < results.Len(); i++ {
+			for i := range results.Len() {
 				funcResults[i] = results.At(i)
 			}
 		}

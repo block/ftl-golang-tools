@@ -139,7 +139,7 @@ func fix72727(a, b int) {
 
 type myfloat float64
 
-// The built-in min/max differ in their treatement of NaN,
+// The built-in min/max differ in their treatment of NaN,
 // so reject floating-point numbers (#72829).
 func nopeFloat(a, b myfloat) (res myfloat) {
 	if a < b {
@@ -148,4 +148,24 @@ func nopeFloat(a, b myfloat) (res myfloat) {
 		res = b
 	}
 	return
+}
+
+// Regression test for golang/go#72928.
+func underscoreAssign(a, b int) {
+	if a > b {
+		_ = a
+	}
+}
+
+// Regression test for https://github.com/golang/go/issues/73576.
+func nopeIfElseIf(a int) int {
+	x := 0
+	if a < 0 {
+		x = 0
+	} else if a > 100 {
+		x = 100
+	} else {
+		x = a
+	}
+	return x
 }

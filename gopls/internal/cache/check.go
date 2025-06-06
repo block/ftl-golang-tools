@@ -1688,7 +1688,7 @@ func (b *typeCheckBatch) checkPackage(ctx context.Context, fset *token.FileSet, 
 
 	// Track URIs with parse errors so that we can suppress type errors for these
 	// files.
-	unparseable := map[protocol.DocumentURI]bool{}
+	unparsable := map[protocol.DocumentURI]bool{}
 	for _, e := range pkg.parseErrors {
 		diags, err := parseErrorDiagnostics(pkg, e)
 		if err != nil {
@@ -1696,7 +1696,7 @@ func (b *typeCheckBatch) checkPackage(ctx context.Context, fset *token.FileSet, 
 			continue
 		}
 		for _, diag := range diags {
-			unparseable[diag.URI] = true
+			unparsable[diag.URI] = true
 			pkg.diagnostics = append(pkg.diagnostics, diag)
 		}
 	}
@@ -1706,7 +1706,7 @@ func (b *typeCheckBatch) checkPackage(ctx context.Context, fset *token.FileSet, 
 		// If the file didn't parse cleanly, it is highly likely that type
 		// checking errors will be confusing or redundant. But otherwise, type
 		// checking usually provides a good enough signal to include.
-		if !unparseable[diag.URI] {
+		if !unparsable[diag.URI] {
 			pkg.diagnostics = append(pkg.diagnostics, diag)
 		}
 	}
@@ -2070,12 +2070,14 @@ func typeErrorsToDiagnostics(pkg *syntaxPackage, inputs *typeCheckInputs, errs [
 					}
 				}
 			} else {
+				// TODO(adonovan): check File(start)==File(end).
+
 				// debugging golang/go#65960
 				if _, err := safetoken.Offset(pgf.Tok, end); err != nil {
 					if pkg.hasFixedFiles() {
-						bug.Reportf("ReadGo116ErrorData returned invalid end: %v (fixed files)", err)
+						bug.Reportf("ErrorCodeStartEnd returned invalid end: %v (fixed files)", err)
 					} else {
-						bug.Reportf("ReadGo116ErrorData returned invalid end: %v", err)
+						bug.Reportf("ErrorCodeStartEnd returned invalid end: %v", err)
 					}
 				}
 			}
@@ -2127,11 +2129,11 @@ func typeErrorsToDiagnostics(pkg *syntaxPackage, inputs *typeCheckInputs, errs [
 			if i > 0 && len(diags) > 0 {
 				primary := diags[0]
 				primary.Related = append(primary.Related, protocol.DiagnosticRelatedInformation{
-					Location: protocol.Location{URI: diag.URI, Range: diag.Range},
+					Location: diag.URI.Location(diag.Range),
 					Message:  related[i].Msg, // use the unmodified secondary error for related errors.
 				})
 				diag.Related = []protocol.DiagnosticRelatedInformation{{
-					Location: protocol.Location{URI: primary.URI, Range: primary.Range},
+					Location: primary.URI.Location(primary.Range),
 				}}
 			}
 			diags = append(diags, diag)

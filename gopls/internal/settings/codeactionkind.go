@@ -81,6 +81,7 @@ const (
 	GoTest                     protocol.CodeActionKind = "source.test"
 	GoToggleCompilerOptDetails protocol.CodeActionKind = "source.toggleCompilerOptDetails"
 	AddTest                    protocol.CodeActionKind = "source.addTest"
+	OrganizeImports            protocol.CodeActionKind = "source.organizeImports"
 
 	// gopls
 	GoplsDocFeatures protocol.CodeActionKind = "gopls.doc.features"
@@ -96,9 +97,12 @@ const (
 	RefactorRewriteMoveParamRight     protocol.CodeActionKind = "refactor.rewrite.moveParamRight"
 	RefactorRewriteSplitLines         protocol.CodeActionKind = "refactor.rewrite.splitLines"
 	RefactorRewriteEliminateDotImport protocol.CodeActionKind = "refactor.rewrite.eliminateDotImport"
+	RefactorRewriteAddTags            protocol.CodeActionKind = "refactor.rewrite.addTags"
+	RefactorRewriteRemoveTags         protocol.CodeActionKind = "refactor.rewrite.removeTags"
 
 	// refactor.inline
-	RefactorInlineCall protocol.CodeActionKind = "refactor.inline.call"
+	RefactorInlineCall     protocol.CodeActionKind = "refactor.inline.call"
+	RefactorInlineVariable protocol.CodeActionKind = "refactor.inline.variable"
 
 	// refactor.extract
 	RefactorExtractConstant    protocol.CodeActionKind = "refactor.extract.constant"

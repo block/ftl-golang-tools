@@ -6,7 +6,6 @@ package modfile
 
 import (
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
@@ -598,12 +597,12 @@ func main() {
 				Diagnostics(env.AtRegexp("a/main.go", "x = ")),
 			)
 			env.RegexpReplace("a/go.mod", "v1.2.3", "v1.2.2")
-			env.Editor.SaveBuffer(env.Ctx, "a/go.mod") // go.mod changes must be on disk
+			env.SaveBuffer("a/go.mod") // go.mod changes must be on disk
 			env.AfterChange(
 				Diagnostics(env.AtRegexp("a/go.mod", "example.com v1.2.2")),
 			)
 			env.RegexpReplace("a/go.mod", "v1.2.2", "v1.2.3")
-			env.Editor.SaveBuffer(env.Ctx, "a/go.mod") // go.mod changes must be on disk
+			env.SaveBuffer("a/go.mod") // go.mod changes must be on disk
 			env.AfterChange(
 				Diagnostics(env.AtRegexp("a/main.go", "x = ")),
 			)
@@ -869,13 +868,13 @@ func hello() {}
 		env.RegexpReplace("go.mod", "module", "modul")
 		// Confirm that we still have metadata with only on-disk edits.
 		env.OpenFile("main.go")
-		loc := env.GoToDefinition(env.RegexpSearch("main.go", "hello"))
-		if filepath.Base(string(loc.URI)) != "hello.go" {
+		loc := env.FirstDefinition(env.RegexpSearch("main.go", "hello"))
+		if loc.URI.Base() != "hello.go" {
 			t.Fatalf("expected definition in hello.go, got %s", loc.URI)
 		}
 		// Confirm that we no longer have metadata when the file is saved.
 		env.SaveBufferWithoutActions("go.mod")
-		_, err := env.Editor.Definition(env.Ctx, env.RegexpSearch("main.go", "hello"))
+		_, err := env.Editor.Definitions(env.Ctx, env.RegexpSearch("main.go", "hello"))
 		if err == nil {
 			t.Fatalf("expected error, got none")
 		}

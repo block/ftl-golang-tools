@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"go/ast"
 	"go/format"
-	"go/token"
 	"go/types"
 	"os"
 	"path/filepath"
@@ -29,6 +28,7 @@ import (
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 	goplsastutil "github.com/block/ftl-golang-tools/gopls/internal/util/astutil"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/moremaps"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 	"github.com/block/ftl-golang-tools/internal/imports"
 	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
@@ -182,7 +182,7 @@ type testInfo struct {
 	// TestingPackageName is the package name should be used when referencing
 	// package "testing"
 	TestingPackageName string
-	// PackageName is the package name the target function/method is delcared from.
+	// PackageName is the package name the target function/method is declared from.
 	PackageName  string
 	TestFuncName string
 	// Func holds information about the function or method being tested.
@@ -265,7 +265,7 @@ func AddTestForFunc(ctx context.Context, snapshot *cache.Snapshot, loc protocol.
 		return nil, err
 	}
 
-	testBase := strings.TrimSuffix(filepath.Base(loc.URI.Path()), ".go") + "_test.go"
+	testBase := strings.TrimSuffix(loc.URI.Base(), ".go") + "_test.go"
 	goTestFileURI := protocol.URIFromPath(filepath.Join(loc.URI.DirPath(), testBase))
 
 	testFH, err := snapshot.ReadFile(ctx, goTestFileURI)
@@ -320,11 +320,11 @@ func AddTestForFunc(ctx context.Context, snapshot *cache.Snapshot, loc protocol.
 		// Search for something that looks like a copyright header, to replicate
 		// in the new file.
 		if c := CopyrightComment(pgf.File); c != nil {
-			start, end, err := pgf.NodeOffsets(c)
+			text, err := pgf.NodeText(c)
 			if err != nil {
 				return nil, err
 			}
-			header.Write(pgf.Src[start:end])
+			header.Write(text)
 			// One empty line between copyright header and following.
 			header.WriteString("\n\n")
 		}
@@ -332,11 +332,11 @@ func AddTestForFunc(ctx context.Context, snapshot *cache.Snapshot, loc protocol.
 		// If this test file was created by gopls, add build constraints
 		// matching the non-test file.
 		if c := buildConstraintComment(pgf.File); c != nil {
-			start, end, err := pgf.NodeOffsets(c)
+			text, err := pgf.NodeText(c)
 			if err != nil {
 				return nil, err
 			}
-			header.Write(pgf.Src[start:end])
+			header.Write(text)
 			// One empty line between build constraint and following.
 			header.WriteString("\n\n")
 		}
@@ -395,25 +395,26 @@ func AddTestForFunc(ctx context.Context, snapshot *cache.Snapshot, loc protocol.
 			NewText: header.String(),
 		})
 	} else { // existing _test.go file.
-		if testPGF.File.Name == nil || testPGF.File.Name.NamePos == token.NoPos {
+		file := testPGF.File
+		if !file.Name.NamePos.IsValid() {
 			return nil, fmt.Errorf("missing package declaration")
 		}
-		switch testPGF.File.Name.Name {
+		switch file.Name.Name {
 		case pgf.File.Name.Name:
 			xtest = false
 		case pgf.File.Name.Name + "_test":
 			xtest = true
 		default:
-			return nil, fmt.Errorf("invalid package declaration %q in test file %q", testPGF.File.Name, testPGF)
+			return nil, fmt.Errorf("invalid package declaration %q in test file %q", file.Name, testPGF)
 		}
 
-		eofRange, err = testPGF.PosRange(testPGF.File.FileEnd, testPGF.File.FileEnd)
+		eofRange, err = testPGF.PosRange(file.FileEnd, file.FileEnd)
 		if err != nil {
 			return nil, err
 		}
 
 		// Collect all the imports from the foo_test.go.
-		if testImports, err = collectImports(testPGF.File); err != nil {
+		if testImports, err = collectImports(file); err != nil {
 			return nil, err
 		}
 	}
@@ -480,14 +481,8 @@ func AddTestForFunc(ctx context.Context, snapshot *cache.Snapshot, loc protocol.
 		},
 	}
 
-	errorType := types.Universe.Lookup("error").Type()
-
-	var isContextType = func(t types.Type) bool {
-		named, ok := t.(*types.Named)
-		if !ok {
-			return false
-		}
-		return named.Obj().Pkg().Path() == "context" && named.Obj().Name() == "Context"
+	isContextType := func(t types.Type) bool {
+		return analysisinternal.IsTypeNamed(t, "context", "Context")
 	}
 
 	for i := range sig.Params().Len() {

@@ -14,7 +14,6 @@ import (
 	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/go/packages"
 	"github.com/block/ftl-golang-tools/go/types/typeutil"
-	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
 	"github.com/block/ftl-golang-tools/internal/testenv"
 	"github.com/block/ftl-golang-tools/internal/typesinternal/typeindex"
 )
@@ -134,7 +133,7 @@ func BenchmarkIndex(b *testing.B) {
 	b.Run("cursor", func(b *testing.B) {
 		for b.Loop() {
 			countB = 0
-			for curCall := range cursor.Root(inspect).Preorder((*ast.CallExpr)(nil)) {
+			for curCall := range inspect.Root().Preorder((*ast.CallExpr)(nil)) {
 				call := curCall.Node().(*ast.CallExpr)
 				if typeutil.Callee(pkg.TypesInfo, call) == target {
 					countB++

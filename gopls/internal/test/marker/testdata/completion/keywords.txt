@@ -164,3 +164,97 @@ func _() {
 		d //@complete(" //", default)
 	}
 }
+
+-- default_name_var_switch.go --
+package keywords
+
+func _() {
+	var defaultVar int //@item(defaultVar, "defaultVar", "int", "var")
+	switch defaultVar {
+		case 1:
+			println("helloworld")
+		d //@complete(" //", default, defaultVar, defer)
+	}
+	switch defaultVar {
+		default:
+		d //@complete(" //", defaultVar, defer)
+	}
+	var nested int
+	switch defaultVar {
+		case 1:
+			switch nested {
+				default:
+					println("")
+			}
+		d //@complete(" //", default, defaultVar, defer)
+	}
+}
+
+-- return_different_func.go --
+package keywords
+
+/* return  */ //@item(returnWithSpace, "return ", "", "keyword")
+
+
+func _ () int {
+	r //@complete(" //", returnWithSpace)
+}
+
+func _ () (int, int) {
+	r //@complete(" //", returnWithSpace)
+}
+
+func _ () (_ int) {
+	r //@complete(" //", returnWithSpace)
+}
+
+func _ () (_ int) {
+	r //@complete(" //", returnWithSpace)
+}
+
+func _ () (_, _ int) {
+	r //@complete(" //", returnWithSpace)
+}
+
+func _ () (_, a int) {
+	r //@complete(" //", return)
+}
+
+func _ () {
+	r //@complete(" //", return)
+}
+
+func _ () (a int) {
+	r //@complete(" //", return)
+}
+
+func _ () (a, b int) {
+	r //@complete(" //", return)
+}
+
+func _ () (a, b int, c string) {
+	r //@complete(" //", return)
+}
+
+func _ () (a int) {
+	_ = func (){
+		r //@complete(" //", return)
+	}
+	return
+}
+
+func _ () int {
+	_ = func () (a int) {
+		// func lit will be affected by outer function.
+		r //@complete(" //", returnWithSpace)
+	}
+	return
+}
+
+func _ () {
+	_ = func () int {
+		// func lit will be affected by outer function.
+		r //@complete(" //", return)
+	}
+	return
+}

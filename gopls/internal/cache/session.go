@@ -64,7 +64,7 @@ type Session struct {
 
 	viewMu  sync.Mutex
 	views   []*View
-	viewMap map[protocol.DocumentURI]*View // file->best view or nil; nil after shutdown
+	viewMap map[protocol.DocumentURI]*View // file->best view or nil; nil after shutdown; the key must be a clean uri.
 
 	// snapshots is a counting semaphore that records the number
 	// of unreleased snapshots associated with this session.
@@ -139,13 +139,21 @@ func (s *Session) NewView(ctx context.Context, folder *Folder) (*View, *Snapshot
 	}
 	view, snapshot, release := s.createView(ctx, def)
 	s.views = append(s.views, view)
-	// we always need to drop the view map
-	s.viewMap = make(map[protocol.DocumentURI]*View)
+	s.viewMap[folder.Dir.Clean()] = view
 	return view, snapshot, release, nil
 }
 
+// HasView checks whether the uri's view exists.
+func (s *Session) HasView(uri protocol.DocumentURI) bool {
+	uri = uri.Clean()
+	s.viewMu.Lock()
+	defer s.viewMu.Unlock()
+	_, ok := s.viewMap[uri]
+	return ok
+}
+
 // createView creates a new view, with an initial snapshot that retains the
-// supplied context, detached from events and cancelation.
+// supplied context, detached from events and cancellation.
 //
 // The caller is responsible for calling the release function once.
 func (s *Session) createView(ctx context.Context, def *viewDefinition) (*View, *Snapshot, func()) {
@@ -175,7 +183,7 @@ func (s *Session) createView(ctx context.Context, def *viewDefinition) (*View, *
 			// Note that the logic below doesn't handle the case where uri ==
 			// v.folder.Dir, because there is no point in excluding the entire
 			// workspace folder!
-			if rel := strings.TrimPrefix(uri, dirPrefix); rel != uri {
+			if rel, ok := strings.CutPrefix(uri, dirPrefix); ok {
 				return !pathIncluded(rel)
 			}
 			return false
@@ -372,6 +380,7 @@ func (s *Session) View(id string) (*View, error) {
 //
 // On success, the caller must call the returned function to release the snapshot.
 func (s *Session) SnapshotOf(ctx context.Context, uri protocol.DocumentURI) (*Snapshot, func(), error) {
+	uri = uri.Clean()
 	// Fast path: if the uri has a static association with a view, return it.
 	s.viewMu.Lock()
 	v, err := s.viewOfLocked(ctx, uri)
@@ -411,7 +420,7 @@ func (s *Session) SnapshotOf(ctx context.Context, uri protocol.DocumentURI) (*Sn
 			continue // view was shut down
 		}
 		// We don't check the error from awaitLoaded, because a load failure (that
-		// doesn't result from context cancelation) should not prevent us from
+		// doesn't result from context cancellation) should not prevent us from
 		// continuing to search for the best view.
 		_ = snapshot.awaitLoaded(ctx)
 		g := snapshot.MetadataGraph()
@@ -444,6 +453,21 @@ func (s *Session) SnapshotOf(ctx context.Context, uri protocol.DocumentURI) (*Sn
 	return nil, nil, errNoViews
 }
 
+// FileOf returns the file for a given URI and its snapshot.
+// On success, the returned function must be called to release the snapshot.
+func (s *Session) FileOf(ctx context.Context, uri protocol.DocumentURI) (file.Handle, *Snapshot, func(), error) {
+	snapshot, release, err := s.SnapshotOf(ctx, uri)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	fh, err := snapshot.ReadFile(ctx, uri)
+	if err != nil {
+		release()
+		return nil, nil, nil, err
+	}
+	return fh, snapshot, release, nil
+}
+
 // errNoViews is sought by orphaned file diagnostics, to detect the case where
 // we have no view containing a file.
 var errNoViews = errors.New("no views")
@@ -451,7 +475,7 @@ var errNoViews = errors.New("no views")
 // viewOfLocked evaluates the best view for uri, memoizing its result in
 // s.viewMap.
 //
-// Precondition: caller holds s.viewMu lock.
+// Precondition: caller holds s.viewMu lock; uri must be clean.
 //
 // May return (nil, nil) if no best view can be determined.
 func (s *Session) viewOfLocked(ctx context.Context, uri protocol.DocumentURI) (*View, error) {
@@ -726,7 +750,7 @@ func (s *Session) ResetView(ctx context.Context, uri protocol.DocumentURI) (*Vie
 		return nil, fmt.Errorf("session is shut down")
 	}
 
-	view, err := s.viewOfLocked(ctx, uri)
+	view, err := s.viewOfLocked(ctx, uri.Clean())
 	if err != nil {
 		return nil, err
 	}

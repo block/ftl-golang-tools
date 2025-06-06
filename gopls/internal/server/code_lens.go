@@ -22,10 +22,10 @@ import (
 // CodeLens reports the set of available CodeLenses
 // (range-associated commands) in the given file.
 func (s *server) CodeLens(ctx context.Context, params *protocol.CodeLensParams) ([]protocol.CodeLens, error) {
-	ctx, done := event.Start(ctx, "lsp.Server.codeLens", label.URI.Of(params.TextDocument.URI))
+	ctx, done := event.Start(ctx, "server.CodeLens", label.URI.Of(params.TextDocument.URI))
 	defer done()
 
-	fh, snapshot, release, err := s.fileOf(ctx, params.TextDocument.URI)
+	fh, snapshot, release, err := s.session.FileOf(ctx, params.TextDocument.URI)
 	if err != nil {
 		return nil, err
 	}

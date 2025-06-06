@@ -17,6 +17,7 @@ import (
 	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 //go:embed doc.go
@@ -60,12 +61,11 @@ func describe(typ, inType types.Type, inName string) string {
 }
 
 func typeName(t types.Type) string {
-	type hasTypeName interface{ Obj() *types.TypeName } // Alias, Named, TypeParam
-	switch t := t.(type) {
-	case *types.Basic:
-		return t.Name()
-	case hasTypeName:
-		return t.Obj().Name()
+	if basic, ok := t.(*types.Basic); ok {
+		return basic.Name() // may be (e.g.) "untyped int", which has no TypeName
+	}
+	if tname := typesinternal.TypeNameFor(t); tname != nil {
+		return tname.Name()
 	}
 	return ""
 }

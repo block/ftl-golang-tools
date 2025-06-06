@@ -146,3 +146,41 @@ func nopeNeedleHaystackDifferentTypes2(x error, args []any) {
 		}
 	}
 }
+
+func nopeVariadicNamedContainsFunc(slice []int) bool {
+	for _, elem := range slice {
+		if variadicPredicate(elem) {
+			return true
+		}
+	}
+	return false
+}
+
+func variadicPredicate(int, ...any) bool
+
+func nopeVariadicContainsFunc(slice []int) bool {
+	f := func(int, ...any) bool {
+		return true
+	}
+	for _, elem := range slice {
+		if f(elem) {
+			return true
+		}
+	}
+	return false
+}
+
+// Negative test case for implicit C->I conversion
+type I interface{ F() }
+type C int
+
+func (C) F() {}
+
+func nopeImplicitConversionContainsFunc(slice []C, f func(I) bool) bool {
+	for _, elem := range slice {
+		if f(elem) {
+			return true
+		}
+	}
+	return false
+}

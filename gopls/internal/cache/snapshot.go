@@ -102,7 +102,7 @@ type Snapshot struct {
 	// initialErr holds the last error resulting from initialization. If
 	// initialization fails, we only retry when the workspace modules change,
 	// to avoid too many go/packages calls.
-	// If initialized is false, initialErr stil holds the error resulting from
+	// If initialized is false, initialErr still holds the error resulting from
 	// the previous initialization.
 	// TODO(rfindley): can we unify the lifecycle of initialized and initialErr.
 	initialErr *InitializationError
@@ -608,7 +608,7 @@ func (s *Snapshot) MethodSets(ctx context.Context, ids ...PackageID) ([]*methods
 	pre := func(i int, ph *packageHandle) bool {
 		data, err := filecache.Get(methodSetsKind, ph.key)
 		if err == nil { // hit
-			indexes[i] = methodsets.Decode(data)
+			indexes[i] = methodsets.Decode(ph.mp.PkgPath, data)
 			return false
 		} else if err != filecache.ErrNotFound {
 			event.Error(ctx, "reading methodsets from filecache", err)
@@ -916,10 +916,12 @@ func (s *Snapshot) watchSubdirs() bool {
 		// requirements that client names do not change. We should update the VS
 		// Code extension to set a default value of "subdirWatchPatterns" to "on",
 		// so that this workaround is only temporary.
-		if s.Options().ClientInfo.Name == "Visual Studio Code" {
+		switch s.Options().ClientInfo.Name {
+		case "Visual Studio Code", "Visual Studio Code - Insiders":
 			return true
+		default:
+			return false
 		}
-		return false
 	default:
 		bug.Reportf("invalid subdirWatchPatterns: %q", p)
 		return false
@@ -1419,7 +1421,7 @@ https://github.com/golang/tools/blob/master/gopls/doc/workspace.md.`, modDir, fi
 					fix = `This file may be excluded due to its build tags; try adding "-tags=<build tag>" to your gopls "buildFlags" configuration
 See the documentation for more information on working with build tags:
 https://github.com/golang/tools/blob/master/gopls/doc/settings.md#buildflags.`
-				} else if strings.Contains(filepath.Base(fh.URI().Path()), "_") {
+				} else if strings.Contains(fh.URI().Base(), "_") {
 					fix = `This file may be excluded due to its GOOS/GOARCH, or other build constraints.`
 				} else {
 					fix = `This file is ignored by your gopls build.` // we don't know why
@@ -1461,10 +1463,11 @@ func orphanedFileDiagnosticRange(ctx context.Context, cache *parseCache, fh file
 		return nil, protocol.Range{}, false
 	}
 	pgf := pgfs[0]
-	if !pgf.File.Name.Pos().IsValid() {
+	name := pgf.File.Name
+	if !name.Pos().IsValid() {
 		return nil, protocol.Range{}, false
 	}
-	rng, err := pgf.PosRange(pgf.File.Name.Pos(), pgf.File.Name.End())
+	rng, err := pgf.PosRange(name.Pos(), name.End())
 	if err != nil {
 		return nil, protocol.Range{}, false
 	}
@@ -1759,7 +1762,7 @@ func (s *Snapshot) clone(ctx, bgCtx context.Context, changed StateChange, done f
 	//
 	// We could also do better by looking at which imports were deleted and
 	// trying to find cycles they are involved in. This fails when the file goes
-	// from an unparseable state to a parseable state, as we don't have a
+	// from an unparsable state to a parseable state, as we don't have a
 	// starting point to compare with.
 	if anyImportDeleted {
 		for id, mp := range s.meta.Packages {
@@ -2087,7 +2090,7 @@ func metadataChanges(ctx context.Context, lockedSnapshot *Snapshot, oldFH, newFH
 		} else {
 			// At this point, we shouldn't ever fail to produce a parsego.File, as
 			// we're already past header parsing.
-			bug.Reportf("metadataChanges: unparseable file %v (old error: %v, new error: %v)", oldFH.URI(), oldErr, newErr)
+			bug.Reportf("metadataChanges: unparsable file %v (old error: %v, new error: %v)", oldFH.URI(), oldErr, newErr)
 		}
 	}
 

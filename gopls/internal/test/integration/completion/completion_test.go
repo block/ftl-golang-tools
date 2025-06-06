@@ -17,6 +17,7 @@ import (
 	"golang.org/x/telemetry/counter/countertest"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 	"github.com/block/ftl-golang-tools/gopls/internal/server"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
 	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
@@ -305,6 +306,7 @@ func _() {
 	WithOptions(
 		WriteGoSum("."),
 		ProxyFiles(proxy),
+		Settings{"importsSource": settings.ImportsSourceGopls},
 	).Run(t, mod, func(t *testing.T, env *Env) {
 		// Make sure the dependency is in the module cache and accessible for
 		// unimported completions, and then remove it before proceeding.
@@ -369,6 +371,7 @@ const Name = "mainmod"
 `
 	WithOptions(
 		WriteGoSum("."),
+		Settings{"importsSource": settings.ImportsSourceGopls},
 		ProxyFiles(proxy)).Run(t, files, func(t *testing.T, env *Env) {
 		env.CreateBuffer("import.go", "package pkg\nvar _ = mainmod.Name\n")
 		env.SaveBuffer("import.go")
@@ -382,6 +385,10 @@ const Name = "mainmod"
 // Test that we can doctor the source code enough so the file is
 // parseable and completion works as expected.
 func TestSourceFixup(t *testing.T) {
+	// This example relies on the fixer to turn "s." into "s._" so
+	// that it parses as a SelectorExpr with only local problems,
+	// instead of snarfing up the following declaration of S
+	// looking for an identifier; thus completion offers s.i.
 	const files = `
 -- go.mod --
 module mod.com
@@ -538,6 +545,7 @@ func main() {
 	WithOptions(
 		WindowsLineEndings(),
 		Settings{"ui.completion.usePlaceholders": true},
+		Settings{"importsSource": settings.ImportsSourceGopls},
 	).Run(t, src, func(t *testing.T, env *Env) {
 		// Trigger unimported completions for the mod.com package.
 		env.OpenFile("main.go")
@@ -590,7 +598,10 @@ var Lower = ""
 	for _, supportInsertReplace := range []bool{true, false} {
 		t.Run(fmt.Sprintf("insertReplaceSupport=%v", supportInsertReplace), func(t *testing.T) {
 			capabilities := fmt.Sprintf(`{ "textDocument": { "completion": { "completionItem": {"insertReplaceSupport":%t, "snippetSupport": false } } } }`, supportInsertReplace)
-			runner := WithOptions(CapabilitiesJSON([]byte(capabilities)))
+			runner := WithOptions(
+				CapabilitiesJSON([]byte(capabilities)),
+				Settings{"importsSource": settings.ImportsSourceGopls},
+			)
 			runner.Run(t, src, func(t *testing.T, env *Env) {
 				env.OpenFile("main.go")
 				env.Await(env.DoneWithOpen())
@@ -671,7 +682,8 @@ func F3[K comparable, V any](map[K]V, chan V) {}
 `
 	WithOptions(
 		WindowsLineEndings(),
-		Settings{"ui.completion.usePlaceholders": true},
+		Settings{"ui.completion.usePlaceholders": true,
+			"importsSource": settings.ImportsSourceGopls},
 	).Run(t, src, func(t *testing.T, env *Env) {
 		env.OpenFile("a/a.go")
 		env.Await(env.DoneWithOpen())
@@ -681,8 +693,8 @@ func F3[K comparable, V any](map[K]V, chan V) {}
 		for i, want := range []string{
 			common + "b.F0(${1:a int}, ${2:b int}, ${3:c float64})\r\n",
 			common + "b.F1(${1:_ int}, ${2:_ chan *string})\r\n",
-			common + "b.F2[${1:K any}, ${2:V any}](${3:_ map[K]V}, ${4:_ chan V})\r\n",
-			common + "b.F3[${1:K comparable}, ${2:V any}](${3:_ map[K]V}, ${4:_ chan V})\r\n",
+			common + "b.F2(${1:_ map[K]V}, ${2:_ chan V})\r\n",
+			common + "b.F3(${1:_ map[K]V}, ${2:_ chan V})\r\n",
 		} {
 			loc := env.RegexpSearch("a/a.go", "b.F()")
 			completions := env.Completion(loc)
@@ -1327,6 +1339,7 @@ func _() {
 }
 
 // Fix for golang/go#60062: unimported completion included "golang.org/toolchain" results.
+// and check that functions (from the standard library) have snippets
 func TestToolchainCompletions(t *testing.T) {
 	const files = `
 -- go.mod --
@@ -1361,6 +1374,7 @@ func Join() {}
 
 	WithOptions(
 		ProxyFiles(proxy),
+		Settings{"importsSource": settings.ImportsSourceGopls},
 	).Run(t, files, func(t *testing.T, env *Env) {
 		env.RunGoCommand("mod", "download", "golang.org/toolchain@v0.0.1-go1.21.1.linux-amd64")
 		env.OpenFile("foo.go")
@@ -1371,6 +1385,16 @@ func Join() {}
 			for _, item := range res.Items {
 				if strings.Contains(item.Detail, "golang.org/toolchain") {
 					t.Errorf("Completion(...) returned toolchain item %#v", item)
+				}
+				if strings.HasPrefix(item.Detail, "func") {
+					// check that there are snippets
+					x, ok := item.TextEdit.Value.(protocol.InsertReplaceEdit)
+					if !ok {
+						t.Errorf("item.TextEdit.Value unexpected type %T", item.TextEdit.Value)
+					}
+					if !strings.Contains(x.NewText, "${1") {
+						t.Errorf("expected snippet in %q", x.NewText)
+					}
 				}
 			}
 		}

@@ -79,15 +79,18 @@ Gopls supports the following code actions:
 - [`refactor.extract.variable`](#extract)
 - [`refactor.extract.variable-all`](#extract)
 - [`refactor.inline.call`](#refactor.inline.call)
+- [`refactor.inline.variable`](#refactor.inline.variable)
+- [`refactor.rewrite.addTags`](#refactor.rewrite.addTags)
 - [`refactor.rewrite.changeQuote`](#refactor.rewrite.changeQuote)
 - [`refactor.rewrite.fillStruct`](#refactor.rewrite.fillStruct)
 - [`refactor.rewrite.fillSwitch`](#refactor.rewrite.fillSwitch)
 - [`refactor.rewrite.invertIf`](#refactor.rewrite.invertIf)
 - [`refactor.rewrite.joinLines`](#refactor.rewrite.joinLines)
-- [`refactor.rewrite.removeUnusedParam`](#refactor.rewrite.removeUnusedParam)
-- [`refactor.rewrite.splitLines`](#refactor.rewrite.splitLines)
 - [`refactor.rewrite.moveParamLeft`](#refactor.rewrite.moveParamLeft)
 - [`refactor.rewrite.moveParamRight`](#refactor.rewrite.moveParamRight)
+- [`refactor.rewrite.removeTags`](#refactor.rewrite.removeTags)
+- [`refactor.rewrite.removeUnusedParam`](#refactor.rewrite.removeUnusedParam)
+- [`refactor.rewrite.splitLines`](#refactor.rewrite.splitLines)
 
 Gopls reports some code actions twice, with two different kinds, so
 that they appear in multiple UI elements: simplifications,
@@ -315,11 +318,30 @@ Similar problems may arise with packages that use reflection, such as
 `encoding/json` or `text/template`. There is no substitute for good
 judgment and testing.
 
+Special cases:
+
+- When renaming the declaration of a method receiver, the tool also
+  attempts to rename the receivers of all other methods associated
+  with the same named type. Each other receiver that cannot be fully
+  renamed is quietly skipped. Renaming any _use_ of a receiver affects
+  only that variable.
+
+  ```go
+  type Counter struct { x int }
+
+                   Rename here to affect only this method
+                            ↓
+  func (c *Counter) Inc() { c.x++ }
+  func (c *Counter) Dec() { c.x++ }
+        ↑
+    Rename here to affect all methods
+  ```
+
+- Renaming a package declaration additionally causes the package's
+  directory to be renamed.
+
 Some tips for best results:
 
-- There is currently no special support for renaming all receivers of
-  a family of methods at once, so you will need to rename one receiver
-  one at a time (golang/go#41892).
 - The safety checks performed by the Rename algorithm require type
   information. If the program is grossly malformed, there may be
   insufficient information for it to run (golang/go#41870),
@@ -586,6 +608,55 @@ more detail. All of this is to say, it's a complex problem, and we aim
 for correctness first of all. We've already implemented a number of
 important "tidiness optimizations" and we expect more to follow.
 
+<a name='refactor.inline.variable'></a>
+
+## `refactor.inline.variable`: Inline local variable
+
+For a `codeActions` request where the selection is (or is within) an
+identifier that is a use of a local variable whose declaration has an
+initializer expression, gopls will return a code action of kind
+`refactor.inline.variable`, whose effect is to inline the variable:
+that is, to replace the reference by the variable's initializer
+expression.
+
+For example, if invoked on the identifier `s` in the call `println(s)`:
+```go
+func f(x int) {
+	s := fmt.Sprintf("+%d", x)
+	println(s)
+}
+```
+the code action transforms the code to:
+
+```go
+func f(x int) {
+	s := fmt.Sprintf("+%d", x)
+	println(fmt.Sprintf("+%d", x))
+}
+```
+
+(In this instance, `s` becomes an unreferenced variable which you will
+need to remove.)
+
+The code action always replaces the reference by the initializer
+expression, even if there are later assignments to the variable (such
+as `s = ""`).
+
+The code action reports an error if it is not possible to make the
+transformation because one of the identifiers within the initializer
+expression (e.g. `x` in the example above) is shadowed by an
+intervening declaration, as in this example:
+
+```go
+func f(x int) {
+	s := fmt.Sprintf("+%d", x)
+	{
+		x := 123
+		println(s, x) // error: cannot replace s with fmt.Sprintf(...) since x is shadowed
+	}
+}
+```
+
 <a name='refactor.rewrite'></a>
 ## `refactor.rewrite`: Miscellaneous rewrites
 
@@ -823,3 +894,18 @@ When the cursor is on a dot import gopls can offer the "Eliminate dot import"
 code action, which removes the dot from the import and qualifies uses of the
 package throughout the file. This code action is offered only if
 each use of the package can be qualified without collisions with existing names.
+
+<a name='refactor.rewrite.addTags'></a>
+### `refactor.rewrite.addTags`: Add struct tags
+
+When the cursor is within a struct, this code action adds to each field a `json`
+struct tag that specifies its JSON name, using lower case with underscores
+(e.g. LinkTarget becomes link_target). For a highlighted selection, it only
+adds tags on selected fields.
+
+<a name='refactor.rewrite.removeTags'></a>
+### `refactor.rewrite.removeTags`: Remove struct tags
+
+When the cursor is within a struct, this code action clears struct tags on
+all struct fields. For a highlighted selection, it removes tags from only
+the selected fields.

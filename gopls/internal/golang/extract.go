@@ -15,45 +15,45 @@ import (
 	"go/types"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"text/scanner"
 
 	"github.com/block/ftl-golang-tools/go/analysis"
 	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
 	goplsastutil "github.com/block/ftl-golang-tools/gopls/internal/util/astutil"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
-	"github.com/block/ftl-golang-tools/internal/analysisinternal"
-	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
 	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
-// extractVariable implements the refactor.extract.{variable,constant} CodeAction command.
-func extractVariable(pkg *cache.Package, pgf *parsego.File, start, end token.Pos) (*token.FileSet, *analysis.SuggestedFix, error) {
-	return extractExprs(pkg, pgf, start, end, false)
+// extractVariableOne implements the refactor.extract.{variable,constant} CodeAction command.
+func extractVariableOne(pkg *cache.Package, pgf *parsego.File, start, end token.Pos) (*token.FileSet, *analysis.SuggestedFix, error) {
+	return extractVariable(pkg, pgf, start, end, false)
 }
 
 // extractVariableAll implements the refactor.extract.{variable,constant}-all CodeAction command.
 func extractVariableAll(pkg *cache.Package, pgf *parsego.File, start, end token.Pos) (*token.FileSet, *analysis.SuggestedFix, error) {
-	return extractExprs(pkg, pgf, start, end, true)
+	return extractVariable(pkg, pgf, start, end, true)
 }
 
-// extractExprs replaces occurrence(s) of a specified expression within the same function
-// with newVar. If 'all' is true, it replaces all occurrences of the same expression;
-// otherwise, it only replaces the selected expression.
+// extractVariable replaces one or all occurrences of a specified
+// expression within the same function with newVar. If 'all' is true,
+// it replaces all occurrences of the same expression; otherwise, it
+// only replaces the selected expression.
 //
 // The new variable/constant is declared as close as possible to the first found expression
 // within the deepest common scope accessible to all candidate occurrences.
-func extractExprs(pkg *cache.Package, pgf *parsego.File, start, end token.Pos, all bool) (*token.FileSet, *analysis.SuggestedFix, error) {
+func extractVariable(pkg *cache.Package, pgf *parsego.File, start, end token.Pos, all bool) (*token.FileSet, *analysis.SuggestedFix, error) {
 	var (
 		fset = pkg.FileSet()
 		info = pkg.TypesInfo()
 		file = pgf.File
 	)
 	// TODO(adonovan): simplify, using Cursor.
-	tokFile := fset.File(file.FileStart)
 	exprs, err := canExtractVariable(info, pgf.Cursor, start, end, all)
 	if err != nil {
 		return nil, nil, fmt.Errorf("cannot extract: %v", err)
@@ -163,7 +163,7 @@ Outer:
 			return nil, nil, fmt.Errorf("cannot find location to insert extraction: %v", err)
 		}
 		// Within function: compute appropriate statement indentation.
-		indent, err := calculateIndentation(pgf.Src, tokFile, before)
+		indent, err := pgf.Indentation(before.Pos())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -390,7 +390,7 @@ func stmtToInsertVarBefore(path []ast.Node, variables []*variable) (ast.Stmt, er
 // canExtractVariable reports whether the code in the given range can be
 // extracted to a variable (or constant). It returns the selected expression or, if 'all',
 // all structurally equivalent expressions within the same function body, in lexical order.
-func canExtractVariable(info *types.Info, curFile cursor.Cursor, start, end token.Pos, all bool) ([]ast.Expr, error) {
+func canExtractVariable(info *types.Info, curFile inspector.Cursor, start, end token.Pos, all bool) ([]ast.Expr, error) {
 	if start == end {
 		return nil, fmt.Errorf("empty selection")
 	}
@@ -487,10 +487,8 @@ func canExtractVariable(info *types.Info, curFile cursor.Cursor, start, end toke
 		path, _ := astutil.PathEnclosingInterval(file, e.Pos(), e.End())
 		for _, n := range path {
 			if assignment, ok := n.(*ast.AssignStmt); ok {
-				for _, lhs := range assignment.Lhs {
-					if lhs == e {
-						return nil, fmt.Errorf("node %T is in LHS of an AssignStmt", expr)
-					}
+				if slices.Contains(assignment.Lhs, e) {
+					return nil, fmt.Errorf("node %T is in LHS of an AssignStmt", expr)
 				}
 				break
 			}
@@ -505,19 +503,6 @@ func canExtractVariable(info *types.Info, curFile cursor.Cursor, start, end toke
 		}
 	}
 	return exprs, nil
-}
-
-// Calculate indentation for insertion.
-// When inserting lines of code, we must ensure that the lines have consistent
-// formatting (i.e. the proper indentation). To do so, we observe the indentation on the
-// line of code on which the insertion occurs.
-func calculateIndentation(content []byte, tok *token.File, insertBeforeStmt ast.Node) (string, error) {
-	line := safetoken.Line(tok, insertBeforeStmt.Pos())
-	lineOffset, stmtOffset, err := safetoken.Offsets(tok, tok.LineStart(line), insertBeforeStmt.Pos())
-	if err != nil {
-		return "", err
-	}
-	return string(content[lineOffset:stmtOffset]), nil
 }
 
 // freshName returns an identifier based on prefix (perhaps with a
@@ -628,31 +613,75 @@ func extractFunctionMethod(cpkg *cache.Package, pgf *parsego.File, start, end to
 	// A return statement is non-nested if its parent node is equal to the parent node
 	// of the first node in the selection. These cases must be handled separately because
 	// non-nested return statements are guaranteed to execute.
-	var retStmts []*ast.ReturnStmt
 	var hasNonNestedReturn bool
-	startParent := findParent(outer, node)
-	ast.Inspect(outer, func(n ast.Node) bool {
-		if n == nil {
-			return false
+	curStart, ok := pgf.Cursor.FindNode(node)
+	if !ok {
+		return nil, nil, bug.Errorf("cannot find Cursor for start Node")
+	}
+	curOuter, ok := pgf.Cursor.FindNode(outer)
+	if !ok {
+		return nil, nil, bug.Errorf("cannot find Cursor for start Node")
+	}
+	// Determine whether all return statements in the selection are
+	// error-handling return statements. They must be of the form:
+	// if err != nil {
+	// 	return ..., err
+	// }
+	// If all return statements in the extracted block have a non-nil error, we
+	// can replace the "shouldReturn" check with an error check to produce a
+	// more concise output.
+	allReturnsFinalErr := true // all ReturnStmts have final 'err' expression
+	hasReturn := false         // selection contains a ReturnStmt
+	filter := []ast.Node{(*ast.ReturnStmt)(nil), (*ast.FuncLit)(nil)}
+	curOuter.Inspect(filter, func(cur inspector.Cursor) (descend bool) {
+		if funcLit, ok := cur.Node().(*ast.FuncLit); ok {
+			// Exclude return statements in function literals because they don't affect the refactor.
+			// Keep descending into func lits whose declaration is not included in the extracted block.
+			return !(start < funcLit.Pos() && funcLit.End() < end)
 		}
-		if n.Pos() < start || n.End() > end {
-			return n.Pos() <= end
+		ret := cur.Node().(*ast.ReturnStmt)
+		if ret.Pos() < start || ret.End() > end {
+			return false // not part of the extracted block
 		}
-		// exclude return statements in function literals because they don't affect the refactor.
-		if _, ok := n.(*ast.FuncLit); ok {
-			return false
-		}
-		ret, ok := n.(*ast.ReturnStmt)
-		if !ok {
-			return true
-		}
-		if findParent(outer, n) == startParent {
+		hasReturn = true
+
+		if cur.Parent() == curStart.Parent() {
 			hasNonNestedReturn = true
 		}
-		retStmts = append(retStmts, ret)
+
+		if !allReturnsFinalErr {
+			// Stop the traversal if we have already found a non error-handling return statement.
+			return false
+		}
+		// Check if the return statement returns a non-nil error as the last value.
+		if len(ret.Results) > 0 {
+			typ := info.TypeOf(ret.Results[len(ret.Results)-1])
+			if typ != nil && types.Identical(typ, errorType) {
+				// Have: return ..., err
+				// Check for enclosing "if err != nil { return ..., err }".
+				// In that case, we can lift the error return to the caller.
+				if ifstmt, ok := cur.Parent().Parent().Node().(*ast.IfStmt); ok {
+					// Only handle the case where the if statement body contains a single statement.
+					if body, ok := cur.Parent().Node().(*ast.BlockStmt); ok && len(body.List) <= 1 {
+						if cond, ok := ifstmt.Cond.(*ast.BinaryExpr); ok {
+							tx := info.TypeOf(cond.X)
+							ty := info.TypeOf(cond.Y)
+							isErr := tx != nil && types.Identical(tx, errorType)
+							isNil := ty != nil && types.Identical(ty, types.Typ[types.UntypedNil])
+							if cond.Op == token.NEQ && isErr && isNil {
+								// allReturnsErrHandling remains true
+								return false
+							}
+						}
+					}
+				}
+			}
+		}
+		allReturnsFinalErr = false
 		return false
 	})
-	containsReturnStatement := len(retStmts) > 0
+
+	allReturnsFinalErr = hasReturn && allReturnsFinalErr
 
 	// Now that we have determined the correct range for the selection block,
 	// we must determine the signature of the extracted function. We will then replace
@@ -754,6 +783,7 @@ func extractFunctionMethod(cpkg *cache.Package, pgf *parsego.File, start, end to
 				//
 				// The second condition below handles the case when
 				// v's block is the FuncDecl.Body itself.
+				startParent := curStart.Parent().Node()
 				if vscope.Pos() == startParent.Pos() ||
 					startParent == outer.Body && vscope == info.Scopes[outer.Type] {
 					canRedefineCount++
@@ -894,13 +924,26 @@ func extractFunctionMethod(cpkg *cache.Package, pgf *parsego.File, start, end to
 
 	var retVars []*returnVariable
 	var ifReturn *ast.IfStmt
-	if containsReturnStatement {
+
+	// Determine if the extracted block contains any free branch statements, for
+	// example: "continue label" where "label" is declared outside of the
+	// extracted block, or continue inside a "for" statement where the for
+	// statement is declared outside of the extracted block. These will be
+	// handled below, after adjusting return statements and generating return
+	// info.
+	curSel, _ := pgf.Cursor.FindByPos(start, end) // since canExtractFunction succeeded, this will always return a valid cursor
+	freeBranches := freeBranches(info, curSel, start, end)
+
+	// All return statements in the extracted block are error handling returns, and there are no free control statements.
+	isErrHandlingReturnsCase := allReturnsFinalErr && len(freeBranches) == 0
+
+	if hasReturn {
 		if !hasNonNestedReturn {
 			// The selected block contained return statements, so we have to modify the
 			// signature of the extracted function as described above. Adjust all of
 			// the return statements in the extracted function to reflect this change in
 			// signature.
-			if err := adjustReturnStatements(returnTypes, seenVars, extractedBlock, qual); err != nil {
+			if err := adjustReturnStatements(returnTypes, seenVars, extractedBlock, qual, isErrHandlingReturnsCase); err != nil {
 				return nil, nil, err
 			}
 		}
@@ -908,10 +951,119 @@ func extractFunctionMethod(cpkg *cache.Package, pgf *parsego.File, start, end to
 		// statements in the selection. Update the type signature of the extracted
 		// function and construct the if statement that will be inserted in the enclosing
 		// function.
-		retVars, ifReturn, err = generateReturnInfo(enclosing, pkg, path, file, info, start, end, hasNonNestedReturn)
+		retVars, ifReturn, err = generateReturnInfo(enclosing, pkg, path, file, info, start, end, hasNonNestedReturn, isErrHandlingReturnsCase)
 		if err != nil {
 			return nil, nil, err
 		}
+	}
+
+	// If the extracted block contains free branch statements, we add another
+	// return value "ctrl" to the extracted function that will be used to
+	// determine the control flow. See the following example, where === denotes
+	// the range to be extracted.
+	//
+	// Before:
+	// func f(cond bool) {
+	//      for range "abc" {
+	//      ==============
+	//      if cond {
+	//          continue
+	//      }
+	//      ==============
+	//      println(0)
+	//      }
+	// }
+
+	// After:
+	// func f(cond bool) {
+	//      for range "abc" {
+	//      ctrl := newFunction(cond)
+	//      switch ctrl {
+	//      case 1:
+	//          continue
+	//      }
+	//      println(0)
+	//      }
+	// }
+	//
+	// func newFunction(cond bool) int {
+	//      if cond {
+	//          return 1
+	//      }
+	//      return 0
+	// }
+	//
+
+	// Generate an unused identifier for the control value.
+	ctrlVar, _ := freshName(info, file, start, "ctrl", 0)
+	if len(freeBranches) > 0 {
+
+		zeroValExpr := &ast.BasicLit{
+			Kind:  token.INT,
+			Value: "0",
+		}
+		var branchStmts []*ast.BranchStmt
+		var stack []ast.Node
+		// Add the zero "ctrl" value to each return statement in the extracted block.
+		ast.Inspect(extractedBlock, func(n ast.Node) bool {
+			if n != nil {
+				stack = append(stack, n)
+			} else {
+				stack = stack[:len(stack)-1]
+			}
+			switch n := n.(type) {
+			case *ast.ReturnStmt:
+				n.Results = append(n.Results, zeroValExpr)
+			case *ast.BranchStmt:
+				// Collect a list of branch statements in the extracted block to examine later.
+				if isFreeBranchStmt(stack) {
+					branchStmts = append(branchStmts, n)
+				}
+			case *ast.FuncLit:
+				// Don't descend into nested functions. When we return false
+				// here, ast.Inspect does not give us a "pop" event when leaving
+				// the subtree, so we need to pop here. (golang/go#73319)
+				stack = stack[:len(stack)-1]
+				return false
+			}
+			return true
+		})
+
+		// Construct a return statement to replace each free branch statement in the extracted block. It should have
+		// zero values for all return parameters except one, "ctrl", which dictates which continuation to follow.
+		var freeCtrlStmtReturns []ast.Expr
+		// Create "zero values" for each type.
+		for _, returnType := range returnTypes {
+			var val ast.Expr
+			var isValid bool
+			for obj, typ := range seenVars {
+				if typ == returnType.Type {
+					val, isValid = typesinternal.ZeroExpr(obj.Type(), qual)
+					break
+				}
+			}
+			if !isValid {
+				return nil, nil, fmt.Errorf("could not find matching AST expression for %T", returnType.Type)
+			}
+			freeCtrlStmtReturns = append(freeCtrlStmtReturns, val)
+		}
+		freeCtrlStmtReturns = append(freeCtrlStmtReturns, getZeroVals(retVars)...)
+
+		for i, branchStmt := range branchStmts {
+			replaceBranchStmtWithReturnStmt(extractedBlock, branchStmt, &ast.ReturnStmt{
+				Return: branchStmt.Pos(),
+				Results: append(slices.Clip(freeCtrlStmtReturns), &ast.BasicLit{
+					Kind:  token.INT,
+					Value: strconv.Itoa(i + 1), // start with 1 because 0 is reserved for base case
+				}),
+			})
+
+		}
+		retVars = append(retVars, &returnVariable{
+			name:    ast.NewIdent(ctrlVar),
+			decl:    &ast.Field{Type: ast.NewIdent("int")},
+			zeroVal: zeroValExpr,
+		})
 	}
 
 	// Add a return statement to the end of the new function. This return statement must include
@@ -962,8 +1114,16 @@ func extractFunctionMethod(cpkg *cache.Package, pgf *parsego.File, start, end to
 		return nil, nil, err
 	}
 	if ifReturn != nil {
-		if err := format.Node(&ifBuf, fset, ifReturn); err != nil {
-			return nil, nil, err
+		if isErrHandlingReturnsCase {
+			errName := retVars[len(retVars)-1]
+			fmt.Fprintf(&ifBuf, "if %s != nil ", errName.name.String())
+			if err := format.Node(&ifBuf, fset, ifReturn.Body); err != nil {
+				return nil, nil, err
+			}
+		} else {
+			if err := format.Node(&ifBuf, fset, ifReturn); err != nil {
+				return nil, nil, err
+			}
 		}
 	}
 
@@ -1019,7 +1179,7 @@ func extractFunctionMethod(cpkg *cache.Package, pgf *parsego.File, start, end to
 	}
 	before := src[outerStart:startOffset]
 	after := src[endOffset:outerEnd]
-	indent, err := calculateIndentation(src, tok, node)
+	indent, err := pgf.Indentation(node.Pos())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1042,6 +1202,22 @@ func extractFunctionMethod(cpkg *cache.Package, pgf *parsego.File, start, end to
 			strings.ReplaceAll(ifBuf.String(), "\n", newLineIndent)
 		fullReplacement.WriteString(ifstatement)
 	}
+
+	// Add the switch statement for free branch statements after the new function call.
+	if len(freeBranches) > 0 {
+		fmt.Fprintf(&fullReplacement, "%[1]sswitch %[2]s {%[1]s", newLineIndent, ctrlVar)
+		for i, br := range freeBranches {
+			// Preserve spacing at the beginning of the line containing the branch statement.
+			startPos := tok.LineStart(safetoken.Line(tok, br.Pos()))
+			text, err := pgf.PosText(startPos, br.End())
+			if err != nil {
+				return nil, nil, err
+			}
+			fmt.Fprintf(&fullReplacement, "case %d:\n%s%s", i+1, text, newLineIndent)
+		}
+		fullReplacement.WriteString("}")
+	}
+
 	fullReplacement.Write(after)
 	fullReplacement.WriteString("\n\n")       // add newlines after the enclosing function
 	fullReplacement.Write(newFuncBuf.Bytes()) // insert the extracted function
@@ -1106,7 +1282,7 @@ func moveParamToFrontIfFound(params []ast.Expr, paramTypes []*ast.Field, x, sel 
 // their cursors for whitespace. To support this use case, we must manually adjust the
 // ranges to match the correct AST node. In this particular example, we would adjust
 // rng.Start forward to the start of 'if' and rng.End backward to after '}'.
-func adjustRangeForCommentsAndWhiteSpace(tok *token.File, start, end token.Pos, content []byte, curFile cursor.Cursor) (token.Pos, token.Pos, error) {
+func adjustRangeForCommentsAndWhiteSpace(tok *token.File, start, end token.Pos, content []byte, curFile inspector.Cursor) (token.Pos, token.Pos, error) {
 	file := curFile.Node().(*ast.File)
 	// TODO(adonovan): simplify, using Cursor.
 
@@ -1172,20 +1348,6 @@ func adjustRangeForCommentsAndWhiteSpace(tok *token.File, start, end token.Pos, 
 // Go as defined by scanner.GoWhitespace.
 func isGoWhiteSpace(b byte) bool {
 	return uint64(scanner.GoWhitespace)&(1<<uint(b)) != 0
-}
-
-// findParent finds the parent AST node of the given target node, if the target is a
-// descendant of the starting node.
-func findParent(start ast.Node, target ast.Node) ast.Node {
-	var parent ast.Node
-	analysisinternal.WalkASTWithParent(start, func(n, p ast.Node) bool {
-		if n == target {
-			parent = p
-			return false
-		}
-		return true
-	})
-	return parent
 }
 
 // variable describes the status of a variable within a selection.
@@ -1271,6 +1433,9 @@ func collectFreeVars(info *types.Info, file *ast.File, start, end token.Pos, nod
 			var obj types.Object
 			var isFree, prune bool
 			switch n := n.(type) {
+			case *ast.BranchStmt:
+				// Avoid including labels attached to branch statements.
+				return false
 			case *ast.Ident:
 				obj, isFree = id(n)
 			case *ast.SelectorExpr:
@@ -1433,7 +1598,7 @@ type fnExtractParams struct {
 
 // canExtractFunction reports whether the code in the given range can be
 // extracted to a function.
-func canExtractFunction(tok *token.File, start, end token.Pos, src []byte, curFile cursor.Cursor) (*fnExtractParams, bool, bool, error) {
+func canExtractFunction(tok *token.File, start, end token.Pos, src []byte, curFile inspector.Cursor) (*fnExtractParams, bool, bool, error) {
 	if start == end {
 		return nil, false, false, fmt.Errorf("start and end are equal")
 	}
@@ -1599,19 +1764,9 @@ func parseStmts(fset *token.FileSet, src []byte) (*ast.BlockStmt, []*ast.Comment
 // signature of the extracted function. We prepare names, signatures, and "zero values" that
 // represent the new variables. We also use this information to construct the if statement that
 // is inserted below the call to the extracted function.
-func generateReturnInfo(enclosing *ast.FuncType, pkg *types.Package, path []ast.Node, file *ast.File, info *types.Info, start, end token.Pos, hasNonNestedReturns bool) ([]*returnVariable, *ast.IfStmt, error) {
+func generateReturnInfo(enclosing *ast.FuncType, pkg *types.Package, path []ast.Node, file *ast.File, info *types.Info, start, end token.Pos, hasNonNestedReturns bool, isErrHandlingReturnsCase bool) ([]*returnVariable, *ast.IfStmt, error) {
 	var retVars []*returnVariable
 	var cond *ast.Ident
-	if !hasNonNestedReturns {
-		// Generate information for the added bool value.
-		name, _ := freshNameOutsideRange(info, file, path[0].Pos(), start, end, "shouldReturn", 0)
-		cond = &ast.Ident{Name: name}
-		retVars = append(retVars, &returnVariable{
-			name:    cond,
-			decl:    &ast.Field{Type: ast.NewIdent("bool")},
-			zeroVal: ast.NewIdent("false"),
-		})
-	}
 	// Generate information for the values in the return signature of the enclosing function.
 	if enclosing.Results != nil {
 		nameIdx := make(map[string]int) // last integral suffixes of generated names
@@ -1652,12 +1807,21 @@ func generateReturnInfo(enclosing *ast.FuncType, pkg *types.Package, path []ast.
 	}
 	var ifReturn *ast.IfStmt
 	if !hasNonNestedReturns {
-		// Create the return statement for the enclosing function. We must exclude the variable
-		// for the condition of the if statement (cond) from the return statement.
+		results := getNames(retVars)
+		if !isErrHandlingReturnsCase {
+			// Generate information for the added bool value.
+			name, _ := freshNameOutsideRange(info, file, path[0].Pos(), start, end, "shouldReturn", 0)
+			cond = &ast.Ident{Name: name}
+			retVars = append(retVars, &returnVariable{
+				name:    cond,
+				decl:    &ast.Field{Type: ast.NewIdent("bool")},
+				zeroVal: ast.NewIdent("false"),
+			})
+		}
 		ifReturn = &ast.IfStmt{
 			Cond: cond,
 			Body: &ast.BlockStmt{
-				List: []ast.Stmt{&ast.ReturnStmt{Results: getNames(retVars)[1:]}},
+				List: []ast.Stmt{&ast.ReturnStmt{Results: results}},
 			},
 		}
 	}
@@ -1684,42 +1848,36 @@ var conventionalVarNames = map[objKey]string{
 //
 // For special types, it uses known conventional names.
 func varNameForType(t types.Type) (string, bool) {
-	var typeName string
-	if tn, ok := t.(interface{ Obj() *types.TypeName }); ok {
-		obj := tn.Obj()
-		k := objKey{name: obj.Name()}
-		if obj.Pkg() != nil {
-			k.pkg = obj.Pkg().Name()
-		}
-		if name, ok := conventionalVarNames[k]; ok {
-			return name, true
-		}
-		typeName = obj.Name()
-	} else if b, ok := t.(*types.Basic); ok {
-		typeName = b.Name()
-	}
-
-	if typeName == "" {
+	tname := typesinternal.TypeNameFor(t)
+	if tname == nil {
 		return "", false
 	}
 
-	return AbbreviateVarName(typeName), true
+	// Have Alias, Basic, Named, or TypeParam.
+	k := objKey{name: tname.Name()}
+	if tname.Pkg() != nil {
+		k.pkg = tname.Pkg().Name()
+	}
+	if name, ok := conventionalVarNames[k]; ok {
+		return name, true
+	}
+
+	return AbbreviateVarName(tname.Name()), true
 }
 
-// adjustReturnStatements adds "zero values" of the given types to each return statement
-// in the given AST node.
-func adjustReturnStatements(returnTypes []*ast.Field, seenVars map[types.Object]ast.Expr, extractedBlock *ast.BlockStmt, qual types.Qualifier) error {
+// adjustReturnStatements adds "zero values" of the given types to each return
+// statement in the given AST node.
+func adjustReturnStatements(returnTypes []*ast.Field, seenVars map[types.Object]ast.Expr, extractedBlock *ast.BlockStmt, qual types.Qualifier, isErrHandlingReturnsCase bool) error {
 	var zeroVals []ast.Expr
 	// Create "zero values" for each type.
 	for _, returnType := range returnTypes {
 		var val ast.Expr
 		var isValid bool
 		for obj, typ := range seenVars {
-			if typ != returnType.Type {
-				continue
+			if typ == returnType.Type {
+				val, isValid = typesinternal.ZeroExpr(obj.Type(), qual)
+				break
 			}
-			val, isValid = typesinternal.ZeroExpr(obj.Type(), qual)
-			break
 		}
 		if !isValid {
 			return fmt.Errorf("could not find matching AST expression for %T", returnType.Type)
@@ -1731,9 +1889,15 @@ func adjustReturnStatements(returnTypes []*ast.Field, seenVars map[types.Object]
 	// extracted function. We set the bool to 'true' because, if these return statements
 	// execute, the extracted function terminates early, and the enclosing function must
 	// return as well.
-	zeroVals = append(zeroVals, ast.NewIdent("true"))
+	if !isErrHandlingReturnsCase {
+		zeroVals = append(zeroVals, ast.NewIdent("true"))
+	}
 	ast.Inspect(extractedBlock, func(n ast.Node) bool {
 		if n == nil {
+			return false
+		}
+		// Don't modify return statements inside anonymous functions.
+		if _, ok := n.(*ast.FuncLit); ok {
 			return false
 		}
 		if n, ok := n.(*ast.ReturnStmt); ok {
@@ -1859,4 +2023,123 @@ func cond[T any](cond bool, t, f T) T {
 	} else {
 		return f
 	}
+}
+
+// replaceBranchStmtWithReturnStmt modifies the ast node to replace the given
+// branch statement with the given return statement.
+func replaceBranchStmtWithReturnStmt(block ast.Node, br *ast.BranchStmt, ret *ast.ReturnStmt) {
+	ast.Inspect(block, func(n ast.Node) bool {
+		// Look for the branch statement within a BlockStmt or CaseClause.
+		switch n := n.(type) {
+		case *ast.BlockStmt:
+			for i, stmt := range n.List {
+				if stmt == br {
+					n.List[i] = ret
+					return false
+				}
+			}
+		case *ast.CaseClause:
+			for i, stmt := range n.Body {
+				if stmt.Pos() == br.Pos() {
+					n.Body[i] = ret
+					return false
+				}
+			}
+		}
+		return true
+	})
+}
+
+// freeBranches returns all branch statements beneath cur whose continuation
+// lies outside the (start, end) range.
+func freeBranches(info *types.Info, cur inspector.Cursor, start, end token.Pos) (free []*ast.BranchStmt) {
+nextBranch:
+	for curBr := range cur.Preorder((*ast.BranchStmt)(nil)) {
+		br := curBr.Node().(*ast.BranchStmt)
+		if br.End() < start || br.Pos() > end {
+			continue
+		}
+		label, _ := info.Uses[br.Label].(*types.Label)
+		if label != nil && !(start <= label.Pos() && label.Pos() <= end) {
+			free = append(free, br)
+			continue
+		}
+		if br.Tok == token.BREAK || br.Tok == token.CONTINUE {
+			filter := []ast.Node{
+				(*ast.ForStmt)(nil),
+				(*ast.RangeStmt)(nil),
+				(*ast.SwitchStmt)(nil),
+				(*ast.TypeSwitchStmt)(nil),
+				(*ast.SelectStmt)(nil),
+			}
+			// Find innermost relevant ancestor for break/continue.
+			for curAncestor := range curBr.Parent().Enclosing(filter...) {
+				if l, ok := curAncestor.Parent().Node().(*ast.LabeledStmt); ok &&
+					label != nil &&
+					l.Label.Name == label.Name() {
+					continue
+				}
+				switch n := curAncestor.Node().(type) {
+				case *ast.ForStmt, *ast.RangeStmt:
+					if n.Pos() < start {
+						free = append(free, br)
+					}
+					continue nextBranch
+				case *ast.SwitchStmt, *ast.TypeSwitchStmt, *ast.SelectStmt:
+					if br.Tok == token.BREAK {
+						if n.Pos() < start {
+							free = append(free, br)
+						}
+						continue nextBranch
+					}
+				}
+			}
+		}
+	}
+	return
+}
+
+// isFreeBranchStmt returns true if the relevant ancestor for the branch
+// statement at stack[len(stack)-1] cannot be found in the stack. This is used
+// when we are examining the extracted block, since type information isn't
+// available. We need to find the location of the label without using
+// types.Info.
+func isFreeBranchStmt(stack []ast.Node) bool {
+	switch node := stack[len(stack)-1].(type) {
+	case *ast.BranchStmt:
+		isLabeled := node.Label != nil
+		switch node.Tok {
+		case token.GOTO:
+			if isLabeled {
+				return !enclosingLabel(stack, node.Label.Name)
+			}
+		case token.BREAK, token.CONTINUE:
+			// Find innermost relevant ancestor for break/continue.
+			for i := len(stack) - 2; i >= 0; i-- {
+				n := stack[i]
+				if isLabeled {
+					l, ok := n.(*ast.LabeledStmt)
+					if !(ok && l.Label.Name == node.Label.Name) {
+						continue
+					}
+				}
+				switch n.(type) {
+				case *ast.ForStmt, *ast.RangeStmt, *ast.SwitchStmt, *ast.TypeSwitchStmt, *ast.SelectStmt:
+					return false
+				}
+			}
+		}
+	}
+	// We didn't find the relevant ancestor on the path, so this must be a free branch statement.
+	return true
+}
+
+// enclosingLabel returns true if the given label is found on the stack.
+func enclosingLabel(stack []ast.Node, label string) bool {
+	for _, n := range stack {
+		if labelStmt, ok := n.(*ast.LabeledStmt); ok && labelStmt.Label.Name == label {
+			return true
+		}
+	}
+	return false
 }

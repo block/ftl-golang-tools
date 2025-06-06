@@ -32,7 +32,7 @@ func generateDoc(out *bytes.Buffer, doc string) {
 		return
 	}
 	var list bool
-	for _, line := range strings.Split(doc, "\n") {
+	for line := range strings.SplitSeq(doc, "\n") {
 		// Lists in metaModel.json start with a dash.
 		// To make a go doc list they have to be preceded
 		// by a blank line, and indented.
@@ -77,8 +77,6 @@ func propStar(name string, t NameType, gotype string) (omitempty, indirect bool)
 	if newStar, ok := goplsStar[prop{name, t.Name}]; ok {
 		switch newStar {
 		case nothing:
-			indirect, omitempty = false, false
-		case wantStar:
 			indirect, omitempty = false, false
 		case wantOpt:
 			indirect, omitempty = false, true

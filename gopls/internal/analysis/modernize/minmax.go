@@ -13,9 +13,9 @@ import (
 
 	"github.com/block/ftl-golang-tools/go/analysis"
 	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/ast/edge"
 	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/internal/analysisinternal"
-	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
@@ -38,7 +38,7 @@ func minmax(pass *analysis.Pass) {
 
 	// check is called for all statements of this form:
 	//   if a < b { lhs = rhs }
-	check := func(file *ast.File, curIfStmt cursor.Cursor, compare *ast.BinaryExpr) {
+	check := func(file *ast.File, curIfStmt inspector.Cursor, compare *ast.BinaryExpr) {
 		var (
 			ifStmt  = curIfStmt.Node().(*ast.IfStmt)
 			tassign = ifStmt.Body.List[0].(*ast.AssignStmt)
@@ -48,6 +48,15 @@ func minmax(pass *analysis.Pass) {
 			rhs     = tassign.Rhs[0]
 			scope   = pass.TypesInfo.Scopes[ifStmt.Body]
 			sign    = isInequality(compare.Op)
+
+			// callArg formats a call argument, preserving comments from [start-end).
+			callArg = func(arg ast.Expr, start, end token.Pos) string {
+				comments := allComments(file, start, end)
+				return cond(arg == b, ", ", "") + // second argument needs a comma
+					cond(comments != "", "\n", "") + // comments need their own line
+					comments +
+					analysisinternal.Format(pass.Fset, arg)
+			}
 		)
 
 		if fblock, ok := ifStmt.Else.(*ast.BlockStmt); ok && isAssignBlock(fblock) {
@@ -91,12 +100,12 @@ func minmax(pass *analysis.Pass) {
 							// Replace IfStmt with lhs = min(a, b).
 							Pos: ifStmt.Pos(),
 							End: ifStmt.End(),
-							NewText: fmt.Appendf(nil, "%s%s = %s(%s, %s)",
-								allComments(file, ifStmt.Pos(), ifStmt.End()),
+							NewText: fmt.Appendf(nil, "%s = %s(%s%s)",
 								analysisinternal.Format(pass.Fset, lhs),
 								sym,
-								analysisinternal.Format(pass.Fset, a),
-								analysisinternal.Format(pass.Fset, b)),
+								callArg(a, ifStmt.Pos(), ifStmt.Else.Pos()),
+								callArg(b, ifStmt.Else.Pos(), ifStmt.End()),
+							),
 						}},
 					}},
 				})
@@ -154,13 +163,13 @@ func minmax(pass *analysis.Pass) {
 							Pos: fassign.Pos(),
 							End: ifStmt.End(),
 							// Replace "x := a; if ... {}" with "x = min(...)", preserving comments.
-							NewText: fmt.Appendf(nil, "%s %s %s %s(%s, %s)",
-								allComments(file, fassign.Pos(), ifStmt.End()),
+							NewText: fmt.Appendf(nil, "%s %s %s(%s%s)",
 								analysisinternal.Format(pass.Fset, lhs),
 								fassign.Tok.String(),
 								sym,
-								analysisinternal.Format(pass.Fset, a),
-								analysisinternal.Format(pass.Fset, b)),
+								callArg(a, fassign.Pos(), ifStmt.Pos()),
+								callArg(b, ifStmt.Pos(), ifStmt.End()),
+							),
 						}},
 					}},
 				})
@@ -175,14 +184,26 @@ func minmax(pass *analysis.Pass) {
 		astFile := curFile.Node().(*ast.File)
 		for curIfStmt := range curFile.Preorder((*ast.IfStmt)(nil)) {
 			ifStmt := curIfStmt.Node().(*ast.IfStmt)
+
+			// Don't bother handling "if a < b { lhs = rhs }" when it appears
+			// as the "else" branch of another if-statement.
+			//    if cond { ... } else if a < b { lhs = rhs }
+			// (This case would require introducing another block
+			//    if cond { ... } else { if a < b { lhs = rhs } }
+			// and checking that there is no following "else".)
+			if ek, _ := curIfStmt.ParentEdge(); ek == edge.IfStmt_Else {
+				continue
+			}
+
 			if compare, ok := ifStmt.Cond.(*ast.BinaryExpr); ok &&
 				ifStmt.Init == nil &&
 				isInequality(compare.Op) != 0 &&
-				isAssignBlock(ifStmt.Body) &&
-				!maybeNaN(info.TypeOf(ifStmt.Body.List[0].(*ast.AssignStmt).Lhs[0])) { // lhs
-
-				// Have: if a < b { lhs = rhs }
-				check(astFile, curIfStmt, compare)
+				isAssignBlock(ifStmt.Body) {
+				// a blank var has no type.
+				if tLHS := info.TypeOf(ifStmt.Body.List[0].(*ast.AssignStmt).Lhs[0]); tLHS != nil && !maybeNaN(tLHS) {
+					// Have: if a < b { lhs = rhs }
+					check(astFile, curIfStmt, compare)
+				}
 			}
 		}
 	}

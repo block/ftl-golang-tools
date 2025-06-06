@@ -38,6 +38,7 @@ import (
 	gastutil "github.com/block/ftl-golang-tools/gopls/internal/util/astutil"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
+	internalastutil "github.com/block/ftl-golang-tools/internal/astutil"
 	"github.com/block/ftl-golang-tools/internal/event"
 	"github.com/block/ftl-golang-tools/internal/stdlib"
 	"github.com/block/ftl-golang-tools/internal/tokeninternal"
@@ -286,6 +287,10 @@ func hover(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, pp pro
 		}
 	}
 
+	// By convention, we qualify hover information relative to the package
+	// from which the request originated.
+	qual := typesinternal.FileQualifier(pgf.File, pkg.Types())
+
 	// Handle hover over identifier.
 
 	// The general case: compute hover information for the object referenced by
@@ -303,10 +308,6 @@ func hover(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, pp pro
 		}
 		hoverRange = &rng
 	}
-
-	// By convention, we qualify hover information relative to the package
-	// from which the request originated.
-	qual := typesinternal.FileQualifier(pgf.File, pkg.Types())
 
 	// Handle type switch identifiers as a special case, since they don't have an
 	// object.
@@ -343,6 +344,42 @@ func hover(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, pp pro
 
 	// By default, types.ObjectString provides a reasonable signature.
 	signature := objectString(obj, qual, declPos, declPGF.Tok, spec)
+
+	// When hovering over a reference to a promoted struct field,
+	// show the implicitly selected intervening fields.
+	cur, ok := pgf.Cursor.FindByPos(pos, pos)
+	if !ok {
+		return protocol.Range{}, nil, fmt.Errorf("Invalid hover position, failed to get cursor")
+	}
+	if obj, ok := obj.(*types.Var); ok && obj.IsField() {
+		if selExpr, ok := cur.Parent().Node().(*ast.SelectorExpr); ok {
+			sel := pkg.TypesInfo().Selections[selExpr]
+			if len(sel.Index()) > 1 {
+				var buf bytes.Buffer
+				buf.WriteString(" // through ")
+				t := typesinternal.Unpointer(sel.Recv())
+				for i, index := range sel.Index()[:len(sel.Index())-1] {
+					if i > 0 {
+						buf.WriteString(", ")
+					}
+					field := typesinternal.Unpointer(t.Underlying()).(*types.Struct).Field(index)
+					t = field.Type()
+					// Inv: fieldType is N or *N for some NamedOrAlias type N.
+					if ptr, ok := t.(*types.Pointer); ok {
+						buf.WriteString("*")
+						t = ptr.Elem()
+					}
+					// Be defensive in case of ill-typed code:
+					if named, ok := t.(typesinternal.NamedOrAlias); ok {
+						buf.WriteString(named.Obj().Name())
+					}
+				}
+				// Update signature to include embedded struct info.
+				signature += buf.String()
+			}
+		}
+	}
+
 	singleLineSignature := signature
 
 	// Display struct tag for struct fields at the end of the signature.
@@ -359,6 +396,7 @@ func hover(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, pp pro
 	}
 
 	// Compute size information for types,
+	// including allocator size class,
 	// and (size, offset) for struct fields.
 	//
 	// Also, if a struct type's field ordering is significantly
@@ -393,13 +431,18 @@ func hover(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, pp pro
 
 		path := pathEnclosingObjNode(pgf.File, pos)
 
-		// Build string of form "size=... (X% wasted), offset=...".
+		// Build string of form "size=... (X% wasted), class=..., offset=...".
 		size, wasted, offset := computeSizeOffsetInfo(pkg, path, obj)
 		var buf strings.Builder
 		if size >= 0 {
 			fmt.Fprintf(&buf, "size=%s", format(size))
 			if wasted >= 20 { // >=20% wasted
 				fmt.Fprintf(&buf, " (%d%% wasted)", wasted)
+			}
+
+			// Include allocator size class, if larger.
+			if class := sizeClass(size); class > size {
+				fmt.Fprintf(&buf, ", class=%s", format(class))
 			}
 		}
 		if offset >= 0 {
@@ -458,7 +501,7 @@ func hover(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, pp pro
 					types.TypeString(f.field.Type(), qual),
 					f.path)
 			}
-			w.Flush()
+			w.Flush() // ignore error
 			b.WriteByte('\n')
 			fields = b.String()
 		}
@@ -614,7 +657,7 @@ func hover(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, pp pro
 		linkPath = ""
 	} else if linkMeta.Module != nil && linkMeta.Module.Version != "" {
 		mod := linkMeta.Module
-		linkPath = strings.Replace(linkPath, mod.Path, mod.Path+"@"+mod.Version, 1)
+		linkPath = strings.Replace(linkPath, mod.Path, cache.ResolvedString(mod), 1)
 	}
 
 	var footer string
@@ -1003,7 +1046,7 @@ func hoverReturnStatement(pgf *parsego.File, path []ast.Node, ret *ast.ReturnStm
 		if i > 0 {
 			buf.WriteString(", ")
 		}
-		cfg.Fprint(&buf, fset, field.Type)
+		cfg.Fprint(&buf, fset, field.Type) // ignore error
 	}
 	buf.WriteByte(')')
 	return rng, &hoverResult{
@@ -1502,14 +1545,8 @@ func findDeclInfo(files []*ast.File, pos token.Pos) (decl ast.Decl, spec ast.Spe
 	stack := make([]ast.Node, 0, 20)
 
 	// Allocate the closure once, outside the loop.
-	f := func(n ast.Node) bool {
+	f := func(n ast.Node, stack []ast.Node) bool {
 		if found {
-			return false
-		}
-		if n != nil {
-			stack = append(stack, n) // push
-		} else {
-			stack = stack[:len(stack)-1] // pop
 			return false
 		}
 
@@ -1596,7 +1633,7 @@ func findDeclInfo(files []*ast.File, pos token.Pos) (decl ast.Decl, spec ast.Spe
 		return true
 	}
 	for _, file := range files {
-		ast.Inspect(file, f)
+		internalastutil.PreorderStack(file, stack, f)
 		if found {
 			return decl, spec, field
 		}
@@ -1744,4 +1781,15 @@ func computeSizeOffsetInfo(pkg *cache.Package, path []ast.Node, obj types.Object
 	}
 
 	return
+}
+
+// sizeClass reports the size class for a struct of the specified size, or -1 if unknown.f
+// See GOROOT/src/runtime/msize.go for details.
+func sizeClass(size int64) int64 {
+	if size > 1<<16 {
+		return -1 // avoid allocation
+	}
+	// We assume that bytes.Clone doesn't trim,
+	// and reports the underlying size class; see TestSizeClass.
+	return int64(cap(bytes.Clone(make([]byte, size))))
 }

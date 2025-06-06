@@ -12,12 +12,11 @@ import (
 
 	"github.com/block/ftl-golang-tools/go/analysis"
 	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/ast/edge"
 	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/go/types/typeutil"
 	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 	typeindexanalyzer "github.com/block/ftl-golang-tools/internal/analysisinternal/typeindex"
-	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
-	"github.com/block/ftl-golang-tools/internal/astutil/edge"
 	"github.com/block/ftl-golang-tools/internal/typesinternal"
 	"github.com/block/ftl-golang-tools/internal/typesinternal/typeindex"
 )
@@ -246,7 +245,7 @@ func rangeint(pass *analysis.Pass) {
 //
 // This function is valid only for scalars (x = ...),
 // not for aggregates (x.a[i] = ...)
-func isScalarLvalue(info *types.Info, curId cursor.Cursor) bool {
+func isScalarLvalue(info *types.Info, curId inspector.Cursor) bool {
 	// Unfortunately we can't simply use info.Types[e].Assignable()
 	// as it is always true for a variable even when that variable is
 	// used only as an r-value. So we must inspect enclosing syntax.

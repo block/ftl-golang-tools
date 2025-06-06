@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -387,7 +388,7 @@ func TestLoadArgumentListIsNotTooLong(t *testing.T) {
 	defer exported.Cleanup()
 	numOfPatterns := argMax/16 + 1 // the pattern below is approx. 16 chars
 	patterns := make([]string, numOfPatterns)
-	for i := 0; i < numOfPatterns; i++ {
+	for i := range numOfPatterns {
 		patterns[i] = fmt.Sprintf("golang.org/mod/p%d", i)
 	} // patterns have more than argMax number of chars combined with whitespaces b/w patterns
 
@@ -1610,7 +1611,7 @@ EOF
 			defer os.Setenv(pathKey, oldPath)
 			// Clone exported.Config
 			config := exported.Config
-			config.Env = append([]string{}, exported.Config.Env...)
+			config.Env = slices.Clone(exported.Config.Env)
 			config.Env = append(config.Env, "GOPACKAGESDRIVER="+test.driver)
 			pkgs, err := packages.Load(exported.Config, "golist")
 			if err != nil {
@@ -1978,7 +1979,6 @@ func testCgoNoSyntax(t *testing.T, exporter packagestest.Exporter) {
 		packages.NeedName | packages.NeedImports,
 	}
 	for _, mode := range modes {
-		mode := mode
 		t.Run(fmt.Sprint(mode), func(t *testing.T) {
 			exported.Config.Mode = mode
 			pkgs, err := packages.Load(exported.Config, "golang.org/fake/c")
@@ -2676,7 +2676,7 @@ func testIssue48226(t *testing.T, exporter packagestest.Exporter) {
 		t.Fatal(err)
 	}
 	if len(initial) != 1 {
-		t.Fatalf("exepected 1 package, got %d", len(initial))
+		t.Fatalf("expected 1 package, got %d", len(initial))
 	}
 	pkg := initial[0]
 
@@ -2721,7 +2721,7 @@ func testModule(t *testing.T, exporter packagestest.Exporter) {
 			t.Fatal("package.Module: want non-nil, got nil")
 		}
 		if a.Module.Path != "golang.org/fake" {
-			t.Fatalf("package.Modile.Path: want \"golang.org/fake\", got %q", a.Module.Path)
+			t.Fatalf("package.Module.Path: want \"golang.org/fake\", got %q", a.Module.Path)
 		}
 		if a.Module.GoMod != filepath.Join(rootDir, "go.mod") {
 			t.Fatalf("package.Module.GoMod: want %q, got %q", filepath.Join(rootDir, "go.mod"), a.Module.GoMod)
@@ -2787,7 +2787,7 @@ func main() {
 		t.Fatal(err)
 	}
 
-	exported.Config.Env = append(append([]string{}, baseEnv...), "GOPACKAGESDRIVER="+emptyDriverPath)
+	exported.Config.Env = append(slices.Clone(baseEnv), "GOPACKAGESDRIVER="+emptyDriverPath)
 	initial, err := packages.Load(exported.Config, "golang.org/fake/a")
 	if err != nil {
 		t.Fatal(err)
@@ -2807,7 +2807,7 @@ func main() {
 		t.Fatal(err)
 	}
 
-	exported.Config.Env = append(append([]string{}, baseEnv...), "GOPACKAGESDRIVER="+notHandledDriverPath)
+	exported.Config.Env = append(slices.Clone(baseEnv), "GOPACKAGESDRIVER="+notHandledDriverPath)
 	initial, err = packages.Load(exported.Config, "golang.org/fake/a")
 	if err != nil {
 		t.Fatal(err)

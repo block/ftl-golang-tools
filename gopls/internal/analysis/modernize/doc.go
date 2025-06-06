@@ -25,6 +25,9 @@
 //
 //	$ go run github.com/block/ftl-golang-tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test ./...
 //
+// (Do not use "go get -tool" to add gopls as a dependency of your
+// module; gopls commands must be built from their release branch.)
+//
 // If the tool warns of conflicting fixes, you may need to run it more
 // than once until it has applied all fixes cleanly. This command is
 // not an officially supported interface and may change in the future.
@@ -47,6 +50,11 @@
 //
 // Categories of modernize diagnostic:
 //
+//   - forvar: remove x := x variable declarations made unnecessary by the new semantics of loops in go1.22.
+//
+//   - slicescontains: replace 'for i, elem := range s { if elem == needle { ...; break }'
+//     by a call to slices.Contains, added in go1.21.
+//
 //   - minmax: replace an if/else conditional assignment by a call to
 //     the built-in min or max functions added in go1.21.
 //
@@ -54,9 +62,6 @@
 //     by a call to slices.Sort(s), added in go1.21.
 //
 //   - efaceany: replace interface{} by the 'any' type added in go1.18.
-//
-//   - slicesclone: replace append([]T(nil), s...) by slices.Clone(s) or
-//     slices.Concat(s), added in go1.21.
 //
 //   - mapsloop: replace a loop around an m[k]=v map update by a call
 //     to one of the Collect, Copy, Clone, or Insert functions from
@@ -74,13 +79,16 @@
 //     benchmark with "for b.Loop()", and remove any preceding calls
 //     to b.StopTimer, b.StartTimer, and b.ResetTimer.
 //
-//   - slicesdelete: replace append(s[:i], s[i+1]...) by
-//     slices.Delete(s, i, i+1), added in go1.21.
+//     B.Loop intentionally defeats compiler optimizations such as
+//     inlining so that the benchmark is not entirely optimized away.
+//     Currently, however, it may cause benchmarks to become slower
+//     in some cases due to increased allocation; see
+//     https://go.dev/issue/73137.
 //
 //   - rangeint: replace a 3-clause "for i := 0; i < n; i++" loop by
 //     "for i := range n", added in go1.22.
 //
-//   - stringseq: replace Split in "for range strings.Split(...)" by go1.24's
+//   - stringsseq: replace Split in "for range strings.Split(...)" by go1.24's
 //     more efficient SplitSeq, or Fields with FieldSeq.
 //
 //   - stringscutprefix: replace some uses of HasPrefix followed by TrimPrefix with CutPrefix,

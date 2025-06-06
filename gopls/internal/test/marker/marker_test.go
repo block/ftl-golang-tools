@@ -18,6 +18,7 @@ import (
 	"go/types"
 	"io/fs"
 	"log"
+	"net/http/httptest"
 	"os"
 	"path"
 	"path/filepath"
@@ -34,6 +35,7 @@ import (
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
 	"github.com/block/ftl-golang-tools/gopls/internal/debug"
 	"github.com/block/ftl-golang-tools/gopls/internal/lsprpc"
+	internalmcp "github.com/block/ftl-golang-tools/gopls/internal/mcp"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 	"github.com/block/ftl-golang-tools/gopls/internal/test/compare"
 	"github.com/block/ftl-golang-tools/gopls/internal/test/integration"
@@ -45,6 +47,7 @@ import (
 	"github.com/block/ftl-golang-tools/internal/expect"
 	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
 	"github.com/block/ftl-golang-tools/internal/jsonrpc2/servertest"
+	"github.com/block/ftl-golang-tools/internal/mcp"
 	"github.com/block/ftl-golang-tools/internal/testenv"
 	"github.com/block/ftl-golang-tools/txtar"
 )
@@ -55,7 +58,7 @@ func TestMain(m *testing.M) {
 	bug.PanicOnBugs = true
 	testenv.ExitIfSmallMachine()
 	// Disable GOPACKAGESDRIVER, as it can cause spurious test failures.
-	os.Setenv("GOPACKAGESDRIVER", "off")
+	os.Setenv("GOPACKAGESDRIVER", "off") // ignore error
 	integration.FilterToolchainPathAndGOROOT()
 	os.Exit(m.Run())
 }
@@ -113,7 +116,6 @@ func Test(t *testing.T) {
 	cache := cache.New(nil)
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -135,6 +137,15 @@ func Test(t *testing.T) {
 					t.Fatalf("parsing -min_go version: %v", err)
 				}
 				testenv.NeedsGo1Point(t, go1point)
+			}
+			if test.maxGoVersion != "" {
+				// A max Go version may be useful when (e.g.) a recent go/types
+				// fix makes it impossible to reproduce a certain older crash.
+				var go1point int
+				if _, err := fmt.Sscanf(test.maxGoVersion, "go1.%d", &go1point); err != nil {
+					t.Fatalf("parsing -max_go version: %v", err)
+				}
+				testenv.SkipAfterGo1Point(t, go1point)
 			}
 			if test.minGoCommandVersion != "" {
 				var go1point int
@@ -177,16 +188,13 @@ func Test(t *testing.T) {
 
 			run := &markerTestRun{
 				test:       test,
-				env:        newEnv(t, cache, test.files, test.proxyFiles, test.writeGoSum, config),
+				env:        newEnv(t, cache, test.files, test.proxyFiles, test.writeGoSum, config, test.mcp),
 				settings:   config.Settings,
 				values:     make(map[expect.Identifier]any),
 				diags:      make(map[protocol.Location][]protocol.Diagnostic),
 				extraNotes: make(map[protocol.DocumentURI]map[string][]*expect.Note),
 			}
-
-			// TODO(rfindley): make it easier to clean up the integration test environment.
-			defer run.env.Editor.Shutdown(context.Background()) // ignore error
-			defer run.env.Sandbox.Close()                       // ignore error
+			defer run.env.Shutdown()
 
 			// Open all files so that we operate consistently with LSP clients, and
 			// (pragmatically) so that we have a Mapper available via the fake
@@ -596,12 +604,15 @@ var actionMarkerFuncs = map[string]func(marker){
 	"selectionrange":   actionMarkerFunc(selectionRangeMarker),
 	"signature":        actionMarkerFunc(signatureMarker),
 	"snippet":          actionMarkerFunc(snippetMarker),
+	"subtypes":         actionMarkerFunc(subtypesMarker),
+	"supertypes":       actionMarkerFunc(supertypesMarker),
 	"quickfix":         actionMarkerFunc(quickfixMarker),
 	"quickfixerr":      actionMarkerFunc(quickfixErrMarker),
 	"symbol":           actionMarkerFunc(symbolMarker),
 	"token":            actionMarkerFunc(tokenMarker),
 	"typedef":          actionMarkerFunc(typedefMarker),
 	"workspacesymbol":  actionMarkerFunc(workspaceSymbolMarker),
+	"mcptool":          actionMarkerFunc(mcpToolMarker, "output"),
 }
 
 // markerTest holds all the test data extracted from a test txtar archive.
@@ -625,17 +636,18 @@ type markerTest struct {
 	flags      []string // flags extracted from the special "flags" archive file.
 
 	// Parsed flags values. See the flag definitions below for documentation.
-	minGoVersion        string // minimum Go runtime version; max should never be needed
-	minGoCommandVersion string
-	maxGoCommandVersion string
-	cgo                 bool
-	writeGoSum          []string
-	skipGOOS            []string
-	skipGOARCH          []string
-	ignoreExtraDiags    bool
-	filterBuiltins      bool
-	filterKeywords      bool
-	errorsOK            bool
+	minGoVersion, maxGoVersion               string // min/max version of Go runtime
+	minGoCommandVersion, maxGoCommandVersion string // min/max version of ambient go command
+
+	cgo              bool
+	writeGoSum       []string
+	skipGOOS         []string
+	skipGOARCH       []string
+	ignoreExtraDiags bool
+	filterBuiltins   bool
+	filterKeywords   bool
+	errorsOK         bool
+	mcp              bool
 }
 
 // flagSet returns the flagset used for parsing the special "flags" file in the
@@ -643,6 +655,7 @@ type markerTest struct {
 func (t *markerTest) flagSet() *flag.FlagSet {
 	flags := flag.NewFlagSet(t.name, flag.ContinueOnError)
 	flags.StringVar(&t.minGoVersion, "min_go", "", "if set, the minimum go1.X version required for this test")
+	flags.StringVar(&t.maxGoVersion, "max_go", "", "if set, the maximum go1.X version required for this test")
 	flags.StringVar(&t.minGoCommandVersion, "min_go_command", "", "if set, the minimum go1.X go command version required for this test")
 	flags.StringVar(&t.maxGoCommandVersion, "max_go_command", "", "if set, the maximum go1.X go command version required for this test")
 	flags.BoolVar(&t.cgo, "cgo", false, "if set, requires cgo (both the cgo tool and CGO_ENABLED=1)")
@@ -653,6 +666,7 @@ func (t *markerTest) flagSet() *flag.FlagSet {
 	flags.BoolVar(&t.filterBuiltins, "filter_builtins", true, "if set, filter builtins from completion results")
 	flags.BoolVar(&t.filterKeywords, "filter_keywords", true, "if set, filter keywords from completion results")
 	flags.BoolVar(&t.errorsOK, "errors_ok", false, "if set, Error level log messages are acceptable in this test")
+	flags.BoolVar(&t.mcp, "mcp", false, "if set, enable model context protocol client and server in this test")
 	return flags
 }
 
@@ -780,7 +794,12 @@ func loadMarkerTest(name string, content []byte) (*markerTest, error) {
 		files:   make(map[string][]byte),
 		golden:  make(map[expect.Identifier]*Golden),
 	}
+	seen := make(map[string]bool)
 	for _, file := range archive.Files {
+		if seen[file.Name] {
+			return nil, fmt.Errorf("duplicate archive section %q", file.Name)
+		}
+		seen[file.Name] = true
 		switch {
 		case file.Name == "skip":
 			reason := strings.ReplaceAll(string(file.Data), "\n", " ")
@@ -945,7 +964,7 @@ func formatTest(test *markerTest) ([]byte, error) {
 //
 // TODO(rfindley): simplify and refactor the construction of testing
 // environments across integration tests, marker tests, and benchmarks.
-func newEnv(t *testing.T, cache *cache.Cache, files, proxyFiles map[string][]byte, writeGoSum []string, config fake.EditorConfig) *integration.Env {
+func newEnv(t *testing.T, cache *cache.Cache, files, proxyFiles map[string][]byte, writeGoSum []string, config fake.EditorConfig, enableMCP bool) *integration.Env {
 	sandbox, err := fake.NewSandbox(&fake.SandboxConfig{
 		RootDir:    t.TempDir(),
 		Files:      files,
@@ -967,13 +986,23 @@ func newEnv(t *testing.T, cache *cache.Cache, files, proxyFiles map[string][]byt
 	ctx = debug.WithInstance(ctx)
 
 	awaiter := integration.NewAwaiter(sandbox.Workdir)
-	ss := lsprpc.NewStreamServer(cache, false, nil)
+
+	var eventChan chan lsprpc.SessionEvent
+	var mcpServer *httptest.Server
+	if enableMCP {
+		eventChan = make(chan lsprpc.SessionEvent)
+		mcpServer = httptest.NewServer(internalmcp.HTTPHandler(eventChan, cache, false))
+	}
+
+	ss := lsprpc.NewStreamServer(cache, false, eventChan, nil)
+
 	server := servertest.NewPipeServer(ss, jsonrpc2.NewRawStream)
 	editor, err := fake.NewEditor(sandbox, config).Connect(ctx, server, awaiter.Hooks())
 	if err != nil {
 		sandbox.Close() // ignore error
 		t.Fatal(err)
 	}
+
 	if err := awaiter.Await(ctx, integration.OnceMet(
 		integration.InitialWorkspaceLoad,
 		integration.NoShownMessage(""),
@@ -981,12 +1010,25 @@ func newEnv(t *testing.T, cache *cache.Cache, files, proxyFiles map[string][]byt
 		sandbox.Close() // ignore error
 		t.Fatal(err)
 	}
+
+	var mcpSession *mcp.ClientSession
+	if enableMCP {
+		client := mcp.NewClient("test", "v1.0.0", nil)
+		mcpSession, err = client.Connect(ctx, mcp.NewSSEClientTransport(mcpServer.URL))
+		if err != nil {
+			t.Fatalf("fail to connect to mcp server: %v", err)
+		}
+	}
+
 	return &integration.Env{
-		TB:      t,
-		Ctx:     ctx,
-		Editor:  editor,
-		Sandbox: sandbox,
-		Awaiter: awaiter,
+		TB:         t,
+		Ctx:        ctx,
+		Editor:     editor,
+		Sandbox:    sandbox,
+		Awaiter:    awaiter,
+		MCPSession: mcpSession,
+		MCPServer:  mcpServer,
+		EventChan:  eventChan,
 	}
 }
 
@@ -1590,7 +1632,7 @@ func completeMarker(mark marker, src protocol.Location, want ...completionItem) 
 		want = nil // got is nil if empty
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
-		mark.errorf("Completion(...) returned unexpect results (-want +got):\n%s", diff)
+		mark.errorf("Completion(...) returned unexpected results (-want +got):\n%s", diff)
 	}
 }
 
@@ -1649,20 +1691,22 @@ func acceptCompletionMarker(mark marker, src protocol.Location, label string, go
 }
 
 // defMarker implements the @def marker, running textDocument/definition at
-// the given src location and asserting that there is exactly one resulting
-// location, matching dst.
-//
-// TODO(rfindley): support a variadic destination set.
-func defMarker(mark marker, src, dst protocol.Location) {
-	got := mark.run.env.GoToDefinition(src)
-	if got != dst {
-		mark.errorf("definition location does not match:\n\tgot: %s\n\twant %s",
-			mark.run.fmtLoc(got), mark.run.fmtLoc(dst))
+// the given location and asserting that there the results match want.
+func defMarker(mark marker, loc protocol.Location, want ...protocol.Location) {
+	env := mark.run.env
+	got, err := env.Editor.Definitions(env.Ctx, loc)
+	if err != nil {
+		mark.errorf("definition request failed: %v", err)
+		return
+	}
+
+	if err := compareLocations(mark, got, want); err != nil {
+		mark.errorf("def failed: %v", err)
 	}
 }
 
 func typedefMarker(mark marker, src, dst protocol.Location) {
-	got := mark.run.env.TypeDefinition(src)
+	got := mark.run.env.FirstTypeDefinition(src)
 	if got != dst {
 		mark.errorf("type definition location does not match:\n\tgot: %s\n\twant %s",
 			mark.run.fmtLoc(got), mark.run.fmtLoc(dst))
@@ -1690,8 +1734,9 @@ func foldingRangeMarker(mark marker, g *Golden) {
 		})
 	}
 	for i, rng := range ranges {
-		insert(rng.StartLine, rng.StartCharacter, fmt.Sprintf("<%d kind=%q>", i, rng.Kind))
-		insert(rng.EndLine, rng.EndCharacter, fmt.Sprintf("</%d>", i))
+		// We assume the server populates these optional fields.
+		insert(*rng.StartLine, *rng.StartCharacter, fmt.Sprintf("<%d kind=%q>", i, rng.Kind))
+		insert(*rng.EndLine, *rng.EndCharacter, fmt.Sprintf("</%d>", i))
 	}
 	filename := mark.path()
 	mapper, err := env.Editor.Mapper(filename)
@@ -1772,7 +1817,7 @@ func sortDocumentHighlights(s []protocol.DocumentHighlight) {
 func highlightAllMarker(mark marker, all ...protocol.DocumentHighlight) {
 	sortDocumentHighlights(all)
 	for _, src := range all {
-		loc := protocol.Location{URI: mark.uri(), Range: src.Range}
+		loc := mark.uri().Location(src.Range)
 		got := mark.run.env.DocumentHighlight(loc)
 		sortDocumentHighlights(got)
 
@@ -1783,7 +1828,7 @@ func highlightAllMarker(mark marker, all ...protocol.DocumentHighlight) {
 }
 
 func highlightMarker(mark marker, src protocol.DocumentHighlight, dsts ...protocol.DocumentHighlight) {
-	loc := protocol.Location{URI: mark.uri(), Range: src.Range}
+	loc := mark.uri().Location(src.Range)
 	got := mark.run.env.DocumentHighlight(loc)
 
 	sortDocumentHighlights(got)
@@ -1817,7 +1862,7 @@ func locMarker(mark marker, loc protocol.Location) protocol.Location { return lo
 // defLocMarker implements the @defloc marker, which binds a location to the
 // (first) result of a jump-to-definition request.
 func defLocMarker(mark marker, loc protocol.Location) protocol.Location {
-	return mark.run.env.GoToDefinition(loc)
+	return mark.run.env.FirstDefinition(loc)
 }
 
 // diagMarker implements the @diag marker. It eliminates diagnostics from
@@ -1943,8 +1988,12 @@ func signatureMarker(mark marker, src protocol.Location, label string, active in
 	if got := gotLabels[0]; got != label {
 		mark.errorf("signatureHelp: got label %q, want %q", got, label)
 	}
-	if got := int64(got.ActiveParameter); got != active {
-		mark.errorf("signatureHelp: got active parameter %d, want %d", got, active)
+	gotActiveParameter := int64(-1) // => missing
+	if got.ActiveParameter != nil {
+		gotActiveParameter = int64(*got.ActiveParameter)
+	}
+	if gotActiveParameter != active {
+		mark.errorf("signatureHelp: got active parameter %d, want %d", gotActiveParameter, active)
 	}
 }
 
@@ -2153,7 +2202,7 @@ func documentLinkMarker(mark marker, g *Golden) {
 			mark.errorf("%s: nil link target", l.Range)
 			continue
 		}
-		loc := protocol.Location{URI: mark.uri(), Range: l.Range}
+		loc := mark.uri().Location(l.Range)
 		fmt.Fprintln(&b, mark.run.fmtLocForGolden(loc), *l.Target)
 	}
 
@@ -2393,10 +2442,45 @@ func implementationMarker(mark marker, src protocol.Location, want ...protocol.L
 	}
 }
 
-func itemLocation(item protocol.CallHierarchyItem) protocol.Location {
-	return protocol.Location{
-		URI:   item.URI,
-		Range: item.Range,
+func mcpToolMarker(mark marker, tool string, rawArgs string, loc protocol.Location) {
+	args := make(map[string]any)
+	if err := json.Unmarshal([]byte(rawArgs), &args); err != nil {
+		mark.errorf("fail to unmarshal arguments to map[string]any: %v", err)
+		return
+	}
+
+	// TODO(hxjiang): Make the "location" key configurable.
+	args["location"] = loc
+
+	res, err := mcp.CallTool(mark.ctx(), mark.run.env.MCPSession, &mcp.CallToolParams[map[string]any]{
+		Name:      tool,
+		Arguments: args,
+	})
+	if err != nil {
+		mark.errorf("failed to call mcp tool: %v", err)
+		return
+	}
+
+	var buf bytes.Buffer
+	for i, c := range res.Content {
+		if c.Type != "text" {
+			mark.errorf("unsupported return content[%v] type: %s", i, c.Type)
+			continue
+		}
+		buf.WriteString(c.Text)
+	}
+	if !bytes.HasSuffix(buf.Bytes(), []byte{'\n'}) {
+		buf.WriteString("\n") // all golden content is newline terminated
+	}
+
+	got := buf.String()
+
+	output := namedArg(mark, "output", expect.Identifier(""))
+	golden := mark.getGolden(output)
+	if want, ok := golden.Get(mark.T(), "", []byte(got)); !ok {
+		mark.errorf("%s: missing golden file @%s", mark.note.Name, golden.id)
+	} else if diff := cmp.Diff(got, string(want)); diff != "" {
+		mark.errorf("unexpected mcp tools call %s return; got:\n%s\n want:\n%s\ndiff:\n%s", tool, got, want, diff)
 	}
 }
 
@@ -2408,7 +2492,7 @@ func incomingCallsMarker(mark marker, src protocol.Location, want ...protocol.Lo
 		}
 		var locs []protocol.Location
 		for _, call := range calls {
-			locs = append(locs, itemLocation(call.From))
+			locs = append(locs, call.From.URI.Location(call.From.Range))
 		}
 		return locs, nil
 	}
@@ -2423,7 +2507,7 @@ func outgoingCallsMarker(mark marker, src protocol.Location, want ...protocol.Lo
 		}
 		var locs []protocol.Location
 		for _, call := range calls {
-			locs = append(locs, itemLocation(call.To))
+			locs = append(locs, call.To.URI.Location(call.To.Range))
 		}
 		return locs, nil
 	}
@@ -2444,7 +2528,8 @@ func callHierarchy(mark marker, src protocol.Location, getCalls callHierarchyFun
 		mark.errorf("PrepareCallHierarchy returned %d items, want exactly 1", nitems)
 		return
 	}
-	if loc := itemLocation(items[0]); loc != src {
+	item := items[0]
+	if loc := item.URI.Location(item.Range); loc != src {
 		mark.errorf("PrepareCallHierarchy found call %v, want %v", loc, src)
 		return
 	}
@@ -2454,16 +2539,8 @@ func callHierarchy(mark marker, src protocol.Location, getCalls callHierarchyFun
 		return
 	}
 	if calls == nil {
-		calls = []protocol.Location{}
+		calls = []protocol.Location{} // non-nil; cmp.Diff cares
 	}
-	// TODO(rfindley): why aren't call hierarchy results stable?
-	sortLocs := func(locs []protocol.Location) {
-		sort.Slice(locs, func(i, j int) bool {
-			return protocol.CompareLocation(locs[i], locs[j]) < 0
-		})
-	}
-	sortLocs(want)
-	sortLocs(calls)
 	if d := cmp.Diff(want, calls); d != "" {
 		mark.errorf("call hierarchy: unexpected results (-want +got):\n%s", d)
 	}
@@ -2523,6 +2600,50 @@ func prepareRenameMarker(mark marker, src protocol.Location, placeholder string)
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
 		mark.errorf("mismatching PrepareRename result:\n%s", diff)
+	}
+}
+
+func subtypesMarker(mark marker, src protocol.Location, want ...protocol.Location) {
+	typeHierarchy(mark, src, want, func(item protocol.TypeHierarchyItem) ([]protocol.TypeHierarchyItem, error) {
+		return mark.server().Subtypes(mark.ctx(), &protocol.TypeHierarchySubtypesParams{Item: item})
+	})
+}
+
+func supertypesMarker(mark marker, src protocol.Location, want ...protocol.Location) {
+	typeHierarchy(mark, src, want, func(item protocol.TypeHierarchyItem) ([]protocol.TypeHierarchyItem, error) {
+		return mark.server().Supertypes(mark.ctx(), &protocol.TypeHierarchySupertypesParams{Item: item})
+	})
+}
+
+type typeHierarchyFunc = func(item protocol.TypeHierarchyItem) ([]protocol.TypeHierarchyItem, error)
+
+func typeHierarchy(mark marker, src protocol.Location, want []protocol.Location, get typeHierarchyFunc) {
+	items, err := mark.server().PrepareTypeHierarchy(mark.ctx(), &protocol.TypeHierarchyPrepareParams{
+		TextDocumentPositionParams: protocol.LocationTextDocumentPositionParams(src),
+	})
+	if err != nil {
+		mark.errorf("PrepareTypeHierarchy failed: %v", err)
+		return
+	}
+	if nitems := len(items); nitems != 1 {
+		mark.errorf("PrepareTypeHierarchy returned %d items, want exactly 1", nitems)
+		return
+	}
+	if loc := (protocol.Location{URI: items[0].URI, Range: items[0].Range}); loc != src {
+		mark.errorf("PrepareTypeHierarchy found type %v, want %v", loc, src)
+		return
+	}
+	items, err = get(items[0])
+	if err != nil {
+		mark.errorf("type hierarchy failed: %v", err)
+		return
+	}
+	got := []protocol.Location{} // non-nil; cmp.Diff cares
+	for _, item := range items {
+		got = append(got, item.URI.Location(item.Range))
+	}
+	if d := cmp.Diff(want, got); d != "" {
+		mark.errorf("type hierarchy: unexpected results (-want +got):\n%s", d)
 	}
 }
 

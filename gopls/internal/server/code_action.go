@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
@@ -22,10 +21,10 @@ import (
 )
 
 func (s *server) CodeAction(ctx context.Context, params *protocol.CodeActionParams) ([]protocol.CodeAction, error) {
-	ctx, done := event.Start(ctx, "lsp.Server.codeAction")
+	ctx, done := event.Start(ctx, "server.CodeAction")
 	defer done()
 
-	fh, snapshot, release, err := s.fileOf(ctx, params.TextDocument.URI)
+	fh, snapshot, release, err := s.session.FileOf(ctx, params.TextDocument.URI)
 	if err != nil {
 		return nil, err
 	}
@@ -181,10 +180,16 @@ func (s *server) CodeAction(ctx context.Context, params *protocol.CodeActionPara
 		}
 		actions = append(actions, moreActions...)
 
-		// Don't suggest fixes for generated files, since they are generally
+		// Don't suggest most fixes for generated files, since they are generally
 		// not useful and some editors may apply them automatically on save.
 		// (Unfortunately there's no reliable way to distinguish fixes from
 		// queries, so we must list all kinds of queries here.)
+		//
+		// We make an exception for OrganizeImports, because
+		// (a) it is needed when making temporary experimental
+		//     changes (e.g. adding logging) in generated files, and
+		// (b) it doesn't report diagnostics on well-formed code, and
+		//     unedited generated files must be well formed.
 		if golang.IsGenerated(ctx, snapshot, uri) {
 			actions = slices.DeleteFunc(actions, func(a protocol.CodeAction) bool {
 				switch a.Kind {
@@ -195,6 +200,8 @@ func (s *server) CodeAction(ctx context.Context, params *protocol.CodeActionPara
 					settings.GoplsDocFeatures,
 					settings.GoToggleCompilerOptDetails:
 					return false // read-only query
+				case settings.OrganizeImports:
+					return false // fix allowed in generated files (see #73959)
 				}
 				return true // potential write operation
 			})
@@ -225,7 +232,7 @@ func triggerKind(params *protocol.CodeActionParams) protocol.CodeActionTriggerKi
 // This feature allows capable clients to preview and selectively apply the diff
 // instead of applying the whole thing unconditionally through workspace/applyEdit.
 func (s *server) ResolveCodeAction(ctx context.Context, ca *protocol.CodeAction) (*protocol.CodeAction, error) {
-	ctx, done := event.Start(ctx, "lsp.Server.resolveCodeAction")
+	ctx, done := event.Start(ctx, "server.ResolveCodeAction")
 	defer done()
 
 	// Only resolve the code action if there is Data provided.
@@ -354,9 +361,7 @@ func (s *server) getSupportedCodeActions() []protocol.CodeActionKind {
 	for kind := range allCodeActionKinds {
 		result = append(result, kind)
 	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i] < result[j]
-	})
+	slices.Sort(result)
 	return result
 }
 

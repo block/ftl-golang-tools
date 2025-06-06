@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/astutil"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
 	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
@@ -41,6 +42,7 @@ type gobCallee struct {
 	ValidForCallStmt bool                   // function body is "return expr" where expr is f() or <-ch
 	NumResults       int                    // number of results (according to type, not ast.FieldList)
 	Params           []*paramInfo           // information about parameters (incl. receiver)
+	TypeParams       []*paramInfo           // information about type parameters
 	Results          []*paramInfo           // information about result variables
 	Effects          []int                  // order in which parameters are evaluated (see calleefx)
 	HasDefer         bool                   // uses defer
@@ -112,17 +114,6 @@ func AnalyzeCallee(logf func(string, ...any), fset *token.FileSet, pkg *types.Pa
 		return nil, fmt.Errorf("cannot inline function %s as it has no body", name)
 	}
 
-	// TODO(adonovan): support inlining of instantiated generic
-	// functions by replacing each occurrence of a type parameter
-	// T by its instantiating type argument (e.g. int). We'll need
-	// to wrap the instantiating type in parens when it's not an
-	// ident or qualified ident to prevent "if x == struct{}"
-	// parsing ambiguity, or "T(x)" where T = "*int" or "func()"
-	// from misparsing.
-	if funcHasTypeParams(decl) {
-		return nil, fmt.Errorf("cannot inline generic function %s: type parameters are not yet supported", name)
-	}
-
 	// Record the location of all free references in the FuncDecl.
 	// (Parameters are not free by this definition.)
 	var (
@@ -132,16 +123,11 @@ func AnalyzeCallee(logf func(string, ...any), fset *token.FileSet, pkg *types.Pa
 		freeRefs     []freeRef // free refs that may need renaming
 		unexported   []string  // free refs to unexported objects, for later error checks
 	)
-	var f func(n ast.Node) bool
-	visit := func(n ast.Node) { ast.Inspect(n, f) }
+	var f func(n ast.Node, stack []ast.Node) bool
 	var stack []ast.Node
 	stack = append(stack, decl.Type) // for scope of function itself
-	f = func(n ast.Node) bool {
-		if n != nil {
-			stack = append(stack, n) // push
-		} else {
-			stack = stack[:len(stack)-1] // pop
-		}
+	visit := func(n ast.Node, stack []ast.Node) { astutil.PreorderStack(n, stack, f) }
+	f = func(n ast.Node, stack []ast.Node) bool {
 		switch n := n.(type) {
 		case *ast.SelectorExpr:
 			// Check selections of free fields/methods.
@@ -153,7 +139,7 @@ func AnalyzeCallee(logf func(string, ...any), fset *token.FileSet, pkg *types.Pa
 			}
 
 			// Don't recur into SelectorExpr.Sel.
-			visit(n.X)
+			visit(n.X, stack)
 			return false
 
 		case *ast.CompositeLit:
@@ -162,7 +148,7 @@ func AnalyzeCallee(logf func(string, ...any), fset *token.FileSet, pkg *types.Pa
 			litType := typeparams.Deref(info.TypeOf(n))
 			if s, ok := typeparams.CoreType(litType).(*types.Struct); ok {
 				if n.Type != nil {
-					visit(n.Type)
+					visit(n.Type, stack)
 				}
 				for i, elt := range n.Elts {
 					var field *types.Var
@@ -180,7 +166,7 @@ func AnalyzeCallee(logf func(string, ...any), fset *token.FileSet, pkg *types.Pa
 					}
 
 					// Don't recur into KeyValueExpr.Key.
-					visit(value)
+					visit(value, stack)
 				}
 				return false
 			}
@@ -234,7 +220,7 @@ func AnalyzeCallee(logf func(string, ...any), fset *token.FileSet, pkg *types.Pa
 		}
 		return true
 	}
-	visit(decl)
+	visit(decl, stack)
 
 	// Analyze callee body for "return expr" form,
 	// where expr is f() or <-ch. These forms are
@@ -351,6 +337,7 @@ func AnalyzeCallee(logf func(string, ...any), fset *token.FileSet, pkg *types.Pa
 	}
 
 	params, results, effects, falcon := analyzeParams(logf, fset, info, decl)
+	tparams := analyzeTypeParams(logf, fset, info, decl)
 	return &Callee{gobCallee{
 		Content:          content,
 		PkgPath:          pkg.Path(),
@@ -361,6 +348,7 @@ func AnalyzeCallee(logf func(string, ...any), fset *token.FileSet, pkg *types.Pa
 		ValidForCallStmt: validForCallStmt,
 		NumResults:       sig.Results().Len(),
 		Params:           params,
+		TypeParams:       tparams,
 		Results:          results,
 		Effects:          effects,
 		HasDefer:         hasDefer,
@@ -408,20 +396,15 @@ type refInfo struct {
 	IsSelectionOperand bool
 }
 
-// analyzeParams computes information about parameters of function fn,
+// analyzeParams computes information about parameters of the function declared by decl,
 // including a simple "address taken" escape analysis.
 //
 // It returns two new arrays, one of the receiver and parameters, and
-// the other of the result variables of function fn.
+// the other of the result variables of the function.
 //
 // The input must be well-typed.
 func analyzeParams(logf func(string, ...any), fset *token.FileSet, info *types.Info, decl *ast.FuncDecl) (params, results []*paramInfo, effects []int, _ falconResult) {
-	fnobj, ok := info.Defs[decl.Name]
-	if !ok {
-		panic(fmt.Sprintf("%s: no func object for %q",
-			fset.PositionFor(decl.Name.Pos(), false), decl.Name)) // ill-typed?
-	}
-	sig := fnobj.Type().(*types.Signature)
+	sig := signature(fset, info, decl)
 
 	paramInfos := make(map[*types.Var]*paramInfo)
 	{
@@ -466,13 +449,7 @@ func analyzeParams(logf func(string, ...any), fset *token.FileSet, info *types.I
 	fieldObjs := fieldObjs(sig)
 	var stack []ast.Node
 	stack = append(stack, decl.Type) // for scope of function itself
-	ast.Inspect(decl.Body, func(n ast.Node) bool {
-		if n != nil {
-			stack = append(stack, n) // push
-		} else {
-			stack = stack[:len(stack)-1] // pop
-		}
-
+	astutil.PreorderStack(decl.Body, stack, func(n ast.Node, stack []ast.Node) bool {
 		if id, ok := n.(*ast.Ident); ok {
 			if v, ok := info.Uses[id].(*types.Var); ok {
 				if pinfo, ok := paramInfos[v]; ok {
@@ -487,6 +464,7 @@ func analyzeParams(logf func(string, ...any), fset *token.FileSet, info *types.I
 					// Contrapositively, if param is not an interface type, then the
 					// assignment may lose type information, for example in the case that
 					// the substituted expression is an untyped constant or unnamed type.
+					stack = append(stack, n) // (the two calls below want n)
 					assignable, ifaceAssign, affectsInference := analyzeAssignment(info, stack)
 					ref := refInfo{
 						Offset:             int(n.Pos() - decl.Pos()),
@@ -511,6 +489,52 @@ func analyzeParams(logf func(string, ...any), fset *token.FileSet, info *types.I
 	falcon := falcon(logf, fset, paramInfos, info, decl)
 
 	return params, results, effects, falcon
+}
+
+// analyzeTypeParams computes information about the type parameters of the function declared by decl.
+func analyzeTypeParams(_ logger, fset *token.FileSet, info *types.Info, decl *ast.FuncDecl) []*paramInfo {
+	sig := signature(fset, info, decl)
+	paramInfos := make(map[*types.TypeName]*paramInfo)
+	var params []*paramInfo
+	collect := func(tpl *types.TypeParamList) {
+		for i := range tpl.Len() {
+			typeName := tpl.At(i).Obj()
+			info := &paramInfo{Name: typeName.Name()}
+			params = append(params, info)
+			paramInfos[typeName] = info
+		}
+	}
+	collect(sig.RecvTypeParams())
+	collect(sig.TypeParams())
+
+	// Find references.
+	// We don't care about most of the properties that matter for parameter references:
+	// a type is immutable, cannot have its address taken, and does not undergo conversions.
+	// TODO(jba): can we nevertheless combine this with the traversal in analyzeParams?
+	var stack []ast.Node
+	stack = append(stack, decl.Type) // for scope of function itself
+	astutil.PreorderStack(decl.Body, stack, func(n ast.Node, stack []ast.Node) bool {
+		if id, ok := n.(*ast.Ident); ok {
+			if v, ok := info.Uses[id].(*types.TypeName); ok {
+				if pinfo, ok := paramInfos[v]; ok {
+					ref := refInfo{Offset: int(n.Pos() - decl.Pos())}
+					pinfo.Refs = append(pinfo.Refs, ref)
+					pinfo.Shadow = pinfo.Shadow.add(info, nil, pinfo.Name, stack)
+				}
+			}
+		}
+		return true
+	})
+	return params
+}
+
+func signature(fset *token.FileSet, info *types.Info, decl *ast.FuncDecl) *types.Signature {
+	fnobj, ok := info.Defs[decl.Name]
+	if !ok {
+		panic(fmt.Sprintf("%s: no func object for %q",
+			fset.PositionFor(decl.Name.Pos(), false), decl.Name)) // ill-typed?
+	}
+	return fnobj.Type().(*types.Signature)
 }
 
 // -- callee helpers --
@@ -579,7 +603,7 @@ func analyzeAssignment(info *types.Info, stack []ast.Node) (assignable, ifaceAss
 		}
 	}
 
-	// Types do not need to match for index expresions.
+	// Types do not need to match for index expressions.
 	if ix, ok := parent.(*ast.IndexExpr); ok {
 		if ix.Index == expr {
 			typ := info.TypeOf(ix.X)

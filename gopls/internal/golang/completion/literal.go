@@ -214,7 +214,7 @@ func (c *completer) functionLiteral(ctx context.Context, sig *types.Signature, m
 		paramNameCount = make(map[string]int)
 		hasTypeParams  bool
 	)
-	for i := 0; i < sig.Params().Len(); i++ {
+	for i := range sig.Params().Len() {
 		var (
 			p    = sig.Params().At(i)
 			name = p.Name()
@@ -258,7 +258,7 @@ func (c *completer) functionLiteral(ctx context.Context, sig *types.Signature, m
 		}
 	}
 
-	for i := 0; i < sig.Params().Len(); i++ {
+	for i := range sig.Params().Len() {
 		if hasTypeParams && !c.opts.placeholders {
 			// If there are type params in the args then the user must
 			// choose the concrete types. If placeholders are disabled just
@@ -331,7 +331,7 @@ func (c *completer) functionLiteral(ctx context.Context, sig *types.Signature, m
 		results.Len() == 1 && results.At(0).Name() != ""
 
 	var resultHasTypeParams bool
-	for i := 0; i < results.Len(); i++ {
+	for i := range results.Len() {
 		if tp, ok := types.Unalias(results.At(i).Type()).(*types.TypeParam); ok && !c.typeParamInScope(tp) {
 			resultHasTypeParams = true
 		}
@@ -340,10 +340,10 @@ func (c *completer) functionLiteral(ctx context.Context, sig *types.Signature, m
 	if resultsNeedParens {
 		snip.WriteText("(")
 	}
-	for i := 0; i < results.Len(); i++ {
+	for i := range results.Len() {
 		if resultHasTypeParams && !c.opts.placeholders {
 			// Leave an empty tabstop if placeholders are disabled and there
-			// are type args that need specificying.
+			// are type args that need specifying.
 			snip.WritePlaceholder(nil)
 			break
 		}
@@ -517,25 +517,28 @@ func (c *completer) typeNameSnippet(literalType types.Type, qual types.Qualifier
 	var (
 		snip     snippet.Builder
 		typeName string
-		pnt, _   = literalType.(typesinternal.NamedOrAlias) // = *Named | *Alias
+		tparams  *types.TypeParamList
 	)
 
-	tparams := typesinternal.TypeParams(pnt)
-	if tparams.Len() > 0 && !c.fullyInstantiated(pnt) {
-		// tparams.Len() > 0 implies pnt != nil.
-		// Inv: pnt is not "error" or "unsafe.Pointer", so pnt.Obj() != nil and has a Pkg().
+	t, ok := literalType.(typesinternal.NamedOrAlias) // = *Named | *Alias
+	if ok {
+		tparams = t.TypeParams()
+	}
+	if tparams.Len() > 0 && !c.fullyInstantiated(t) {
+		// tparams.Len() > 0 implies t != nil.
+		// Inv: t is not "error" or "unsafe.Pointer", so t.Obj() != nil and has a Pkg().
 
 		// We are not "fully instantiated" meaning we have type params that must be specified.
-		if pkg := qual(pnt.Obj().Pkg()); pkg != "" {
+		if pkg := qual(t.Obj().Pkg()); pkg != "" {
 			typeName = pkg + "."
 		}
 
 		// We do this to get "someType" instead of "someType[T]".
-		typeName += pnt.Obj().Name()
+		typeName += t.Obj().Name()
 		snip.WriteText(typeName + "[")
 
 		if c.opts.placeholders {
-			for i := 0; i < tparams.Len(); i++ {
+			for i := range tparams.Len() {
 				if i > 0 {
 					snip.WriteText(", ")
 				}
@@ -560,14 +563,14 @@ func (c *completer) typeNameSnippet(literalType types.Type, qual types.Qualifier
 // fullyInstantiated reports whether all of t's type params have
 // specified type args.
 func (c *completer) fullyInstantiated(t typesinternal.NamedOrAlias) bool {
-	targs := typesinternal.TypeArgs(t)
-	tparams := typesinternal.TypeParams(t)
+	targs := t.TypeArgs()
+	tparams := t.TypeParams()
 
 	if tparams.Len() != targs.Len() {
 		return false
 	}
 
-	for i := 0; i < targs.Len(); i++ {
+	for i := range targs.Len() {
 		targ := targs.At(i)
 
 		// The expansion of an alias can have free type parameters,

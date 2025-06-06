@@ -30,6 +30,20 @@ import (
 	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
 )
 
+// SessionEventType differentiates between new and exiting sessions.
+type SessionEventType int
+
+const (
+	SessionStart SessionEventType = iota
+	SessionEnd
+)
+
+// SessionEvent holds information about the session event.
+type SessionEvent struct {
+	Type    SessionEventType
+	Session *cache.Session
+}
+
 // Unique identifiers for client/server.
 var serverIndex int64
 
@@ -45,13 +59,17 @@ type streamServer struct {
 
 	// serverForTest may be set to a test fake for testing.
 	serverForTest protocol.Server
+
+	// eventChan is an optional channel for LSP server session lifecycle events,
+	// including session creation and termination. If nil, no events are sent.
+	eventChan chan SessionEvent
 }
 
 // NewStreamServer creates a StreamServer using the shared cache. If
 // withTelemetry is true, each session is instrumented with telemetry that
 // records RPC statistics.
-func NewStreamServer(cache *cache.Cache, daemon bool, optionsFunc func(*settings.Options)) jsonrpc2.StreamServer {
-	return &streamServer{cache: cache, daemon: daemon, optionsOverrides: optionsFunc}
+func NewStreamServer(cache *cache.Cache, daemon bool, eventChan chan SessionEvent, optionsFunc func(*settings.Options)) jsonrpc2.StreamServer {
+	return &streamServer{cache: cache, daemon: daemon, eventChan: eventChan, optionsOverrides: optionsFunc}
 }
 
 // ServeStream implements the jsonrpc2.StreamServer interface, by handling
@@ -86,10 +104,25 @@ func (s *streamServer) ServeStream(ctx context.Context, conn jsonrpc2.Conn) erro
 			handshaker(session, executable, s.daemon,
 				protocol.ServerHandler(svr,
 					jsonrpc2.MethodNotFound))))
+
+	if s.eventChan != nil {
+		s.eventChan <- SessionEvent{
+			Session: session,
+			Type:    SessionStart,
+		}
+		defer func() {
+			s.eventChan <- SessionEvent{
+				Session: session,
+				Type:    SessionEnd,
+			}
+		}()
+	}
+
 	if s.daemon {
 		log.Printf("Session %s: connected", session.ID())
 		defer log.Printf("Session %s: exited", session.ID())
 	}
+
 	<-conn.Done()
 	return conn.Err()
 }
@@ -215,9 +248,9 @@ func (f *forwarder) ServeStream(ctx context.Context, clientConn jsonrpc2.Conn) e
 
 	select {
 	case <-serverConn.Done():
-		clientConn.Close()
+		clientConn.Close() // ignore error
 	case <-clientConn.Done():
-		serverConn.Close()
+		serverConn.Close() // ignore error
 	}
 
 	err = nil

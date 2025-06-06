@@ -29,9 +29,7 @@ func BenchmarkInitialGoimportsScan(b *testing.B) {
 
 	repo := getRepo(b, "tools") // since this a test of module cache scanning, any repo will do
 
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		func() {
 			// Unfortunately we (intentionally) don't support resetting the module
 			// cache scan state, so in order to have an accurate benchmark we must
@@ -48,7 +46,7 @@ func BenchmarkInitialGoimportsScan(b *testing.B) {
 			defer env.Close()
 			env.Await(InitialWorkspaceLoad)
 
-			// Create a buffer with a dangling selctor where the receiver is a single
+			// Create a buffer with a dangling selector where the receiver is a single
 			// character ('a') that matches a large fraction of the module cache.
 			env.CreateBuffer("internal/lsp/cache/temp.go", `
 // This is a temp file to exercise goimports scan of the module cache.

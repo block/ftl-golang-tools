@@ -26,6 +26,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -33,7 +34,6 @@ import (
 	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/go/packages"
 	"github.com/block/ftl-golang-tools/go/types/typeutil"
-	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
@@ -167,8 +167,9 @@ func handleSelectJSON(w http.ResponseWriter, req *http.Request) {
 	// It's usually the same, but may differ in edge
 	// cases (e.g. around FuncType.Func).
 	inspect := inspector.New([]*ast.File{file})
-	if cur, ok := cursor.Root(inspect).FindPos(startPos, endPos); ok {
-		fmt.Fprintf(out, "Cursor.FindPos().Stack() = %v\n", cur.Stack(nil))
+	if cur, ok := inspect.Root().FindByPos(startPos, endPos); ok {
+		fmt.Fprintf(out, "Cursor.FindPos().Enclosing() = %v\n",
+			slices.Collect(cur.Enclosing()))
 	} else {
 		fmt.Fprintf(out, "Cursor.FindPos() failed\n")
 	}

@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/ast/edge"
 	typeindexanalyzer "github.com/block/ftl-golang-tools/internal/analysisinternal/typeindex"
-	"github.com/block/ftl-golang-tools/internal/astutil/edge"
 	"github.com/block/ftl-golang-tools/internal/typesinternal/typeindex"
 )
 

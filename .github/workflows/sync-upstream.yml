@@ -12,6 +12,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      repository-projects: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,8 +33,11 @@ jobs:
       - name: Check for changes
         id: check_changes
         run: |
-          git rev-parse HEAD > current_commit.txt
-          git rev-parse upstream/master > upstream_commit.txt
+          CURRENT_COMMIT=$(git rev-parse HEAD)
+          UPSTREAM_COMMIT=$(git rev-parse upstream/master)
+          
+          echo "Current commit: $CURRENT_COMMIT"
+          echo "Upstream commit: $UPSTREAM_COMMIT"
           
           # Check if upstream has new changes
           if ! git merge-base --is-ancestor upstream/master HEAD; then
@@ -108,7 +112,13 @@ jobs:
       - name: Enable auto-merge
         if: steps.check_changes.outputs.has_changes == 'true' && steps.create-pr.outputs.pr_number
         run: |
-          gh pr merge ${{ steps.create-pr.outputs.pr_number }} --auto --merge
+          gh api \
+            --method PUT \
+            /repos/${{ github.repository }}/pulls/${{ steps.create-pr.outputs.pr_number }}/auto_merge \
+            --field merge_method="merge" || {
+            echo "Auto-merge failed, but PR was created successfully"
+            echo "You can manually merge PR #${{ steps.create-pr.outputs.pr_number }}"
+          }
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

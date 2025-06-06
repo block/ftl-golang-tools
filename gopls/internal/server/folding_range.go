@@ -15,10 +15,10 @@ import (
 )
 
 func (s *server) FoldingRange(ctx context.Context, params *protocol.FoldingRangeParams) ([]protocol.FoldingRange, error) {
-	ctx, done := event.Start(ctx, "lsp.Server.foldingRange", label.URI.Of(params.TextDocument.URI))
+	ctx, done := event.Start(ctx, "server.FoldingRange", label.URI.Of(params.TextDocument.URI))
 	defer done()
 
-	fh, snapshot, release, err := s.fileOf(ctx, params.TextDocument.URI)
+	fh, snapshot, release, err := s.session.FileOf(ctx, params.TextDocument.URI)
 	if err != nil {
 		return nil, err
 	}

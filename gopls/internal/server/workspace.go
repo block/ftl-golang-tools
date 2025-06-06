@@ -12,6 +12,8 @@ import (
 	"sync"
 
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/golang/completion"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 	"github.com/block/ftl-golang-tools/gopls/internal/settings"
 	"github.com/block/ftl-golang-tools/internal/event"
@@ -59,7 +61,7 @@ func (s *server) addView(ctx context.Context, name string, dir protocol.Document
 }
 
 func (s *server) DidChangeConfiguration(ctx context.Context, _ *protocol.DidChangeConfigurationParams) error {
-	ctx, done := event.Start(ctx, "lsp.Server.didChangeConfiguration")
+	ctx, done := event.Start(ctx, "server.DidChangeConfiguration")
 	defer done()
 
 	var wg sync.WaitGroup
@@ -119,7 +121,7 @@ func (s *server) DidChangeConfiguration(ctx context.Context, _ *protocol.DidChan
 		}
 		newFolders = append(newFolders, newFolder)
 	}
-	s.session.UpdateFolders(ctx, newFolders)
+	s.session.UpdateFolders(ctx, newFolders) // ignore error
 
 	// The view set may have been updated above.
 	viewsToDiagnose := make(map[*cache.View][]protocol.DocumentURI)
@@ -141,13 +143,13 @@ func (s *server) DidChangeConfiguration(ctx context.Context, _ *protocol.DidChan
 }
 
 func (s *server) DidCreateFiles(ctx context.Context, params *protocol.CreateFilesParams) error {
-	ctx, done := event.Start(ctx, "lsp.Server.didCreateFiles")
+	ctx, done := event.Start(ctx, "server.DidCreateFiles")
 	defer done()
 
 	var allChanges []protocol.DocumentChange
 	for _, createdFile := range params.Files {
 		uri := protocol.DocumentURI(createdFile.URI)
-		fh, snapshot, release, err := s.fileOf(ctx, uri)
+		fh, snapshot, release, err := s.session.FileOf(ctx, uri)
 		if err != nil {
 			event.Error(ctx, "fail to call fileOf", err)
 			continue

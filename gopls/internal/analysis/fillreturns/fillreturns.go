@@ -12,6 +12,7 @@ import (
 	"go/format"
 	"go/types"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/block/ftl-golang-tools/go/analysis"
@@ -20,7 +21,6 @@ import (
 	"github.com/block/ftl-golang-tools/gopls/internal/fuzzy"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/moreiters"
 	"github.com/block/ftl-golang-tools/internal/analysisinternal"
-	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
 	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
@@ -49,7 +49,7 @@ outer:
 		if !ok {
 			continue // no position information
 		}
-		curErr, ok := cursor.Root(inspect).FindPos(start, end)
+		curErr, ok := inspect.Root().FindByPos(start, end)
 		if !ok {
 			continue // can't find node
 		}
@@ -134,7 +134,7 @@ outer:
 
 			if match != nil {
 				fixed[i] = match
-				remaining = append(remaining[:idx], remaining[idx+1:]...)
+				remaining = slices.Delete(remaining, idx, idx+1)
 			} else {
 				names, ok := matches[retTyp]
 				if !ok {
@@ -226,6 +226,6 @@ func fixesError(err types.Error) bool {
 
 // enclosingFunc returns the cursor for the innermost Func{Decl,Lit}
 // that encloses c, if any.
-func enclosingFunc(c cursor.Cursor) (cursor.Cursor, bool) {
+func enclosingFunc(c inspector.Cursor) (inspector.Cursor, bool) {
 	return moreiters.First(c.Enclosing((*ast.FuncDecl)(nil), (*ast.FuncLit)(nil)))
 }

@@ -43,6 +43,8 @@ import (
 	"unicode"
 
 	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/go/ast/edge"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
@@ -329,7 +331,7 @@ func deeper(x, y *types.Scope) bool {
 //     scope that begins at the end of its ValueSpec, or after the
 //     AssignStmt for a var declared by ":=".
 //
-//   - Each type {t,u} in the body has a scope that that begins at
+//   - Each type {t,u} in the body has a scope that begins at
 //     the start of the TypeSpec, so they can be self-recursive
 //     but--unlike package-level types--not mutually recursive.
 
@@ -338,64 +340,58 @@ func deeper(x, y *types.Scope) bool {
 // lexical block enclosing the reference.  If fn returns false the
 // iteration is terminated and findLexicalRefs returns false.
 func forEachLexicalRef(pkg *cache.Package, obj types.Object, fn func(id *ast.Ident, block *types.Scope) bool) bool {
+	filter := []ast.Node{
+		(*ast.Ident)(nil),
+		(*ast.SelectorExpr)(nil),
+		(*ast.CompositeLit)(nil),
+	}
 	ok := true
-	var stack []ast.Node
-
-	var visit func(n ast.Node) bool
-	visit = func(n ast.Node) bool {
-		if n == nil {
-			stack = stack[:len(stack)-1] // pop
-			return false
-		}
+	var visit func(cur inspector.Cursor) (descend bool)
+	visit = func(cur inspector.Cursor) (descend bool) {
 		if !ok {
 			return false // bail out
 		}
-
-		stack = append(stack, n) // push
-		switch n := n.(type) {
+		switch n := cur.Node().(type) {
 		case *ast.Ident:
 			if pkg.TypesInfo().Uses[n] == obj {
-				block := enclosingBlock(pkg.TypesInfo(), stack)
+				block := enclosingBlock(pkg.TypesInfo(), cur)
 				if !fn(n, block) {
 					ok = false
 				}
 			}
-			return visit(nil) // pop stack
 
 		case *ast.SelectorExpr:
 			// don't visit n.Sel
-			ast.Inspect(n.X, visit)
-			return visit(nil) // pop stack, don't descend
+			cur.ChildAt(edge.SelectorExpr_X, -1).Inspect(filter, visit)
+			return false // don't descend
 
 		case *ast.CompositeLit:
 			// Handle recursion ourselves for struct literals
 			// so we don't visit field identifiers.
 			tv, ok := pkg.TypesInfo().Types[n]
 			if !ok {
-				return visit(nil) // pop stack, don't descend
+				return false // don't descend
 			}
 			if is[*types.Struct](typeparams.CoreType(typeparams.Deref(tv.Type))) {
 				if n.Type != nil {
-					ast.Inspect(n.Type, visit)
+					cur.ChildAt(edge.CompositeLit_Type, -1).Inspect(filter, visit)
 				}
-				for _, elt := range n.Elts {
-					if kv, ok := elt.(*ast.KeyValueExpr); ok {
-						ast.Inspect(kv.Value, visit)
-					} else {
-						ast.Inspect(elt, visit)
+				for i, elt := range n.Elts {
+					curElt := cur.ChildAt(edge.CompositeLit_Elts, i)
+					if _, ok := elt.(*ast.KeyValueExpr); ok {
+						// skip kv.Key
+						curElt = curElt.ChildAt(edge.KeyValueExpr_Value, -1)
 					}
+					curElt.Inspect(filter, visit)
 				}
-				return visit(nil) // pop stack, don't descend
+				return false // don't descend
 			}
 		}
 		return true
 	}
 
-	for _, f := range pkg.Syntax() {
-		ast.Inspect(f, visit)
-		if len(stack) != 0 {
-			panic(stack)
-		}
+	for _, pgf := range pkg.CompiledGoFiles() {
+		pgf.Cursor.Inspect(filter, visit)
 		if !ok {
 			break
 		}
@@ -404,11 +400,10 @@ func forEachLexicalRef(pkg *cache.Package, obj types.Object, fn func(id *ast.Ide
 }
 
 // enclosingBlock returns the innermost block logically enclosing the
-// specified AST node (an ast.Ident), specified in the form of a path
-// from the root of the file, [file...n].
-func enclosingBlock(info *types.Info, stack []ast.Node) *types.Scope {
-	for i := range stack {
-		n := stack[len(stack)-1-i]
+// AST node (an ast.Ident), specified as a Cursor.
+func enclosingBlock(info *types.Info, curId inspector.Cursor) *types.Scope {
+	for cur := range curId.Enclosing() {
+		n := cur.Node()
 		// For some reason, go/types always associates a
 		// function's scope with its FuncType.
 		// See comments about scope above.
@@ -472,14 +467,15 @@ func (r *renamer) checkStructField(from *types.Var) {
 			// This struct is also a named type.
 			// We must check for direct (non-promoted) field/field
 			// and method/field conflicts.
-			named := r.pkg.TypesInfo().Defs[spec.Name].Type()
-			prev, indices, _ := types.LookupFieldOrMethod(named, true, r.pkg.Types(), r.to)
-			if len(indices) == 1 {
-				r.errorf(from.Pos(), "renaming this field %q to %q",
-					from.Name(), r.to)
-				r.errorf(prev.Pos(), "\twould conflict with this %s",
-					objectKind(prev))
-				return // skip checkSelections to avoid redundant errors
+			if tname := r.pkg.TypesInfo().Defs[spec.Name]; tname != nil {
+				prev, indices, _ := types.LookupFieldOrMethod(tname.Type(), true, r.pkg.Types(), r.to)
+				if len(indices) == 1 {
+					r.errorf(from.Pos(), "renaming this field %q to %q",
+						from.Name(), r.to)
+					r.errorf(prev.Pos(), "\twould conflict with this %s",
+						objectKind(prev))
+					return // skip checkSelections to avoid redundant errors
+				}
 			}
 		} else {
 			// This struct is not a named type.

@@ -273,7 +273,7 @@ type Interface interface {
 	// ClientOpenURL: Request that the client open a URL in a browser.
 	ClientOpenURL(_ context.Context, url string) error
 
-	// ScanImports: force a sychronous scan of the imports cache.
+	// ScanImports: force a synchronous scan of the imports cache.
 	//
 	// This command is intended for use by gopls tests only.
 	ScanImports(context.Context) error
@@ -297,6 +297,9 @@ type Interface interface {
 
 	// PackageSymbols: Return information about symbols in the given file's package.
 	PackageSymbols(context.Context, PackageSymbolsArgs) (PackageSymbolsResult, error)
+
+	// ModifyTags: Add or remove struct tags on a given node.
+	ModifyTags(context.Context, ModifyTagsArgs) error
 }
 
 type RunTestsArgs struct {
@@ -829,4 +832,20 @@ type PackageSymbol struct {
 
 	// Index of this symbol's file in PackageSymbolsResult.Files
 	File int `json:"file,omitempty"`
+}
+
+// ModifyTagsArgs holds variables that determine how struct tags are modified.
+type ModifyTagsArgs struct {
+	URI                  protocol.DocumentURI // uri of the file to be modified
+	Range                protocol.Range       // range in the file for where to modify struct tags
+	Add                  string               // comma-separated list of tags to add; i.e. "json,xml"
+	AddOptions           string               // comma-separated list of options to add, per tag; i.e. "json=omitempty"
+	Remove               string               // comma-separated list of tags to remove
+	RemoveOptions        string               // comma-separated list of options to remove
+	Clear                bool                 // if set, clear all tags. tags are cleared before any new tags are added
+	ClearOptions         bool                 // if set, clear all tag options; options are cleared before any new options are added
+	Overwrite            bool                 // if set, replace existing tags when adding
+	SkipUnexportedFields bool                 // if set, do not modify tags on unexported struct fields
+	Transform            string               // transform rule for adding tags; i.e. "snakecase"
+	ValueFormat          string               // format for the tag's value, after transformation; for example "column:{field}"
 }
