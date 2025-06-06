@@ -55,7 +55,7 @@ type Options struct {
 	Sequential                  bool      // disable parallelism
 	SanityCheck                 bool      // check fact encoding is ok and deterministic
 	FactLog                     io.Writer // if non-nil, log each exported fact to it
-	ReverseImportExecutionOrder bool      // reverse the order of import execution
+	OnlyAnalyzeProvidedPackages bool      // only perform analysis on the specified packages; no external dependencies are included
 
 	// TODO(adonovan): expose ReadFile so that an Overlay specified
 	// in the [packages.Config] can be communicated via
@@ -173,10 +173,16 @@ func Analyze(analyzers []*analysis.Analyzer, pkgs []*packages.Package, opts *Opt
 	}
 	actions := make(map[key]*Action)
 
+	pkgsSet := make(map[string]bool)
+	for _, p := range pkgs {
+		pkgsSet[p.PkgPath] = true
+	}
+
 	var mkAction func(a *analysis.Analyzer, pkg *packages.Package) *Action
 	mkAction = func(a *analysis.Analyzer, pkg *packages.Package) *Action {
 		k := key{a, pkg}
 		act, ok := actions[k]
+
 		if !ok {
 			act = &Action{Analyzer: a, Package: pkg, opts: opts}
 
@@ -188,17 +194,12 @@ func Analyze(analyzers []*analysis.Analyzer, pkgs []*packages.Package, opts *Opt
 			// An analysis that consumes/produces facts
 			// must run on the package's dependencies too.
 			if len(a.FactTypes) > 0 {
-				if opts.ReverseImportExecutionOrder {
-					for _, p := range pkgs {
-						if p == pkg {
-							continue
-						}
-						for _, imp := range p.Imports {
-							if imp == pkg {
-								dep := mkAction(a, p)
-								act.Deps = append(act.Deps, dep)
-								break
-							}
+				if opts.OnlyAnalyzeProvidedPackages {
+					for _, imp := range pkg.Imports {
+						if ok := pkgsSet[imp.PkgPath]; ok {
+							dep := mkAction(a, imp)
+							act.Deps = append(act.Deps, dep)
+							break
 						}
 					}
 				} else {
