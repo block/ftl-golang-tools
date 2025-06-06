@@ -1,6 +1,6 @@
 # MCP SDK prototype
 
-[![PkgGoDev](https://pkg.go.dev/badge/golang.org/x/tools)](https://pkg.go.dev/golang.org/x/tools/internal/mcp)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/block/ftl-golang-tools)](https://pkg.go.dev/github.com/block/ftl-golang-tools/internal/mcp)
 
 # Contents
 

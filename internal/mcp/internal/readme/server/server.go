@@ -8,7 +8,7 @@ package main
 import (
 	"context"
 
-	"golang.org/x/tools/internal/mcp"
+	"github.com/block/ftl-golang-tools/internal/mcp"
 )
 
 type HiParams struct {

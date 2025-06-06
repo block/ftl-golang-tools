@@ -8,11 +8,11 @@ package gofix
 import (
 	_ "embed"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/internal/analysisinternal"
-	"golang.org/x/tools/internal/gofix/findgofix"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/internal/gofix/findgofix"
 )
 
 //go:embed doc.go
@@ -21,7 +21,7 @@ var doc string
 var Analyzer = &analysis.Analyzer{
 	Name:     "gofixdirective",
 	Doc:      analysisinternal.MustExtractDoc(doc, "gofixdirective"),
-	URL:      "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/gofix",
+	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/go/analysis/passes/gofix",
 	Run:      run,
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 }

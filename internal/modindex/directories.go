@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"golang.org/x/mod/semver"
-	"golang.org/x/tools/internal/gopathwalk"
+	"github.com/block/ftl-golang-tools/internal/gopathwalk"
 )
 
 type directory struct {

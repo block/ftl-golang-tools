@@ -20,17 +20,17 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/cmd"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/test/integration"
-	"golang.org/x/tools/gopls/internal/test/integration/fake"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/internal/event"
-	"golang.org/x/tools/internal/fakenet"
-	"golang.org/x/tools/internal/jsonrpc2"
-	"golang.org/x/tools/internal/jsonrpc2/servertest"
-	"golang.org/x/tools/internal/pprof"
-	"golang.org/x/tools/internal/tool"
+	"github.com/block/ftl-golang-tools/gopls/internal/cmd"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
+	"github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/internal/event"
+	"github.com/block/ftl-golang-tools/internal/fakenet"
+	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
+	"github.com/block/ftl-golang-tools/internal/jsonrpc2/servertest"
+	"github.com/block/ftl-golang-tools/internal/pprof"
+	"github.com/block/ftl-golang-tools/internal/tool"
 )
 
 var (

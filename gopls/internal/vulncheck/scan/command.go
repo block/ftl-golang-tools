@@ -15,10 +15,10 @@ import (
 	"time"
 
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/vulncheck"
-	"golang.org/x/tools/gopls/internal/vulncheck/govulncheck"
-	"golang.org/x/tools/gopls/internal/vulncheck/osv"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck"
+	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/govulncheck"
+	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/osv"
 	"golang.org/x/vuln/scan"
 )
 

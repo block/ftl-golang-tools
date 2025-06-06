@@ -38,8 +38,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/lru"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/lru"
 )
 
 // Start causes the filecache to initialize and start garbage gollection.

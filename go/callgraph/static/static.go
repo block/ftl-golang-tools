@@ -9,8 +9,8 @@ package static
 import (
 	"go/types"
 
-	"golang.org/x/tools/go/callgraph"
-	"golang.org/x/tools/go/ssa"
+	"github.com/block/ftl-golang-tools/go/callgraph"
+	"github.com/block/ftl-golang-tools/go/ssa"
 )
 
 // CallGraph computes the static call graph of the specified program.

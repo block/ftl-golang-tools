@@ -45,7 +45,7 @@
 // these limitations.
 //
 // The unusedfunc algorithm is not as precise as the
-// golang.org/x/tools/cmd/deadcode tool, but it has the advantage that
+// github.com/block/ftl-golang-tools/cmd/deadcode tool, but it has the advantage that
 // it runs within the modular analysis framework, enabling near
 // real-time feedback within gopls.
 package unusedfunc

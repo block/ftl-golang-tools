@@ -12,10 +12,10 @@ import (
 	"sync"
 	"unicode"
 
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/gopls/internal/util/safetoken"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
 )
 
 // A File contains the results of parsing a Go file.

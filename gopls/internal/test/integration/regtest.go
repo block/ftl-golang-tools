@@ -16,13 +16,13 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cmd"
-	"golang.org/x/tools/internal/drivertest"
-	"golang.org/x/tools/internal/gocommand"
-	"golang.org/x/tools/internal/memoize"
-	"golang.org/x/tools/internal/testenv"
-	"golang.org/x/tools/internal/tool"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/cmd"
+	"github.com/block/ftl-golang-tools/internal/drivertest"
+	"github.com/block/ftl-golang-tools/internal/gocommand"
+	"github.com/block/ftl-golang-tools/internal/memoize"
+	"github.com/block/ftl-golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/internal/tool"
 )
 
 var (

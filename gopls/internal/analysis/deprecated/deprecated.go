@@ -15,11 +15,11 @@ import (
 
 	_ "embed"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/internal/analysisinternal"
-	internalastutil "golang.org/x/tools/internal/astutil"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	internalastutil "github.com/block/ftl-golang-tools/internal/astutil"
 )
 
 //go:embed doc.go
@@ -32,7 +32,7 @@ var Analyzer = &analysis.Analyzer{
 	Run:              checkDeprecated,
 	FactTypes:        []analysis.Fact{(*deprecationFact)(nil)},
 	RunDespiteErrors: true,
-	URL:              "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/deprecated",
+	URL:              "https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/deprecated",
 }
 
 // checkDeprecated is a simplified copy of staticcheck.CheckDeprecated.
