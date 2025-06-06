@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/buildutil"
+	"github.com/block/ftl-golang-tools/go/buildutil"
 )
 
 func testContainingPackageCaseFold(file, want string) error {

@@ -14,8 +14,8 @@ import (
 	"os"
 	"sync"
 
-	jsonrpc2 "golang.org/x/tools/internal/jsonrpc2_v2"
-	"golang.org/x/tools/internal/xcontext"
+	jsonrpc2 "github.com/block/ftl-golang-tools/internal/jsonrpc2_v2"
+	"github.com/block/ftl-golang-tools/internal/xcontext"
 )
 
 // ErrConnectionClosed is returned when sending a message to a connection that

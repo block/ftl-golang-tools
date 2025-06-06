@@ -15,7 +15,7 @@ import (
 	"go/types"
 	"testing"
 
-	ti "golang.org/x/tools/internal/typesinternal"
+	ti "github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 func TestClassifyCallAndUsed(t *testing.T) {

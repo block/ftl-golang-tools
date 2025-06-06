@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"slices"
 
-	"golang.org/x/tools/internal/mcp/jsonschema"
+	"github.com/block/ftl-golang-tools/internal/mcp/jsonschema"
 )
 
 // A ToolHandler handles a call to tools/call.

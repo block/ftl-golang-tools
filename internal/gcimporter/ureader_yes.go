@@ -12,9 +12,9 @@ import (
 	"go/types"
 	"sort"
 
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/pkgbits"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/internal/pkgbits"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 // A pkgReader holds the shared state for reading a unified IR package

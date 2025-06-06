@@ -13,10 +13,10 @@ import (
 	"strings"
 	"unicode"
 
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/util/typesutil"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/typesutil"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 var anyType = types.Universe.Lookup("any").Type()

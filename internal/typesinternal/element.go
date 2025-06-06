@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"go/types"
 
-	"golang.org/x/tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
 )
 
 // ForEachElement calls f for type T and each type reachable from its

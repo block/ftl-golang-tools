@@ -11,8 +11,8 @@ import (
 	"reflect"
 	"slices"
 
-	"golang.org/x/tools/internal/mcp/internal/util"
-	"golang.org/x/tools/internal/mcp/jsonschema"
+	"github.com/block/ftl-golang-tools/internal/mcp/internal/util"
+	"github.com/block/ftl-golang-tools/internal/mcp/jsonschema"
 )
 
 // A PromptHandler handles a call to prompts/get.

@@ -14,10 +14,10 @@ import (
 	"go/types"
 	"iter"
 
-	"golang.org/x/tools/go/ast/edge"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/go/ast/edge"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 // New constructs an Index for the package of type-annotated syntax
