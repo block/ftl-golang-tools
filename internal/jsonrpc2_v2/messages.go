@@ -10,9 +10,30 @@ import (
 	"fmt"
 )
 
-// ID is a Request identifier.
+// ID is a Request identifier, which is defined by the spec to be a string, integer, or null.
+// https://www.jsonrpc.org/specification#request_object
 type ID struct {
 	value any
+}
+
+// MakeID coerces the given Go value to an ID. The value is assumed to be the
+// default JSON marshaling of a Request identifier -- nil, float64, or string.
+//
+// Returns an error if the value type was a valid Request ID type.
+//
+// TODO: ID can't be a json.Marshaler/Unmarshaler, because we want to omitzero.
+// Simplify this package by making ID json serializable once we can rely on
+// omitzero.
+func MakeID(v any) (ID, error) {
+	switch v := v.(type) {
+	case nil:
+		return ID{}, nil
+	case float64:
+		return Int64ID(int64(v)), nil
+	case string:
+		return StringID(v), nil
+	}
+	return ID{}, fmt.Errorf("%w: invalid ID type %T", ErrParse, v)
 }
 
 // Message is the interface to all jsonrpc2 message types.
@@ -125,26 +146,30 @@ func EncodeMessage(msg Message) ([]byte, error) {
 	return data, nil
 }
 
+// EncodeIndent is like EncodeMessage, but honors indents.
+// TODO(rfindley): refactor so that this concern is handled independently.
+// Perhaps we should pass in a json.Encoder?
+func EncodeIndent(msg Message, prefix, indent string) ([]byte, error) {
+	wire := wireCombined{VersionTag: wireVersion}
+	msg.marshal(&wire)
+	data, err := json.MarshalIndent(&wire, prefix, indent)
+	if err != nil {
+		return data, fmt.Errorf("marshaling jsonrpc message: %w", err)
+	}
+	return data, nil
+}
+
 func DecodeMessage(data []byte) (Message, error) {
 	msg := wireCombined{}
 	if err := json.Unmarshal(data, &msg); err != nil {
 		return nil, fmt.Errorf("unmarshaling jsonrpc message: %w", err)
 	}
 	if msg.VersionTag != wireVersion {
-		return nil, fmt.Errorf("invalid message version tag %s expected %s", msg.VersionTag, wireVersion)
+		return nil, fmt.Errorf("invalid message version tag %q; expected %q", msg.VersionTag, wireVersion)
 	}
-	id := ID{}
-	switch v := msg.ID.(type) {
-	case nil:
-	case float64:
-		// coerce the id type to int64 if it is float64, the spec does not allow fractional parts
-		id = Int64ID(int64(v))
-	case int64:
-		id = Int64ID(v)
-	case string:
-		id = StringID(v)
-	default:
-		return nil, fmt.Errorf("invalid message id type <%T>%v", v, v)
+	id, err := MakeID(msg.ID)
+	if err != nil {
+		return nil, err
 	}
 	if msg.Method != "" {
 		// has a method, must be a call

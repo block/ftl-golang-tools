@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"math/rand/v2"
 	"os"
 	"path"
@@ -107,6 +108,14 @@ type EditorConfig struct {
 	// configuring a single workspace folder corresponding to the workdir root.
 	// To explicitly send no workspace folders, use an empty (non-nil) slice.
 	WorkspaceFolders []string
+
+	// NoDefaultWorkspaceFiles is used to specify whether the fake editor
+	// should give a default workspace folder when WorkspaceFolders is nil.
+	// When it's true, the editor will pass original WorkspaceFolders as is to the LSP server.
+	NoDefaultWorkspaceFiles bool
+
+	// RelRootPath is the root path which will be converted to rootUri to configure on the LSP server.
+	RelRootPath string
 
 	// Whether to edit files with windows line endings.
 	WindowsLineEndings bool
@@ -253,12 +262,8 @@ func (e *Editor) Client() *Client {
 // makeSettings builds the settings map for use in LSP settings RPCs.
 func makeSettings(sandbox *Sandbox, config EditorConfig, scopeURI *protocol.URI) map[string]any {
 	env := make(map[string]string)
-	for k, v := range sandbox.GoEnv() {
-		env[k] = v
-	}
-	for k, v := range config.Env {
-		env[k] = v
-	}
+	maps.Copy(env, sandbox.GoEnv())
+	maps.Copy(env, config.Env)
 	for k, v := range env {
 		v = strings.ReplaceAll(v, "$SANDBOX_WORKDIR", sandbox.Workdir.RootURI().Path())
 		env[k] = v
@@ -299,9 +304,7 @@ func makeSettings(sandbox *Sandbox, config EditorConfig, scopeURI *protocol.URI)
 			}
 		}
 		if closestSettings != nil {
-			for k, v := range closestSettings {
-				settings[k] = v
-			}
+			maps.Copy(settings, closestSettings)
 		}
 	}
 
@@ -322,7 +325,12 @@ func (e *Editor) initialize(ctx context.Context) error {
 		Version: "v1.0.0",
 	}
 	params.InitializationOptions = makeSettings(e.sandbox, config, nil)
-	params.WorkspaceFolders = makeWorkspaceFolders(e.sandbox, config.WorkspaceFolders)
+
+	params.WorkspaceFolders = makeWorkspaceFolders(e.sandbox, config.WorkspaceFolders, config.NoDefaultWorkspaceFiles)
+	params.RootURI = protocol.URIFromPath(config.RelRootPath)
+	if !uriRE.MatchString(config.RelRootPath) { // relative file path
+		params.RootURI = e.sandbox.Workdir.URI(config.RelRootPath)
+	}
 
 	capabilities, err := clientCapabilities(config)
 	if err != nil {
@@ -434,12 +442,7 @@ func marshalUnmarshal[T any](v any) (T, error) {
 
 // HasCommand reports whether the connected server supports the command with the given ID.
 func (e *Editor) HasCommand(cmd command.Command) bool {
-	for _, command := range e.serverCapabilities.ExecuteCommandProvider.Commands {
-		if command == cmd.String() {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(e.serverCapabilities.ExecuteCommandProvider.Commands, cmd.String())
 }
 
 // Examples: https://www.iana.org/assignments/uri-schemes/uri-schemes.xhtml
@@ -447,8 +450,11 @@ var uriRE = regexp.MustCompile(`^[a-z][a-z0-9+\-.]*://\S+`)
 
 // makeWorkspaceFolders creates a slice of workspace folders to use for
 // this editing session, based on the editor configuration.
-func makeWorkspaceFolders(sandbox *Sandbox, paths []string) (folders []protocol.WorkspaceFolder) {
+func makeWorkspaceFolders(sandbox *Sandbox, paths []string, useEmpty bool) (folders []protocol.WorkspaceFolder) {
 	if len(paths) == 0 {
+		if useEmpty {
+			return nil
+		}
 		paths = []string{string(sandbox.Workdir.RelativeTo)}
 	}
 
@@ -922,54 +928,30 @@ func (e *Editor) setBufferContentLocked(ctx context.Context, path string, dirty 
 	return nil
 }
 
-// GoToDefinition jumps to the definition of the symbol at the given position
-// in an open buffer. It returns the location of the resulting jump.
-func (e *Editor) Definition(ctx context.Context, loc protocol.Location) (protocol.Location, error) {
+// Definitions returns the definitions of the symbol at the given
+// location in an open buffer.
+func (e *Editor) Definitions(ctx context.Context, loc protocol.Location) ([]protocol.Location, error) {
 	if err := e.checkBufferLocation(loc); err != nil {
-		return protocol.Location{}, err
+		return nil, err
 	}
 	params := &protocol.DefinitionParams{}
 	params.TextDocument.URI = loc.URI
 	params.Position = loc.Range.Start
 
-	resp, err := e.Server.Definition(ctx, params)
-	if err != nil {
-		return protocol.Location{}, fmt.Errorf("definition: %w", err)
-	}
-	return e.extractFirstLocation(ctx, resp)
+	return e.Server.Definition(ctx, params)
 }
 
-// TypeDefinition jumps to the type definition of the symbol at the given
-// location in an open buffer.
-func (e *Editor) TypeDefinition(ctx context.Context, loc protocol.Location) (protocol.Location, error) {
+// TypeDefinitions returns the type definitions of the symbol at the
+// given location in an open buffer.
+func (e *Editor) TypeDefinitions(ctx context.Context, loc protocol.Location) ([]protocol.Location, error) {
 	if err := e.checkBufferLocation(loc); err != nil {
-		return protocol.Location{}, err
+		return nil, err
 	}
 	params := &protocol.TypeDefinitionParams{}
 	params.TextDocument.URI = loc.URI
 	params.Position = loc.Range.Start
 
-	resp, err := e.Server.TypeDefinition(ctx, params)
-	if err != nil {
-		return protocol.Location{}, fmt.Errorf("type definition: %w", err)
-	}
-	return e.extractFirstLocation(ctx, resp)
-}
-
-// extractFirstLocation returns the first location.
-// It opens the file if needed.
-func (e *Editor) extractFirstLocation(ctx context.Context, locs []protocol.Location) (protocol.Location, error) {
-	if len(locs) == 0 {
-		return protocol.Location{}, nil
-	}
-
-	newPath := e.sandbox.Workdir.URIToPath(locs[0].URI)
-	if !e.HasBuffer(newPath) {
-		if err := e.OpenFile(ctx, newPath); err != nil {
-			return protocol.Location{}, fmt.Errorf("OpenFile: %w", err)
-		}
-	}
-	return locs[0], nil
+	return e.Server.TypeDefinition(ctx, params)
 }
 
 // Symbol performs a workspace symbol search using query
@@ -1159,11 +1141,8 @@ func (e *Editor) ExecuteCommand(ctx context.Context, params *protocol.ExecuteCom
 	var match bool
 	if e.serverCapabilities.ExecuteCommandProvider != nil {
 		// Ensure that this command was actually listed as a supported command.
-		for _, command := range e.serverCapabilities.ExecuteCommandProvider.Commands {
-			if command == params.Command {
-				match = true
-				break
-			}
+		if slices.Contains(e.serverCapabilities.ExecuteCommandProvider.Commands, params.Command) {
+			match = true
 		}
 	}
 	if !match {
@@ -1596,8 +1575,7 @@ func (e *Editor) applyTextDocumentEdit(ctx context.Context, change protocol.Text
 			// TODO: it's unclear if this is correct. Here we create the buffer (with
 			// version 1), then apply edits. Perhaps we should apply the edits before
 			// sending the didOpen notification.
-			e.CreateBuffer(ctx, path, "")
-			err = nil
+			err = e.CreateBuffer(ctx, path, "")
 		}
 		if err != nil {
 			return err
@@ -1645,8 +1623,8 @@ func (e *Editor) ChangeWorkspaceFolders(ctx context.Context, folders []string) e
 	config := e.Config()
 
 	// capture existing folders so that we can compute the change.
-	oldFolders := makeWorkspaceFolders(e.sandbox, config.WorkspaceFolders)
-	newFolders := makeWorkspaceFolders(e.sandbox, folders)
+	oldFolders := makeWorkspaceFolders(e.sandbox, config.WorkspaceFolders, config.NoDefaultWorkspaceFiles)
+	newFolders := makeWorkspaceFolders(e.sandbox, folders, config.NoDefaultWorkspaceFiles)
 	config.WorkspaceFolders = folders
 	e.SetConfig(config)
 
@@ -1742,7 +1720,7 @@ func (e *Editor) Hover(ctx context.Context, loc protocol.Location) (*protocol.Ma
 	if resp == nil {
 		return nil, protocol.Location{}, nil // e.g. no selected symbol
 	}
-	return &resp.Contents, protocol.Location{URI: loc.URI, Range: resp.Range}, nil
+	return &resp.Contents, loc.URI.Location(resp.Range), nil
 }
 
 func (e *Editor) DocumentLink(ctx context.Context, path string) ([]protocol.DocumentLink, error) {

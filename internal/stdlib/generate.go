@@ -29,7 +29,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"slices"
 	"strings"
 
@@ -37,13 +36,67 @@ import (
 )
 
 func main() {
-	manifest()
+	log.SetFlags(log.Lshortfile) // to identify the source of the log messages
+
+	dir := apidir()
+	manifest(dir)
 	deps()
 }
 
 // -- generate std manifest --
 
-func manifest() {
+func manifest(apidir string) {
+	// find the signatures
+	cfg := packages.Config{
+		Mode: packages.LoadTypes,
+		Env:  append(os.Environ(), "CGO_ENABLED=0", "GOOS=linux", "GOARCH=amd64"),
+	}
+	// find the source. This is not totally reliable: different
+	// systems may get different versions of unreleased APIs.
+	// The result depends on the toolchain.
+	// The x/tools release process regenerates the table
+	// with the canonical toolchain.
+	stdpkgs, err := packages.Load(&cfg, "std")
+	if err != nil {
+		log.Fatal(err)
+	}
+	signatures := make(map[string]map[string]string) // PkgPath->FuncName->signature
+	// signatures start with func and may contain type parameters
+	// "func[T comparable](value T) unique.Handle[T]"
+	for _, pkg := range stdpkgs {
+		if strings.HasPrefix(pkg.PkgPath, "vendor/") ||
+			strings.HasPrefix(pkg.PkgPath, "internal/") ||
+			strings.Contains(pkg.PkgPath, "/internal/") {
+			continue
+		}
+		for _, name := range pkg.Types.Scope().Names() {
+			fixer := func(p *types.Package) string {
+				// fn.Signature() would have produced
+				// "func(fi io/fs.FileInfo, link string) (*archive/tar.Header, error)"},
+				// This produces
+				// "func FileInfoHeader(fi fs.FileInfo, link string) (*Header, error)""
+				// Note that the function name is superfluous, so it is removed below
+				if p != pkg.Types {
+					return p.Name()
+				}
+				return ""
+			}
+			obj := pkg.Types.Scope().Lookup(name)
+			if fn, ok := obj.(*types.Func); ok {
+				mp, ok := signatures[pkg.PkgPath]
+				if !ok {
+					mp = make(map[string]string)
+					signatures[pkg.PkgPath] = mp
+				}
+				sig := types.ObjectString(fn, fixer)
+				// remove the space and function name introduced by fixer
+				sig = strings.Replace(sig, " "+name, "", 1)
+				mp[name] = sig
+			}
+		}
+	}
+
+	// read the api data
 	pkgs := make(map[string]map[string]symInfo) // package -> symbol -> info
 	symRE := regexp.MustCompile(`^pkg (\S+).*?, (var|func|type|const|method \([^)]*\)) ([\pL\p{Nd}_]+)(.*)`)
 
@@ -100,7 +153,15 @@ func manifest() {
 			// as their encoding changes;
 			// deprecations count as updates too.
 			if _, ok := symbols[sym]; !ok {
-				symbols[sym] = symInfo{kind, minor}
+				var sig string
+				if kind == "func" {
+					sig = signatures[path][sym]
+				}
+				symbols[sym] = symInfo{
+					kind:      kind,
+					minor:     minor,
+					signature: sig,
+				}
 			}
 		}
 	}
@@ -111,7 +172,7 @@ func manifest() {
 		if minor > 0 {
 			base = fmt.Sprintf("go1.%d.txt", minor)
 		}
-		filename := filepath.Join(runtime.GOROOT(), "api", base)
+		filename := filepath.Join(apidir, base)
 		data, err := os.ReadFile(filename)
 		if err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
@@ -119,7 +180,7 @@ func manifest() {
 				// Synthesize one final file from any api/next/*.txt fragments.
 				// (They are consolidated into a go1.%d file some time between
 				// the freeze and the first release candidate.)
-				filenames, err := filepath.Glob(filepath.Join(runtime.GOROOT(), "api/next/*.txt"))
+				filenames, err := filepath.Glob(filepath.Join(apidir, "next", "*.txt"))
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -162,8 +223,8 @@ var PackageSymbols = map[string][]Symbol{
 		fmt.Fprintf(&buf, "\t%q: {\n", path)
 		for _, name := range sortedKeys(pkg) {
 			info := pkg[name]
-			fmt.Fprintf(&buf, "\t\t{%q, %s, %d},\n",
-				name, strings.Title(info.kind), info.minor)
+			fmt.Fprintf(&buf, "\t\t{%q, %s, %d, %q},\n",
+				name, strings.Title(info.kind), info.minor, info.signature)
 		}
 		fmt.Fprintln(&buf, "},")
 	}
@@ -177,9 +238,33 @@ var PackageSymbols = map[string][]Symbol{
 	}
 }
 
+// find the api directory, In most situations it is in GOROOT/api, but not always.
+// TODO(pjw): understand where it might be, and if there could be newer and older versions
+func apidir() string {
+	stdout := new(bytes.Buffer)
+	cmd := exec.Command("go", "env", "GOROOT", "GOPATH")
+	cmd.Stdout = stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		log.Fatal(err)
+	}
+	// Prefer GOROOT/api over GOPATH/api.
+	for line := range strings.SplitSeq(stdout.String(), "\n") {
+		apidir := filepath.Join(line, "api")
+		info, err := os.Stat(apidir)
+		if err == nil && info.IsDir() {
+			return apidir
+		}
+	}
+	log.Fatal("could not find api dir")
+	return ""
+}
+
 type symInfo struct {
 	kind  string // e.g. "func"
 	minor int    // go1.%d
+	// for completion snippets
+	signature string // for Kind == stdlib.Func
 }
 
 // loadSymbols computes the exported symbols in the specified package
@@ -246,6 +331,7 @@ func deps() {
 	cmd := exec.Command("go", "list", "-deps", "-json", "std")
 	cmd.Stdout = stdout
 	cmd.Stderr = os.Stderr
+	cmd.Env = append(os.Environ(), "CGO_ENABLED=0", "GOOS=linux", "GOARCH=amd64")
 	if err := cmd.Run(); err != nil {
 		log.Fatal(err)
 	}
@@ -336,6 +422,7 @@ var deps = [...]pkginfo{
 		cmd := exec.Command("go", "list", t.flag, "net/http")
 		cmd.Stdout = stdout
 		cmd.Stderr = os.Stderr
+		cmd.Env = append(os.Environ(), "CGO_ENABLED=0", "GOOS=linux", "GOARCH=amd64")
 		if err := cmd.Run(); err != nil {
 			log.Fatal(err)
 		}

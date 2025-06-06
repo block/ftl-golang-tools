@@ -323,7 +323,7 @@ func (i *Instance) getFile(r *http.Request) any {
 
 func (i *Instance) getInfo(r *http.Request) any {
 	buf := &bytes.Buffer{}
-	i.PrintServerInfo(r.Context(), buf)
+	i.writeServerInfo(buf)
 	return template.HTML(buf.String())
 }
 
@@ -438,6 +438,13 @@ func (i *Instance) Serve(ctx context.Context, addr string) (string, error) {
 		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 		mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 		mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+
+		if h, err := startFlightRecorder(); err != nil {
+			stdlog.Printf("failed to start flight recorder: %v", err) // e.g. go1.24
+		} else {
+			mux.HandleFunc("/flightrecorder", h)
+		}
+
 		if i.prometheus != nil {
 			mux.HandleFunc("/metrics/", i.prometheus.Serve)
 		}
@@ -468,11 +475,8 @@ func (i *Instance) Serve(ctx context.Context, addr string) (string, error) {
 			http.Error(w, "made a bug", http.StatusOK)
 		})
 
-		if err := http.Serve(listener, mux); err != nil {
-			event.Error(ctx, "Debug server failed", err)
-			return
-		}
-		event.Log(ctx, "Debug server finished")
+		err := http.Serve(listener, mux) // always non-nil
+		event.Error(ctx, "Debug server failed", err)
 	}()
 	return i.listenedDebugAddress, nil
 }
@@ -650,6 +654,7 @@ body {
 <a href="/metrics">Metrics</a>
 <a href="/rpc">RPC</a>
 <a href="/trace">Trace</a>
+<a href="/flightrecorder">Flight recorder</a>
 <a href="/analysis">Analysis</a>
 <hr>
 <h1>{{template "title" .}}</h1>
@@ -800,6 +805,7 @@ var SessionTmpl = template.Must(template.Must(BaseTemplate.Clone()).Parse(`
 {{define "title"}}Session {{.ID}}{{end}}
 {{define "body"}}
 From: <b>{{template "cachelink" .Cache.ID}}</b><br>
+
 <h2>Views</h2>
 <ul>{{range .Views}}
 {{- $envOverlay := .EnvOverlay -}}
@@ -810,7 +816,13 @@ Root: <b>{{.Root}}</b><br>
 Env overlay: <b>{{$envOverlay}})</b><br>
 {{end -}}
 Folder: <b>{{.Folder.Name}}:{{.Folder.Dir}}</b></li>
+Settings:<br/>
+<ul>
+{{range .Folder.Options.Debug}}<li>{{.}}</li>
+{{end}}
+</ul>
 {{end}}</ul>
+
 <h2>Overlays</h2>
 {{$session := .}}
 <ul>{{range .Overlays}}

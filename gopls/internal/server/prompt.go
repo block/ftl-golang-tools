@@ -51,7 +51,7 @@ const (
 // The following environment variables may be set by the client.
 // Exported for testing telemetry integration.
 const (
-	GoTelemetryGoplsClientStartTimeEnvvar = "GOTELEMETRY_GOPLS_CLIENT_START_TIME" // telemetry start time recored in client
+	GoTelemetryGoplsClientStartTimeEnvvar = "GOTELEMETRY_GOPLS_CLIENT_START_TIME" // telemetry start time recorded in client
 	GoTelemetryGoplsClientTokenEnvvar     = "GOTELEMETRY_GOPLS_CLIENT_TOKEN"      // sampling token
 )
 
@@ -283,7 +283,7 @@ func (s *server) maybePromptForTelemetry(ctx context.Context, enabled bool) {
 		attempts++
 	}
 
-	pendingContent := []byte(fmt.Sprintf("%s %d %d %d", state, attempts, creationTime, token))
+	pendingContent := fmt.Appendf(nil, "%s %d %d %d", state, attempts, creationTime, token)
 	if err := os.WriteFile(promptFile, pendingContent, 0666); err != nil {
 		errorf("writing pending state: %v", err)
 		return
@@ -351,7 +351,7 @@ Would you like to enable Go telemetry?
 			message(protocol.Error, fmt.Sprintf("Unrecognized response %q", item.Title))
 		}
 	}
-	resultContent := []byte(fmt.Sprintf("%s %d %d %d", result, attempts, creationTime, token))
+	resultContent := fmt.Appendf(nil, "%s %d %d %d", result, attempts, creationTime, token)
 	if err := os.WriteFile(promptFile, resultContent, 0666); err != nil {
 		errorf("error writing result state to prompt file: %v", err)
 	}

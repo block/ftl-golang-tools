@@ -389,7 +389,7 @@ func collectSymbols(ctx context.Context, snapshots []*cache.Snapshot, matcherTyp
 	// which we merge at the end.
 	nmatchers := runtime.GOMAXPROCS(-1) // matching is CPU bound
 	results := make(chan *symbolStore)
-	for i := 0; i < nmatchers; i++ {
+	for i := range nmatchers {
 		go func(i int) {
 			matcher := buildMatcher(matcherType, query)
 			store := new(symbolStore)
@@ -403,7 +403,7 @@ func collectSymbols(ctx context.Context, snapshots []*cache.Snapshot, matcherTyp
 
 	// Gather and merge results as they arrive.
 	var unified symbolStore
-	for i := 0; i < nmatchers; i++ {
+	for range nmatchers {
 		store := <-results
 		for _, syms := range store.res {
 			if syms != nil {
@@ -499,12 +499,9 @@ func matchFile(store *symbolStore, symbolizer symbolizer, matcher matcherFunc, f
 		si := &scoredSymbol{
 			score: score,
 			info: protocol.SymbolInformation{
-				Name: strings.Join(symbolParts, ""),
-				Kind: sym.Kind,
-				Location: protocol.Location{
-					URI:   f.uri,
-					Range: sym.Range,
-				},
+				Name:          strings.Join(symbolParts, ""),
+				Kind:          sym.Kind,
+				Location:      f.uri.Location(sym.Range),
 				ContainerName: string(f.mp.PkgPath),
 			},
 		}

@@ -13,12 +13,12 @@ import (
 	"go/types"
 	"strings"
 
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
 	"github.com/block/ftl-golang-tools/gopls/internal/file"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 	"github.com/block/ftl-golang-tools/gopls/internal/settings"
-	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
 	"github.com/block/ftl-golang-tools/internal/event"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
 	"github.com/block/ftl-golang-tools/internal/typesinternal"
@@ -65,7 +65,7 @@ func InlayHint(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, pR
 	}
 
 	var hints []protocol.InlayHint
-	if curSubrange, ok := pgf.Cursor.FindPos(start, end); ok {
+	if curSubrange, ok := pgf.Cursor.FindByPos(start, end); ok {
 		add := func(hint protocol.InlayHint) { hints = append(hints, hint) }
 		for _, fn := range enabledHints {
 			fn(info, pgf, qual, curSubrange, add)
@@ -74,7 +74,7 @@ func InlayHint(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, pR
 	return hints, nil
 }
 
-type inlayHintFunc func(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur cursor.Cursor, add func(protocol.InlayHint))
+type inlayHintFunc func(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur inspector.Cursor, add func(protocol.InlayHint))
 
 var allInlayHints = map[settings.InlayHint]inlayHintFunc{
 	settings.AssignVariableTypes:        assignVariableTypes,
@@ -86,7 +86,7 @@ var allInlayHints = map[settings.InlayHint]inlayHintFunc{
 	settings.FunctionTypeParameters:     funcTypeParams,
 }
 
-func parameterNames(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur cursor.Cursor, add func(protocol.InlayHint)) {
+func parameterNames(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur inspector.Cursor, add func(protocol.InlayHint)) {
 	for curCall := range cur.Preorder((*ast.CallExpr)(nil)) {
 		callExpr := curCall.Node().(*ast.CallExpr)
 		t := info.TypeOf(callExpr.Fun)
@@ -134,7 +134,7 @@ func parameterNames(info *types.Info, pgf *parsego.File, qual types.Qualifier, c
 	}
 }
 
-func funcTypeParams(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur cursor.Cursor, add func(protocol.InlayHint)) {
+func funcTypeParams(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur inspector.Cursor, add func(protocol.InlayHint)) {
 	for curCall := range cur.Preorder((*ast.CallExpr)(nil)) {
 		call := curCall.Node().(*ast.CallExpr)
 		id, ok := call.Fun.(*ast.Ident)
@@ -164,19 +164,39 @@ func funcTypeParams(info *types.Info, pgf *parsego.File, qual types.Qualifier, c
 	}
 }
 
-func assignVariableTypes(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur cursor.Cursor, add func(protocol.InlayHint)) {
-	for curAssign := range cur.Preorder((*ast.AssignStmt)(nil)) {
-		stmt := curAssign.Node().(*ast.AssignStmt)
-		if stmt.Tok != token.DEFINE {
-			continue
-		}
-		for _, v := range stmt.Lhs {
-			variableType(info, pgf, qual, v, add)
+func assignVariableTypes(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur inspector.Cursor, add func(protocol.InlayHint)) {
+	for node := range cur.Preorder((*ast.AssignStmt)(nil), (*ast.ValueSpec)(nil)) {
+		switch n := node.Node().(type) {
+		case *ast.AssignStmt:
+			if n.Tok != token.DEFINE {
+				continue
+			}
+			for _, v := range n.Lhs {
+				variableType(info, pgf, qual, v, add)
+			}
+		case *ast.GenDecl:
+			if n.Tok != token.VAR {
+				continue
+			}
+			for _, v := range n.Specs {
+				spec := v.(*ast.ValueSpec)
+				// The type of the variable is written, skip showing type of this var.
+				// ```go
+				// var foo string
+				// ```
+				if spec.Type != nil {
+					continue
+				}
+
+				for _, v := range spec.Names {
+					variableType(info, pgf, qual, v, add)
+				}
+			}
 		}
 	}
 }
 
-func rangeVariableTypes(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur cursor.Cursor, add func(protocol.InlayHint)) {
+func rangeVariableTypes(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur inspector.Cursor, add func(protocol.InlayHint)) {
 	for curRange := range cur.Preorder((*ast.RangeStmt)(nil)) {
 		rStmt := curRange.Node().(*ast.RangeStmt)
 		variableType(info, pgf, qual, rStmt.Key, add)
@@ -201,7 +221,7 @@ func variableType(info *types.Info, pgf *parsego.File, qual types.Qualifier, e a
 	})
 }
 
-func constantValues(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur cursor.Cursor, add func(protocol.InlayHint)) {
+func constantValues(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur inspector.Cursor, add func(protocol.InlayHint)) {
 	for curDecl := range cur.Preorder((*ast.GenDecl)(nil)) {
 		genDecl := curDecl.Node().(*ast.GenDecl)
 		if genDecl.Tok != token.CONST {
@@ -252,7 +272,7 @@ func constantValues(info *types.Info, pgf *parsego.File, qual types.Qualifier, c
 	}
 }
 
-func compositeLiteralFields(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur cursor.Cursor, add func(protocol.InlayHint)) {
+func compositeLiteralFields(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur inspector.Cursor, add func(protocol.InlayHint)) {
 	for curCompLit := range cur.Preorder((*ast.CompositeLit)(nil)) {
 		compLit, ok := curCompLit.Node().(*ast.CompositeLit)
 		if !ok {
@@ -300,7 +320,7 @@ func compositeLiteralFields(info *types.Info, pgf *parsego.File, qual types.Qual
 	}
 }
 
-func compositeLiteralTypes(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur cursor.Cursor, add func(protocol.InlayHint)) {
+func compositeLiteralTypes(info *types.Info, pgf *parsego.File, qual types.Qualifier, cur inspector.Cursor, add func(protocol.InlayHint)) {
 	for curCompLit := range cur.Preorder((*ast.CompositeLit)(nil)) {
 		compLit := curCompLit.Node().(*ast.CompositeLit)
 		typ := info.TypeOf(compLit)

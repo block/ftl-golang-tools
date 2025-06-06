@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"maps"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
@@ -54,6 +55,30 @@ type Options struct {
 	ServerOptions
 	UserOptions
 	InternalOptions
+}
+
+// Debug returns a list of "name = value" strings for each Options field.
+func (o *Options) Debug() []string {
+	var res []string
+
+	var visitStruct func(v reflect.Value, path []string)
+	visitStruct = func(v reflect.Value, path []string) {
+		for i := range v.NumField() {
+			f := v.Field(i)
+			ftyp := v.Type().Field(i)
+			path := append(path, ftyp.Name)
+			if ftyp.Type.Kind() == reflect.Struct {
+				visitStruct(f, path)
+			} else {
+				res = append(res, fmt.Sprintf("%s = %#v",
+					strings.Join(path, "."),
+					f.Interface()))
+			}
+		}
+	}
+	visitStruct(reflect.ValueOf(o).Elem(), nil)
+
+	return res
 }
 
 // ClientOptions holds LSP-specific configuration that is provided by the
@@ -433,7 +458,8 @@ type FormattingOptions struct {
 	Gofumpt bool
 }
 
-// Note: DiagnosticOptions must be comparable with reflect.DeepEqual.
+// Note: DiagnosticOptions must be comparable with reflect.DeepEqual,
+// and frob-encodable (no interfaces).
 type DiagnosticOptions struct {
 	// Analyses specify analyses that the user would like to enable or disable.
 	// A map of the names of analysis passes that should be enabled/disabled.
@@ -452,10 +478,21 @@ type DiagnosticOptions struct {
 	// ```
 	Analyses map[string]bool
 
-	// Staticcheck enables additional analyses from staticcheck.io.
+	// Staticcheck configures the default set of analyses staticcheck.io.
 	// These analyses are documented on
 	// [Staticcheck's website](https://staticcheck.io/docs/checks/).
-	Staticcheck bool `status:"experimental"`
+	//
+	// The "staticcheck" option has three values:
+	// - false: disable all staticcheck analyzers
+	// - true: enable all staticcheck analyzers
+	// - unset: enable a subset of staticcheck analyzers
+	//   selected by gopls maintainers for runtime efficiency
+	//   and analytic precision.
+	//
+	// Regardless of this setting, individual analyzers can be
+	// selectively enabled or disabled using the `analyses` setting.
+	Staticcheck         bool `status:"experimental"`
+	StaticcheckProvided bool `status:"experimental"` // = "staticcheck" was explicitly provided
 
 	// Annotations specifies the various kinds of compiler
 	// optimization details that should be reported as diagnostics
@@ -1187,6 +1224,7 @@ func (o *Options) setOne(name string, value any) (applied []CounterPath, _ error
 		return counts, nil
 
 	case "staticcheck":
+		o.StaticcheckProvided = true
 		return setBool(&o.Staticcheck, value)
 
 	case "local":

@@ -21,7 +21,7 @@ func NewFile(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle) (*pr
 	if bs, err := fh.Content(); err != nil || len(bs) != 0 {
 		return nil, err
 	}
-	meta, err := golang.NarrowestMetadataForFile(ctx, snapshot, fh.URI())
+	meta, err := snapshot.NarrowestMetadataForFile(ctx, fh.URI())
 	if err != nil {
 		return nil, err
 	}
@@ -40,11 +40,11 @@ func NewFile(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle) (*pr
 			continue
 		}
 		if group := golang.CopyrightComment(pgf.File); group != nil {
-			start, end, err := pgf.NodeOffsets(group)
+			text, err := pgf.NodeText(group)
 			if err != nil {
 				continue
 			}
-			buf.Write(pgf.Src[start:end])
+			buf.Write(text)
 			buf.WriteString("\n\n")
 			break
 		}

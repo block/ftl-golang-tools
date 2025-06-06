@@ -14,6 +14,7 @@ import (
 	"go/printer"
 	"go/token"
 	"go/types"
+	"maps"
 	pathpkg "path"
 	"reflect"
 	"slices"
@@ -22,7 +23,6 @@ import (
 
 	"github.com/block/ftl-golang-tools/go/ast/astutil"
 	"github.com/block/ftl-golang-tools/go/types/typeutil"
-	"github.com/block/ftl-golang-tools/imports"
 	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 	internalastutil "github.com/block/ftl-golang-tools/internal/astutil"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
@@ -57,6 +57,7 @@ type Options struct {
 type Result struct {
 	Content     []byte // formatted, transformed content of caller file
 	Literalized bool   // chosen strategy replaced callee() with func(){...}()
+	BindingDecl bool   // transformation added "var params = args" declaration
 
 	// TODO(adonovan): provide an API for clients that want structured
 	// output: a list of import additions and deletions plus one or more
@@ -329,20 +330,35 @@ func (st *state) inline() (*Result, error) {
 			}
 		}
 		// Add new imports.
+		// Set their position to after the last position of the old imports, to keep
+		// comments on the old imports from moving.
+		lastPos := token.NoPos
+		if lastSpec := last(importDecl.Specs); lastSpec != nil {
+			lastPos = lastSpec.Pos()
+			if c := lastSpec.(*ast.ImportSpec).Comment; c != nil {
+				lastPos = c.Pos()
+			}
+		}
 		for _, imp := range newImports {
 			// Check that the new imports are accessible.
 			path, _ := strconv.Unquote(imp.spec.Path.Value)
 			if !analysisinternal.CanImport(caller.Types.Path(), path) {
 				return nil, fmt.Errorf("can't inline function %v as its body refers to inaccessible package %q", callee, path)
 			}
+			if lastPos.IsValid() {
+				lastPos++
+				imp.spec.Path.ValuePos = lastPos
+			}
 			importDecl.Specs = append(importDecl.Specs, imp.spec)
 		}
+
 		var out bytes.Buffer
 		out.Write(before)
 		commented := &printer.CommentedNode{
 			Node:     importDecl,
 			Comments: comments,
 		}
+
 		if err := format.Node(&out, fset, commented); err != nil {
 			logf("failed to format new importDecl: %v", err) // debugging
 			return nil, err
@@ -353,7 +369,6 @@ func (st *state) inline() (*Result, error) {
 			return nil, err
 		}
 	}
-
 	// Delete imports referenced only by caller.Call.Fun.
 	for _, oldImport := range res.oldImports {
 		specToDelete := oldImport.spec
@@ -439,6 +454,7 @@ func (st *state) inline() (*Result, error) {
 	return &Result{
 		Content:     newSrc,
 		Literalized: literalized,
+		BindingDecl: res.bindingDecl,
 	}, nil
 }
 
@@ -647,6 +663,7 @@ type inlineCallResult struct {
 	// unfortunately in order to preserve comments, it is important that inlining
 	// replace as little syntax as possible.
 	elideBraces bool
+	bindingDecl bool     // transformation inserted "var params = args" declaration
 	old, new    ast.Node // e.g. replace call expr by callee function body expression
 }
 
@@ -751,84 +768,9 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 	istate := newImportState(logf, caller, callee)
 
 	// Compute the renaming of the callee's free identifiers.
-	objRenames := make([]ast.Expr, len(callee.FreeObjs)) // nil => no change
-	for i, obj := range callee.FreeObjs {
-		// obj is a free object of the callee.
-		//
-		// Possible cases are:
-		// - builtin function, type, or value (e.g. nil, zero)
-		//   => check not shadowed in caller.
-		// - package-level var/func/const/types
-		//   => same package: check not shadowed in caller.
-		//   => otherwise: import other package, form a qualified identifier.
-		//      (Unexported cross-package references were rejected already.)
-		// - type parameter
-		//   => not yet supported
-		// - pkgname
-		//   => import other package and use its local name.
-		//
-		// There can be no free references to labels, fields, or methods.
-
-		// Note that we must consider potential shadowing both
-		// at the caller side (caller.lookup) and, when
-		// choosing new PkgNames, within the callee (obj.shadow).
-
-		var newName ast.Expr
-		if obj.Kind == "pkgname" {
-			// Use locally appropriate import, creating as needed.
-			n := istate.localName(obj.PkgPath, obj.PkgName, obj.Shadow)
-			newName = makeIdent(n) // imported package
-		} else if !obj.ValidPos {
-			// Built-in function, type, or value (e.g. nil, zero):
-			// check not shadowed at caller.
-			found := caller.lookup(obj.Name) // always finds something
-			if found.Pos().IsValid() {
-				return nil, fmt.Errorf("cannot inline, because the callee refers to built-in %q, which in the caller is shadowed by a %s (declared at line %d)",
-					obj.Name, objectKind(found),
-					caller.Fset.PositionFor(found.Pos(), false).Line)
-			}
-
-		} else {
-			// Must be reference to package-level var/func/const/type,
-			// since type parameters are not yet supported.
-			qualify := false
-			if obj.PkgPath == callee.PkgPath {
-				// reference within callee package
-				if samePkg {
-					// Caller and callee are in same package.
-					// Check caller has not shadowed the decl.
-					//
-					// This may fail if the callee is "fake", such as for signature
-					// refactoring where the callee is modified to be a trivial wrapper
-					// around the refactored signature.
-					found := caller.lookup(obj.Name)
-					if found != nil && !isPkgLevel(found) {
-						return nil, fmt.Errorf("cannot inline, because the callee refers to %s %q, which in the caller is shadowed by a %s (declared at line %d)",
-							obj.Kind, obj.Name,
-							objectKind(found),
-							caller.Fset.PositionFor(found.Pos(), false).Line)
-					}
-				} else {
-					// Cross-package reference.
-					qualify = true
-				}
-			} else {
-				// Reference to a package-level declaration
-				// in another package, without a qualified identifier:
-				// it must be a dot import.
-				qualify = true
-			}
-
-			// Form a qualified identifier, pkg.Name.
-			if qualify {
-				pkgName := istate.localName(obj.PkgPath, obj.PkgName, obj.Shadow)
-				newName = &ast.SelectorExpr{
-					X:   makeIdent(pkgName),
-					Sel: makeIdent(obj.Name),
-				}
-			}
-		}
-		objRenames[i] = newName
+	objRenames, err := st.renameFreeObjs(istate)
+	if err != nil {
+		return nil, err
 	}
 
 	res := &inlineCallResult{
@@ -954,9 +896,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 						elts = append(elts, arg.expr)
 						pure = pure && arg.pure
 						effects = effects || arg.effects
-						for k, v := range arg.freevars {
-							freevars[k] = v
-						}
+						maps.Copy(freevars, arg.freevars)
 					}
 					args = append(ordinary, &argument{
 						expr: &ast.CompositeLit{
@@ -974,6 +914,14 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 				}
 			}
 		}
+	}
+
+	typeArgs := st.typeArguments(caller.Call)
+	if len(typeArgs) != len(callee.TypeParams) {
+		return nil, fmt.Errorf("cannot inline: type parameter inference is not yet supported")
+	}
+	if err := substituteTypeParams(logf, callee.TypeParams, typeArgs, params, replaceCalleeID); err != nil {
+		return nil, err
 	}
 
 	// Log effective arguments.
@@ -1137,6 +1085,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 					res.new = results[0]
 				} else {
 					// Reduces to: { var (bindings); expr }
+					res.bindingDecl = true
 					res.old = stmt
 					res.new = &ast.BlockStmt{
 						List: []ast.Stmt{
@@ -1162,6 +1111,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 					res.new = discard
 				} else {
 					// Reduces to: { var (bindings); _, _ = exprs }
+					res.bindingDecl = true
 					res.new = &ast.BlockStmt{
 						List: []ast.Stmt{
 							bindingDecl.stmt,
@@ -1191,6 +1141,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 					List: newStmts,
 				}
 				if needBindingDecl {
+					res.bindingDecl = true
 					block.List = prepend(bindingDecl.stmt, block.List...)
 				}
 
@@ -1307,6 +1258,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 		body := calleeDecl.Body
 		clearPositions(body)
 		if needBindingDecl {
+			res.bindingDecl = true
 			body.List = prepend(bindingDecl.stmt, body.List...)
 		}
 		res.old = ret
@@ -1400,6 +1352,7 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 	if bindingDecl != nil && allResultsUnreferenced {
 		funcLit.Type.Params.List = nil
 		remainingArgs = nil
+		res.bindingDecl = true
 		funcLit.Body.List = prepend(bindingDecl.stmt, funcLit.Body.List...)
 	}
 
@@ -1415,6 +1368,93 @@ func (st *state) inlineCall() (*inlineCallResult, error) {
 	return res, nil
 }
 
+// renameFreeObjs computes the renaming of the callee's free identifiers.
+// It returns a slice of names (identifiers or selector expressions) corresponding
+// to the callee's free objects (gobCallee.FreeObjs).
+func (st *state) renameFreeObjs(istate *importState) ([]ast.Expr, error) {
+	caller, callee := st.caller, &st.callee.impl
+	objRenames := make([]ast.Expr, len(callee.FreeObjs)) // nil => no change
+	for i, obj := range callee.FreeObjs {
+		// obj is a free object of the callee.
+		//
+		// Possible cases are:
+		// - builtin function, type, or value (e.g. nil, zero)
+		//   => check not shadowed in caller.
+		// - package-level var/func/const/types
+		//   => same package: check not shadowed in caller.
+		//   => otherwise: import other package, form a qualified identifier.
+		//      (Unexported cross-package references were rejected already.)
+		// - type parameter
+		//   => not yet supported
+		// - pkgname
+		//   => import other package and use its local name.
+		//
+		// There can be no free references to labels, fields, or methods.
+
+		// Note that we must consider potential shadowing both
+		// at the caller side (caller.lookup) and, when
+		// choosing new PkgNames, within the callee (obj.shadow).
+
+		var newName ast.Expr
+		if obj.Kind == "pkgname" {
+			// Use locally appropriate import, creating as needed.
+			n := istate.localName(obj.PkgPath, obj.PkgName, obj.Shadow)
+			newName = makeIdent(n) // imported package
+		} else if !obj.ValidPos {
+			// Built-in function, type, or value (e.g. nil, zero):
+			// check not shadowed at caller.
+			found := caller.lookup(obj.Name) // always finds something
+			if found.Pos().IsValid() {
+				return nil, fmt.Errorf("cannot inline, because the callee refers to built-in %q, which in the caller is shadowed by a %s (declared at line %d)",
+					obj.Name, objectKind(found),
+					caller.Fset.PositionFor(found.Pos(), false).Line)
+			}
+
+		} else {
+			// Must be reference to package-level var/func/const/type,
+			// since type parameters are not yet supported.
+			qualify := false
+			if obj.PkgPath == callee.PkgPath {
+				// reference within callee package
+				if caller.Types.Path() == callee.PkgPath {
+					// Caller and callee are in same package.
+					// Check caller has not shadowed the decl.
+					//
+					// This may fail if the callee is "fake", such as for signature
+					// refactoring where the callee is modified to be a trivial wrapper
+					// around the refactored signature.
+					found := caller.lookup(obj.Name)
+					if found != nil && !isPkgLevel(found) {
+						return nil, fmt.Errorf("cannot inline, because the callee refers to %s %q, which in the caller is shadowed by a %s (declared at line %d)",
+							obj.Kind, obj.Name,
+							objectKind(found),
+							caller.Fset.PositionFor(found.Pos(), false).Line)
+					}
+				} else {
+					// Cross-package reference.
+					qualify = true
+				}
+			} else {
+				// Reference to a package-level declaration
+				// in another package, without a qualified identifier:
+				// it must be a dot import.
+				qualify = true
+			}
+
+			// Form a qualified identifier, pkg.Name.
+			if qualify {
+				pkgName := istate.localName(obj.PkgPath, obj.PkgName, obj.Shadow)
+				newName = &ast.SelectorExpr{
+					X:   makeIdent(pkgName),
+					Sel: makeIdent(obj.Name),
+				}
+			}
+		}
+		objRenames[i] = newName
+	}
+	return objRenames, nil
+}
+
 type argument struct {
 	expr          ast.Expr
 	typ           types.Type      // may be tuple for sole non-receiver arg in spread call
@@ -1426,6 +1466,35 @@ type argument struct {
 	freevars      map[string]bool // free names of expr
 	variadic      bool            // is explicit []T{...} for eliminated variadic
 	desugaredRecv bool            // is *recv or &recv, where operator was elided
+}
+
+// typeArguments returns the type arguments of the call.
+// It only collects the arguments that are explicitly provided; it does
+// not attempt type inference.
+func (st *state) typeArguments(call *ast.CallExpr) []*argument {
+	var exprs []ast.Expr
+	switch d := ast.Unparen(call.Fun).(type) {
+	case *ast.IndexExpr:
+		exprs = []ast.Expr{d.Index}
+	case *ast.IndexListExpr:
+		exprs = d.Indices
+	default:
+		// No type  arguments
+		return nil
+	}
+	var args []*argument
+	for _, e := range exprs {
+		arg := &argument{expr: e, freevars: freeVars(st.caller.Info, e)}
+		// Wrap the instantiating type in parens when it's not an
+		// ident or qualified ident to prevent "if x == struct{}"
+		// parsing ambiguity, or "T(x)" where T = "*int" or "func()"
+		// from misparsing.
+		if _, ok := arg.expr.(*ast.Ident); !ok {
+			arg.expr = &ast.ParenExpr{X: arg.expr}
+		}
+		args = append(args, arg)
+	}
+	return args
 }
 
 // arguments returns the effective arguments of the call.
@@ -1463,6 +1532,9 @@ func (st *state) arguments(caller *Caller, calleeDecl *ast.FuncDecl, assign1 fun
 
 	callArgs := caller.Call.Args
 	if calleeDecl.Recv != nil {
+		if len(st.callee.impl.TypeParams) > 0 {
+			return nil, fmt.Errorf("cannot inline: generic methods not yet supported")
+		}
 		sel := ast.Unparen(caller.Call.Fun).(*ast.SelectorExpr)
 		seln := caller.Info.Selections[sel]
 		var recvArg ast.Expr
@@ -1586,8 +1658,51 @@ type parameter struct {
 // A replacer replaces an identifier at the given offset in the callee.
 // The replacement tree must not belong to the caller; use cloneNode as needed.
 // If unpackVariadic is set, the replacement is a composite resulting from
-// variadic elimination, and may be unpackeded into variadic calls.
+// variadic elimination, and may be unpacked into variadic calls.
 type replacer = func(offset int, repl ast.Expr, unpackVariadic bool)
+
+// substituteTypeParams replaces type parameters in the callee with the corresponding type arguments
+// from the call.
+func substituteTypeParams(logf logger, typeParams []*paramInfo, typeArgs []*argument, params []*parameter, replace replacer) error {
+	assert(len(typeParams) == len(typeArgs), "mismatched number of type params/args")
+	for i, paramInfo := range typeParams {
+		arg := typeArgs[i]
+		// Perform a simplified, conservative shadow analysis: fail if there is any shadowing.
+		for free := range arg.freevars {
+			if paramInfo.Shadow[free] != 0 {
+				return fmt.Errorf("cannot inline: type argument #%d (type parameter %s) is shadowed", i, paramInfo.Name)
+			}
+		}
+		logf("replacing type param %s with %s", paramInfo.Name, debugFormatNode(token.NewFileSet(), arg.expr))
+		for _, ref := range paramInfo.Refs {
+			replace(ref.Offset, internalastutil.CloneNode(arg.expr), false)
+		}
+		// Also replace parameter field types.
+		// TODO(jba): find a way to do this that is not so slow and clumsy.
+		// Ideally, we'd walk each p.fieldType once, replacing all type params together.
+		for _, p := range params {
+			if id, ok := p.fieldType.(*ast.Ident); ok && id.Name == paramInfo.Name {
+				p.fieldType = arg.expr
+			} else {
+				for _, id := range identsNamed(p.fieldType, paramInfo.Name) {
+					replaceNode(p.fieldType, id, arg.expr)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func identsNamed(n ast.Node, name string) []*ast.Ident {
+	var ids []*ast.Ident
+	ast.Inspect(n, func(n ast.Node) bool {
+		if id, ok := n.(*ast.Ident); ok && id.Name == name {
+			ids = append(ids, id)
+		}
+		return true
+	})
+	return ids
+}
 
 // substitute implements parameter elimination by substitution.
 //
@@ -1700,7 +1815,7 @@ next:
 			}
 		}
 
-		// Arg is a potential substition candidate: analyze its shadowing.
+		// Arg is a potential substitution candidate: analyze its shadowing.
 		//
 		// Consider inlining a call f(z, 1) to
 		//
@@ -1714,7 +1829,6 @@ next:
 		// parameter is also removed by substitution.
 
 		sg[arg] = nil // Absent shadowing, the arg is substitutable.
-
 		for free := range arg.freevars {
 			switch s := param.info.Shadow[free]; {
 			case s < 0:
@@ -2624,7 +2738,6 @@ func pure(info *types.Info, assign1 func(*types.Var) bool, e ast.Expr) bool {
 
 		case *ast.SelectorExpr:
 			if seln, ok := info.Selections[e]; ok {
-
 				// See types.SelectionKind for background.
 				switch seln.Kind() {
 				case types.MethodExpr:
@@ -3477,12 +3590,9 @@ func (st *state) assignStmts(callerStmt *ast.AssignStmt, returnOperands []ast.Ex
 			typeName string
 			obj      *types.TypeName // nil for basic types
 		)
-		switch typ := typ.(type) {
-		case *types.Basic:
-			typeName = typ.Name()
-		case interface{ Obj() *types.TypeName }: // Named, Alias, TypeParam
-			obj = typ.Obj()
-			typeName = typ.Obj().Name()
+		if tname := typesinternal.TypeNameFor(typ); tname != nil {
+			obj = tname
+			typeName = tname.Name()
 		}
 
 		// Special case: check for universe "any".

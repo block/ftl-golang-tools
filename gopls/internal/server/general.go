@@ -24,7 +24,6 @@ import (
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
 	"github.com/block/ftl-golang-tools/gopls/internal/debug"
 	debuglog "github.com/block/ftl-golang-tools/gopls/internal/debug/log"
-	"github.com/block/ftl-golang-tools/gopls/internal/file"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol/semtok"
 	"github.com/block/ftl-golang-tools/gopls/internal/settings"
@@ -38,7 +37,7 @@ import (
 )
 
 func (s *server) Initialize(ctx context.Context, params *protocol.ParamInitialize) (*protocol.InitializeResult, error) {
-	ctx, done := event.Start(ctx, "lsp.Server.initialize")
+	ctx, done := event.Start(ctx, "server.Initialize")
 	defer done()
 
 	var clientName string
@@ -184,6 +183,7 @@ func (s *server) Initialize(ctx context.Context, params *protocol.ParamInitializ
 					IncludeText: false,
 				},
 			},
+			TypeHierarchyProvider: &protocol.Or_ServerCapabilities_typeHierarchyProvider{Value: true},
 			Workspace: &protocol.WorkspaceOptions{
 				WorkspaceFolders: &protocol.WorkspaceFolders5Gn{
 					Supported:           true,
@@ -208,7 +208,7 @@ func (s *server) Initialize(ctx context.Context, params *protocol.ParamInitializ
 }
 
 func (s *server) Initialized(ctx context.Context, params *protocol.InitializedParams) error {
-	ctx, done := event.Start(ctx, "lsp.Server.initialized")
+	ctx, done := event.Start(ctx, "server.Initialized")
 	defer done()
 
 	s.stateMu.Lock()
@@ -220,7 +220,7 @@ func (s *server) Initialized(ctx context.Context, params *protocol.InitializedPa
 	s.stateMu.Unlock()
 
 	for _, not := range s.notifications {
-		s.client.ShowMessage(ctx, not)
+		s.client.ShowMessage(ctx, not) // ignore error
 	}
 	s.notifications = nil
 
@@ -312,8 +312,13 @@ func (s *server) addFolders(ctx context.Context, folders []protocol.WorkspaceFol
 	// but the list can grow over time.
 	var filtered []protocol.WorkspaceFolder
 	for _, f := range folders {
-		if _, err := protocol.ParseDocumentURI(f.URI); err != nil {
+		uri, err := protocol.ParseDocumentURI(f.URI)
+		if err != nil {
 			debuglog.Warning.Logf(ctx, "skip adding virtual folder %q - invalid folder URI: %v", f.Name, err)
+			continue
+		}
+		if s.session.HasView(uri) {
+			debuglog.Warning.Logf(ctx, "skip adding the already added folder %q - its view has been created before", f.Name)
 			continue
 		}
 		filtered = append(filtered, f)
@@ -617,25 +622,10 @@ func (s *server) handleOptionResult(ctx context.Context, applied []telemetry.Cou
 	}
 }
 
-// fileOf returns the file for a given URI and its snapshot.
-// On success, the returned function must be called to release the snapshot.
-func (s *server) fileOf(ctx context.Context, uri protocol.DocumentURI) (file.Handle, *cache.Snapshot, func(), error) {
-	snapshot, release, err := s.session.SnapshotOf(ctx, uri)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	fh, err := snapshot.ReadFile(ctx, uri)
-	if err != nil {
-		release()
-		return nil, nil, nil, err
-	}
-	return fh, snapshot, release, nil
-}
-
 // Shutdown implements the 'shutdown' LSP handler. It releases resources
 // associated with the server and waits for all ongoing work to complete.
 func (s *server) Shutdown(ctx context.Context) error {
-	ctx, done := event.Start(ctx, "lsp.Server.shutdown")
+	ctx, done := event.Start(ctx, "server.Shutdown")
 	defer done()
 
 	s.stateMu.Lock()
@@ -646,7 +636,7 @@ func (s *server) Shutdown(ctx context.Context) error {
 	if s.state != serverShutDown {
 		// Wait for the webserver (if any) to finish.
 		if s.web != nil {
-			s.web.server.Shutdown(ctx)
+			s.web.server.Shutdown(ctx) // ignore error
 		}
 
 		// drop all the active views
@@ -662,13 +652,13 @@ func (s *server) Shutdown(ctx context.Context) error {
 }
 
 func (s *server) Exit(ctx context.Context) error {
-	ctx, done := event.Start(ctx, "lsp.Server.exit")
+	ctx, done := event.Start(ctx, "server.Exit")
 	defer done()
 
 	s.stateMu.Lock()
 	defer s.stateMu.Unlock()
 
-	s.client.Close()
+	s.client.Close() // ignore error
 
 	if s.state != serverShutDown {
 		// TODO: We should be able to do better than this.

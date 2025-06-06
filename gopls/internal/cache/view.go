@@ -36,6 +36,7 @@ import (
 	"github.com/block/ftl-golang-tools/internal/event"
 	"github.com/block/ftl-golang-tools/internal/gocommand"
 	"github.com/block/ftl-golang-tools/internal/imports"
+	"github.com/block/ftl-golang-tools/internal/modindex"
 	"github.com/block/ftl-golang-tools/internal/xcontext"
 )
 
@@ -372,6 +373,11 @@ func (v *View) Env() []string {
 	)
 }
 
+// ModcacheIndex returns the module cache index
+func (v *View) ModcacheIndex() (*modindex.Index, error) {
+	return v.modcacheState.getIndex()
+}
+
 // UpdateFolders updates the set of views for the new folders.
 //
 // Calling this causes each view to be reinitialized.
@@ -473,7 +479,7 @@ func (v *View) filterFunc() func(protocol.DocumentURI) bool {
 		gomodcache := v.folder.Env.GOMODCACHE
 		var filters []string
 		filters = append(filters, v.folder.Options.DirectoryFilters...)
-		if pref := strings.TrimPrefix(gomodcache, folderDir); pref != gomodcache {
+		if pref, ok := strings.CutPrefix(gomodcache, folderDir); ok {
 			modcacheFilter := "-" + strings.TrimPrefix(filepath.ToSlash(pref), "/")
 			filters = append(filters, modcacheFilter)
 		}
@@ -550,7 +556,7 @@ func newIgnoreFilter(dirs []string) *ignoreFilter {
 
 func (f *ignoreFilter) ignored(filename string) bool {
 	for _, prefix := range f.prefixes {
-		if suffix := strings.TrimPrefix(filename, prefix); suffix != filename {
+		if suffix, ok := strings.CutPrefix(filename, prefix); ok {
 			if checkIgnored(suffix) {
 				return true
 			}
@@ -567,7 +573,7 @@ func (f *ignoreFilter) ignored(filename string) bool {
 func checkIgnored(suffix string) bool {
 	// Note: this could be further optimized by writing a HasSegment helper, a
 	// segment-boundary respecting variant of strings.Contains.
-	for _, component := range strings.Split(suffix, string(filepath.Separator)) {
+	for component := range strings.SplitSeq(suffix, string(filepath.Separator)) {
 		if len(component) == 0 {
 			continue
 		}
@@ -1231,7 +1237,7 @@ func globsMatchPath(globs, target string) bool {
 		n := strings.Count(glob, "/")
 		prefix := target
 		// Walk target, counting slashes, truncating at the N+1'th slash.
-		for i := 0; i < len(target); i++ {
+		for i := range len(target) {
 			if target[i] == '/' {
 				if n == 0 {
 					prefix = target[:i]

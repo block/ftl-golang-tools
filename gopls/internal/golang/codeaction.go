@@ -11,13 +11,13 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
-	"path/filepath"
 	"reflect"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/go/ast/edge"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/gopls/internal/analysis/fillstruct"
 	"github.com/block/ftl-golang-tools/gopls/internal/analysis/fillswitch"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
@@ -41,8 +41,7 @@ import (
 //
 // See ../protocol/codeactionkind.go for some code action theory.
 func CodeActions(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, rng protocol.Range, diagnostics []protocol.Diagnostic, enabled func(protocol.CodeActionKind) bool, trigger protocol.CodeActionTriggerKind) (actions []protocol.CodeAction, _ error) {
-
-	loc := protocol.Location{URI: fh.URI(), Range: rng}
+	loc := fh.URI().Location(rng)
 
 	pgf, err := snapshot.ParseGo(ctx, fh, parsego.Full)
 	if err != nil {
@@ -106,16 +105,17 @@ func CodeActions(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, 
 			req.pkg = nil
 		}
 		if err := p.fn(ctx, req); err != nil {
-			// TODO(adonovan): most errors in code action providers should
-			// not block other providers; see https://go.dev/issue/71275.
-			return nil, err
+			// An error in one code action producer
+			// should not affect the others.
+			if ctx.Err() != nil {
+				return nil, err
+			}
+			event.Error(ctx, fmt.Sprintf("CodeAction producer %s failed", p.kind), err)
+			continue
 		}
 	}
 
-	sort.Slice(actions, func(i, j int) bool {
-		return actions[i].Kind < actions[j].Kind
-	})
-
+	// Return code actions in the order their providers are listed.
 	return actions, nil
 }
 
@@ -233,6 +233,8 @@ type codeActionProducer struct {
 	needPkg bool // fn needs type information (req.pkg)
 }
 
+// Code Actions are returned in the order their producers are listed below.
+// Depending on the client, this may influence the order they appear in the UI.
 var codeActionProducers = [...]codeActionProducer{
 	{kind: protocol.QuickFix, fn: quickFix, needPkg: true},
 	{kind: protocol.SourceOrganizeImports, fn: sourceOrganizeImports},
@@ -242,7 +244,6 @@ var codeActionProducers = [...]codeActionProducer{
 	{kind: settings.GoFreeSymbols, fn: goFreeSymbols},
 	{kind: settings.GoTest, fn: goTest, needPkg: true},
 	{kind: settings.GoToggleCompilerOptDetails, fn: toggleCompilerOptDetails},
-	{kind: settings.GoplsDocFeatures, fn: goplsDocFeatures},
 	{kind: settings.RefactorExtractFunction, fn: refactorExtractFunction},
 	{kind: settings.RefactorExtractMethod, fn: refactorExtractMethod},
 	{kind: settings.RefactorExtractToNewFile, fn: refactorExtractToNewFile},
@@ -251,6 +252,7 @@ var codeActionProducers = [...]codeActionProducer{
 	{kind: settings.RefactorExtractConstantAll, fn: refactorExtractVariableAll, needPkg: true},
 	{kind: settings.RefactorExtractVariableAll, fn: refactorExtractVariableAll, needPkg: true},
 	{kind: settings.RefactorInlineCall, fn: refactorInlineCall, needPkg: true},
+	{kind: settings.RefactorInlineVariable, fn: refactorInlineVariable, needPkg: true},
 	{kind: settings.RefactorRewriteChangeQuote, fn: refactorRewriteChangeQuote},
 	{kind: settings.RefactorRewriteFillStruct, fn: refactorRewriteFillStruct, needPkg: true},
 	{kind: settings.RefactorRewriteFillSwitch, fn: refactorRewriteFillSwitch, needPkg: true},
@@ -261,6 +263,9 @@ var codeActionProducers = [...]codeActionProducer{
 	{kind: settings.RefactorRewriteMoveParamRight, fn: refactorRewriteMoveParamRight, needPkg: true},
 	{kind: settings.RefactorRewriteSplitLines, fn: refactorRewriteSplitLines, needPkg: true},
 	{kind: settings.RefactorRewriteEliminateDotImport, fn: refactorRewriteEliminateDotImport, needPkg: true},
+	{kind: settings.RefactorRewriteAddTags, fn: refactorRewriteAddStructTags, needPkg: true},
+	{kind: settings.RefactorRewriteRemoveTags, fn: refactorRewriteRemoveStructTags, needPkg: true},
+	{kind: settings.GoplsDocFeatures, fn: goplsDocFeatures}, // offer this one last (#72742)
 
 	// Note: don't forget to update the allow-list in Server.CodeAction
 	// when adding new query operations like GoTest and GoDoc that
@@ -501,17 +506,17 @@ func refactorExtractVariable(ctx context.Context, req *codeActionsRequest) error
 }
 
 // refactorExtractVariableAll produces "Extract N occurrences of EXPR" code action.
-// See [extractAllOccursOfExpr] for command implementation.
+// See [extractVariable] for implementation.
 func refactorExtractVariableAll(ctx context.Context, req *codeActionsRequest) error {
 	info := req.pkg.TypesInfo()
 	// Don't suggest if only one expr is found,
 	// otherwise it will duplicate with [refactorExtractVariable]
 	if exprs, err := canExtractVariable(info, req.pgf.Cursor, req.start, req.end, true); err == nil && len(exprs) > 1 {
-		start, end, err := req.pgf.NodeOffsets(exprs[0])
+		text, err := req.pgf.NodeText(exprs[0])
 		if err != nil {
 			return err
 		}
-		desc := string(req.pgf.Src[start:end])
+		desc := string(text)
 		if len(desc) >= 40 || strings.Contains(desc, "\n") {
 			desc = astutil.NodeDescription(exprs[0])
 		}
@@ -715,33 +720,28 @@ func refactorRewriteEliminateDotImport(ctx context.Context, req *codeActionsRequ
 
 	// Go through each use of the dot imported package, checking its scope for
 	// shadowing and calculating an edit to qualify the identifier.
-	var stack []ast.Node
-	ast.Inspect(req.pgf.File, func(n ast.Node) bool {
-		if n == nil {
-			stack = stack[:len(stack)-1] // pop
-			return false
-		}
-		stack = append(stack, n) // push
+	for curId := range req.pgf.Cursor.Preorder((*ast.Ident)(nil)) {
+		ident := curId.Node().(*ast.Ident)
 
-		ident, ok := n.(*ast.Ident)
-		if !ok {
-			return true
-		}
 		// Only keep identifiers that use a symbol from the
 		// dot imported package.
 		use := req.pkg.TypesInfo().Uses[ident]
 		if use == nil || use.Pkg() == nil {
-			return true
+			continue
 		}
 		if use.Pkg() != imported {
-			return true
+			continue
 		}
 
-		// Only qualify unqualified identifiers (due to dot imports).
+		// Only qualify unqualified identifiers (due to dot imports)
+		// that reference package-level symbols.
 		// All other references to a symbol imported from another package
 		// are nested within a select expression (pkg.Foo, v.Method, v.Field).
-		if is[*ast.SelectorExpr](stack[len(stack)-2]) {
-			return true
+		if ek, _ := curId.ParentEdge(); ek == edge.SelectorExpr_Sel {
+			continue // qualified identifier (pkg.X) or selector (T.X or e.X)
+		}
+		if !typesinternal.IsPackageLevel(use) {
+			continue // unqualified field reference T{X: ...}
 		}
 
 		// Make sure that the package name will not be shadowed by something else in scope.
@@ -752,24 +752,22 @@ func refactorRewriteEliminateDotImport(ctx context.Context, req *codeActionsRequ
 		// allowed to go through.
 		sc := fileScope.Innermost(ident.Pos())
 		if sc == nil {
-			return true
+			continue
 		}
 		_, obj := sc.LookupParent(newName, ident.Pos())
 		if obj != nil {
-			return true
+			continue
 		}
 
 		rng, err := req.pgf.PosRange(ident.Pos(), ident.Pos()) // sic, zero-width range before ident
 		if err != nil {
-			return true
+			continue
 		}
 		edits = append(edits, protocol.TextEdit{
 			Range:   rng,
 			NewText: newName + ".",
 		})
-
-		return true
-	})
+	}
 
 	req.addEditAction("Eliminate dot import", nil, protocol.DocumentChangeEdit(
 		req.fh,
@@ -816,6 +814,82 @@ func refactorRewriteFillSwitch(ctx context.Context, req *codeActionsRequest) err
 		req.addEditAction(diag.Message, nil, changes...)
 	}
 
+	return nil
+}
+
+// selectionContainsStructField returns true if the given struct contains a
+// field between start and end pos. If needsTag is true, it only returns true if
+// the struct field found contains a struct tag.
+func selectionContainsStructField(node *ast.StructType, start, end token.Pos, needsTag bool) bool {
+	for _, field := range node.Fields.List {
+		if start <= field.End() && end >= field.Pos() {
+			if !needsTag || field.Tag != nil {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// selectionContainsStruct returns true if there exists a struct containing
+// fields within start and end positions. If removeTags is true, it means the
+// current command is for remove tags rather than add tags, so we only return
+// true if the struct field found contains a struct tag to remove.
+func selectionContainsStruct(cursor inspector.Cursor, start, end token.Pos, removeTags bool) bool {
+	cur, ok := cursor.FindByPos(start, end)
+	if !ok {
+		return false
+	}
+	if _, ok := cur.Node().(*ast.StructType); ok {
+		return true
+	}
+
+	// Handles case where selection is within struct.
+	for c := range cur.Enclosing((*ast.StructType)(nil)) {
+		if selectionContainsStructField(c.Node().(*ast.StructType), start, end, removeTags) {
+			return true
+		}
+	}
+
+	// Handles case where selection contains struct but may contain other nodes, including other structs.
+	for c := range cur.Preorder((*ast.StructType)(nil)) {
+		node := c.Node().(*ast.StructType)
+		// Check that at least one field is located within the selection. If we are removing tags, that field
+		// must also have a struct tag, otherwise we do not provide the code action.
+		if selectionContainsStructField(node, start, end, removeTags) {
+			return true
+		}
+	}
+	return false
+}
+
+// refactorRewriteAddStructTags produces "Add struct tags" code actions.
+// See [server.commandHandler.ModifyTags] for command implementation.
+func refactorRewriteAddStructTags(ctx context.Context, req *codeActionsRequest) error {
+	if selectionContainsStruct(req.pgf.Cursor, req.start, req.end, false) {
+		// TODO(mkalil): Prompt user for modification args once we have dialogue capabilities.
+		cmdAdd := command.NewModifyTagsCommand("Add struct tags", command.ModifyTagsArgs{
+			URI:   req.loc.URI,
+			Range: req.loc.Range,
+			Add:   "json",
+		})
+		req.addCommandAction(cmdAdd, false)
+	}
+	return nil
+}
+
+// refactorRewriteRemoveStructTags produces "Remove struct tags" code actions.
+// See [server.commandHandler.ModifyTags] for command implementation.
+func refactorRewriteRemoveStructTags(ctx context.Context, req *codeActionsRequest) error {
+	// TODO(mkalil): Prompt user for modification args once we have dialogue capabilities.
+	if selectionContainsStruct(req.pgf.Cursor, req.start, req.end, true) {
+		cmdRemove := command.NewModifyTagsCommand("Remove struct tags", command.ModifyTagsArgs{
+			URI:   req.loc.URI,
+			Range: req.loc.Range,
+			Clear: true,
+		})
+		req.addCommandAction(cmdRemove, false)
+	}
 	return nil
 }
 
@@ -883,6 +957,17 @@ func refactorInlineCall(ctx context.Context, req *codeActionsRequest) error {
 	// If range is within call expression, offer to inline the call.
 	if _, fn, err := enclosingStaticCall(req.pkg, req.pgf, req.start, req.end); err == nil {
 		req.addApplyFixAction("Inline call to "+fn.Name(), fixInlineCall, req.loc)
+	}
+	return nil
+}
+
+// refactorInlineVariable produces the "Inline variable 'v'" code action.
+// See [inlineVariableOne] for command implementation.
+func refactorInlineVariable(ctx context.Context, req *codeActionsRequest) error {
+	// TODO(adonovan): offer "inline all" variant that eliminates the var (see #70085).
+	if curUse, _, ok := canInlineVariable(req.pkg.TypesInfo(), req.pgf.Cursor, req.start, req.end); ok {
+		title := fmt.Sprintf("Inline variable %q", curUse.Node().(*ast.Ident).Name)
+		req.addApplyFixAction(title, fixInlineVariable, req.loc)
 	}
 	return nil
 }
@@ -955,7 +1040,7 @@ func goAssembly(ctx context.Context, req *codeActionsRequest) error {
 	}
 	sym.WriteString(".")
 
-	curSel, _ := req.pgf.Cursor.FindPos(req.start, req.end)
+	curSel, _ := req.pgf.Cursor.FindByPos(req.start, req.end)
 	for cur := range curSel.Enclosing((*ast.FuncDecl)(nil), (*ast.ValueSpec)(nil)) {
 		var name string // in command title
 		switch node := cur.Node().(type) {
@@ -1014,7 +1099,7 @@ func goAssembly(ctx context.Context, req *codeActionsRequest) error {
 func toggleCompilerOptDetails(ctx context.Context, req *codeActionsRequest) error {
 	// TODO(adonovan): errors from code action providers should probably be
 	// logged, even if they aren't visible to the client; see https://go.dev/issue/71275.
-	if meta, err := NarrowestMetadataForFile(ctx, req.snapshot, req.fh.URI()); err == nil {
+	if meta, err := req.snapshot.NarrowestMetadataForFile(ctx, req.fh.URI()); err == nil {
 		if len(meta.CompiledGoFiles) == 0 {
 			return fmt.Errorf("package %q does not compile file %q", meta.ID, req.fh.URI())
 		}
@@ -1022,7 +1107,7 @@ func toggleCompilerOptDetails(ctx context.Context, req *codeActionsRequest) erro
 
 		title := fmt.Sprintf("%s compiler optimization details for %q",
 			cond(req.snapshot.WantCompilerOptDetails(dir), "Hide", "Show"),
-			filepath.Base(dir.Path()))
+			dir.Base())
 		cmd := command.NewGCDetailsCommand(title, req.fh.URI())
 		req.addCommandAction(cmd, false)
 	}

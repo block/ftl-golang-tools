@@ -29,6 +29,7 @@ import (
 	"github.com/block/ftl-golang-tools/internal/expect"
 	"github.com/block/ftl-golang-tools/internal/refactor/inline"
 	"github.com/block/ftl-golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/internal/testfiles"
 	"github.com/block/ftl-golang-tools/txtar"
 )
 
@@ -63,7 +64,6 @@ func TestData(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, file := range files {
-		file := file
 		t.Run(filepath.Base(file), func(t *testing.T) {
 			t.Parallel()
 
@@ -308,14 +308,22 @@ func doInlineNote(logf func(string, ...any), pkg *packages.Package, file *ast.Fi
 	if want, ok := want.([]byte); ok {
 		got = append(bytes.TrimSpace(got), '\n')
 		want = append(bytes.TrimSpace(want), '\n')
-		if diff := diff.Unified("want", "got", string(want), string(got)); diff != "" {
-			return fmt.Errorf("Inline returned wrong output:\n%s\nWant:\n%s\nDiff:\n%s",
-				got, want, diff)
+		// If the "want" file begins "...", it need only be a substring of the "got" result,
+		// rather than an exact match.
+		if rest, ok := bytes.CutPrefix(want, []byte("...\n")); ok {
+			want = rest
+			if !bytes.Contains(got, want) {
+				return fmt.Errorf("Inline returned wrong output:\n%s\nWant substring:\n%s", got, want)
+			}
+		} else {
+			if diff := diff.Unified("want", "got", string(want), string(got)); diff != "" {
+				return fmt.Errorf("Inline returned wrong output:\n%s\nWant:\n%s\nDiff:\n%s",
+					got, want, diff)
+			}
 		}
 		return nil
 	}
 	return fmt.Errorf("Inline succeeded unexpectedly: want error matching %q, got <<%s>>", want, got)
-
 }
 
 // findFuncByPosition returns the FuncDecl at the specified (package-agnostic) position.
@@ -364,16 +372,16 @@ type testcase struct {
 func TestErrors(t *testing.T) {
 	runTests(t, []testcase{
 		{
-			"Generic functions are not yet supported.",
+			"Inference of type parameters is not yet supported.",
 			`func f[T any](x T) T { return x }`,
 			`var _ = f(0)`,
-			`error: type parameters are not yet supported`,
+			`error: type parameter inference is not yet supported`,
 		},
 		{
 			"Methods on generic types are not yet supported.",
 			`type G[T any] struct{}; func (G[T]) f(x T) T { return x }`,
 			`var _ = G[int]{}.f(0)`,
-			`error: type parameters are not yet supported`,
+			`error: generic methods not yet supported`,
 		},
 	})
 }
@@ -433,6 +441,13 @@ func TestBasics(t *testing.T) {
 	if err := error(nil); err != nil {
 	}
 }`,
+		},
+		{
+			"Explicit type parameters.",
+			`func f[T any](x T) T { return x }`,
+			`var _ = f[int](0)`,
+			// TODO(jba): remove the unnecessary conversion.
+			`var _ = int(0)`,
 		},
 	})
 }
@@ -602,7 +617,6 @@ func f1(i int) int { return i + 1 }`,
 				`func _() { print(F(f1), F(f1)) }`,
 			},
 		})
-
 	})
 }
 
@@ -1793,7 +1807,6 @@ func TestRedundantConversions(t *testing.T) {
 
 func runTests(t *testing.T, tests []testcase) {
 	for _, test := range tests {
-		test := test
 		t.Run(test.descr, func(t *testing.T) {
 			fset := token.NewFileSet()
 			mustParse := func(filename string, content any) *ast.File {
@@ -1831,6 +1844,14 @@ func runTests(t *testing.T, tests []testcase) {
 						}
 					case *ast.Ident:
 						if fun.Name == funcName {
+							call = n
+						}
+					case *ast.IndexExpr:
+						if id, ok := fun.X.(*ast.Ident); ok && id.Name == funcName {
+							call = n
+						}
+					case *ast.IndexListExpr:
+						if id, ok := fun.X.(*ast.Ident); ok && id.Name == funcName {
 							call = n
 						}
 					}
@@ -1884,7 +1905,7 @@ func runTests(t *testing.T, tests []testcase) {
 			res, err := doIt()
 
 			// Want error?
-			if rest := strings.TrimPrefix(test.want, "error: "); rest != test.want {
+			if rest, ok := strings.CutPrefix(test.want, "error: "); ok {
 				if err == nil {
 					t.Fatalf("unexpected success: want error matching %q", rest)
 				}

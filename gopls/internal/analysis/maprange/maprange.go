@@ -11,11 +11,11 @@ import (
 	"go/types"
 
 	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/ast/edge"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/moreiters"
 	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 	typeindexanalyzer "github.com/block/ftl-golang-tools/internal/analysisinternal/typeindex"
-	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
-	"github.com/block/ftl-golang-tools/internal/astutil/edge"
 	"github.com/block/ftl-golang-tools/internal/typesinternal/typeindex"
 	"github.com/block/ftl-golang-tools/internal/versions"
 )
@@ -66,7 +66,7 @@ func run(pass *analysis.Pass) (any, error) {
 // For certain patterns involving x/exp/maps.Keys before Go 1.22, it reports
 // a diagnostic about potential incorrect usage without a suggested fix.
 // No diagnostic is reported if the range statement doesn't require changes.
-func analyzeRangeStmt(pass *analysis.Pass, callee types.Object, curCall cursor.Cursor) {
+func analyzeRangeStmt(pass *analysis.Pass, callee types.Object, curCall inspector.Cursor) {
 	var (
 		call      = curCall.Node().(*ast.CallExpr)
 		rangeStmt = curCall.Parent().Node().(*ast.RangeStmt)
@@ -152,7 +152,7 @@ func isSet(expr ast.Expr) bool {
 
 // fileUses reports whether the file containing the specified cursor
 // uses at least the specified version of Go (e.g. "go1.24").
-func fileUses(info *types.Info, c cursor.Cursor, version string) bool {
+func fileUses(info *types.Info, c inspector.Cursor, version string) bool {
 	c, _ = moreiters.First(c.Enclosing((*ast.File)(nil)))
 	file := c.Node().(*ast.File)
 	return !versions.Before(info.FileVersions[file], version)

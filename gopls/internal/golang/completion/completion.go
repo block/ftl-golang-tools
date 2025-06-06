@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 	"go/ast"
-	"go/build"
 	"go/constant"
 	"go/parser"
 	"go/printer"
@@ -138,13 +137,14 @@ func (i *CompletionItem) Snippet() string {
 // addConversion wraps the existing completionItem in a conversion expression.
 // Only affects the receiver's InsertText and snippet fields, not the Label.
 // An empty conv argument has no effect.
-func (i *CompletionItem) addConversion(c *completer, conv conversionEdits) error {
+func (i *CompletionItem) addConversion(c *completer, conv conversionEdits) {
 	if conv.prefix != "" {
 		// If we are in a selector, add an edit to place prefix before selector.
 		if sel := enclosingSelector(c.path, c.pos); sel != nil {
 			edits, err := c.editText(sel.Pos(), sel.Pos(), conv.prefix)
 			if err != nil {
-				return err
+				// safetoken failed: invalid token.Pos information in AST.
+				return
 			}
 			i.AdditionalTextEdits = append(i.AdditionalTextEdits, edits...)
 		} else {
@@ -158,8 +158,6 @@ func (i *CompletionItem) addConversion(c *completer, conv conversionEdits) error
 		i.InsertText += conv.suffix
 		i.snippet.WriteText(conv.suffix)
 	}
-
-	return nil
 }
 
 // Scoring constants are used for weighting the relevance of different candidates.
@@ -489,12 +487,7 @@ type candidate struct {
 }
 
 func (c candidate) hasMod(mod typeModKind) bool {
-	for _, m := range c.mods {
-		if m == mod {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(c.mods, mod)
 }
 
 // Completion returns a list of possible candidates for completion, given a
@@ -510,7 +503,9 @@ func Completion(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, p
 	startTime := time.Now()
 
 	pkg, pgf, err := golang.NarrowestPackageForFile(ctx, snapshot, fh.URI())
-	if err != nil || pgf.File.Package == token.NoPos {
+	if err != nil || !pgf.File.Package.IsValid() {
+		// Invalid package declaration
+		//
 		// If we can't parse this file or find position for the package
 		// keyword, it may be missing a package declaration. Try offering
 		// suggestions for the package declaration.
@@ -591,12 +586,6 @@ func Completion(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, p
 	}
 	scopes = append(scopes, pkg.Types().Scope(), types.Universe)
 
-	var goversion string // "" => no version check
-	// Prior go1.22, the behavior of FileVersion is not useful to us.
-	if slices.Contains(build.Default.ReleaseTags, "go1.22") {
-		goversion = versions.FileVersion(info, pgf.File) // may be ""
-	}
-
 	opts := snapshot.Options()
 	c := &completer{
 		pkg:      pkg,
@@ -610,7 +599,7 @@ func Completion(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, p
 		fh:                        fh,
 		filename:                  fh.URI().Path(),
 		pgf:                       pgf,
-		goversion:                 goversion,
+		goversion:                 versions.FileVersion(info, pgf.File), // may be "" => no version check
 		path:                      path,
 		pos:                       pos,
 		seen:                      make(map[types.Object]bool),
@@ -751,24 +740,30 @@ func (c *completer) collectCompletions(ctx context.Context) error {
 		if c.pgf.File.Name == n {
 			return c.packageNameCompletions(ctx, c.fh.URI(), n)
 		} else if sel, ok := c.path[1].(*ast.SelectorExpr); ok && sel.Sel == n {
-			// Is this the Sel part of a selector?
+			// We are in the Sel part of a selector (e.g. x.‸sel or x.sel‸).
 			return c.selector(ctx, sel)
 		}
 		return c.lexical(ctx)
-	// The function name hasn't been typed yet, but the parens are there:
-	//   recv.‸(arg)
+
 	case *ast.TypeAssertExpr:
+		// The function name hasn't been typed yet, but the parens are there:
+		//   recv.‸(arg)
 		// Create a fake selector expression.
-		//
+
 		// The name "_" is the convention used by go/parser to represent phantom
 		// selectors.
 		sel := &ast.Ident{NamePos: n.X.End() + token.Pos(len(".")), Name: "_"}
 		return c.selector(ctx, &ast.SelectorExpr{X: n.X, Sel: sel})
+
 	case *ast.SelectorExpr:
+		// We are in the X part of a selector (x‸.sel),
+		// or after the dot with a fixed/phantom Sel (x.‸_).
 		return c.selector(ctx, n)
-	// At the file scope, only keywords are allowed.
+
 	case *ast.BadDecl, *ast.File:
+		// At the file scope, only keywords are allowed.
 		c.addKeywordCompletions()
+
 	default:
 		// fallback to lexical completions
 		return c.lexical(ctx)
@@ -792,7 +787,6 @@ func (c *completer) containingIdent(src []byte) *ast.Ident {
 	}
 
 	fakeIdent := &ast.Ident{Name: lit, NamePos: pos}
-
 	if _, isBadDecl := c.path[0].(*ast.BadDecl); isBadDecl {
 		// You don't get *ast.Idents at the file level, so look for bad
 		// decls and use the manually extracted token.
@@ -807,6 +801,18 @@ func (c *completer) containingIdent(src []byte) *ast.Ident {
 		// is a keyword. This improves completion after an "accidental
 		// keyword", e.g. completing to "variance" in "someFunc(var<>)".
 		return fakeIdent
+	} else if block, ok := c.path[0].(*ast.BlockStmt); ok && len(block.List) != 0 {
+		last := block.List[len(block.List)-1]
+		// Handle incomplete AssignStmt with multiple left-hand vars:
+		//     var left, right int
+		//     left, ri‸                    -> "right"
+		if expr, ok := last.(*ast.ExprStmt); ok &&
+			(is[*ast.Ident](expr.X) ||
+				is[*ast.SelectorExpr](expr.X) ||
+				is[*ast.IndexExpr](expr.X) ||
+				is[*ast.StarExpr](expr.X)) {
+			return fakeIdent
+		}
 	}
 
 	return nil
@@ -817,6 +823,8 @@ func (c *completer) scanToken(contents []byte) (token.Pos, token.Token, string) 
 	tok := c.pkg.FileSet().File(c.pos)
 
 	var s scanner.Scanner
+	// TODO(adonovan): fix! this mutates the token.File borrowed from c.pkg,
+	// calling AddLine and AddLineColumnInfo. Not sound!
 	s.Init(tok, contents, nil, 0)
 	for {
 		tknPos, tkn, lit := s.Scan()
@@ -1111,7 +1119,7 @@ func (c *completer) populateCommentCompletions(comment *ast.CommentGroup) {
 				_, named := typesinternal.ReceiverNamed(recv)
 				if named != nil {
 					if recvStruct, ok := named.Underlying().(*types.Struct); ok {
-						for i := 0; i < recvStruct.NumFields(); i++ {
+						for i := range recvStruct.NumFields() {
 							field := recvStruct.Field(i)
 							c.deepState.enqueue(candidate{obj: field, score: lowScore})
 						}
@@ -1226,6 +1234,9 @@ const (
 )
 
 // selector finds completions for the specified selector expression.
+//
+// The caller should ensure that sel.X has type information,
+// even if sel is synthetic.
 func (c *completer) selector(ctx context.Context, sel *ast.SelectorExpr) error {
 	c.inference.objChain = objChain(c.pkg.TypesInfo(), sel.X)
 
@@ -1275,6 +1286,23 @@ func (c *completer) selector(ctx context.Context, sel *ast.SelectorExpr) error {
 	}
 
 	// -- completion of symbols in unimported packages --
+
+	// use new code for unimported completions, if flag allows it
+	if c.snapshot.Options().ImportsSource == settings.ImportsSourceGopls {
+		// The user might have typed strings.TLower, so id.Name==strings, sel.Sel.Name == TLower,
+		// but the cursor might be inside TLower, so adjust the prefix
+		prefix := sel.Sel.Name
+		if c.surrounding != nil {
+			if c.surrounding.content != sel.Sel.Name {
+				bug.Reportf("unexpected surrounding: %q != %q", c.surrounding.content, sel.Sel.Name)
+			} else {
+				prefix = sel.Sel.Name[:c.surrounding.cursor-c.surrounding.start]
+			}
+		}
+		c.unimported(ctx, metadata.PackageName(id.Name), prefix)
+		return nil
+
+	}
 
 	// The deep completion algorithm is exceedingly complex and
 	// deeply coupled to the now obsolete notions that all
@@ -1428,7 +1456,7 @@ func (c *completer) selector(ctx context.Context, sel *ast.SelectorExpr) error {
 							var buf strings.Builder
 							buf.WriteString(name)
 							buf.WriteByte(' ')
-							cfg.Fprint(&buf, token.NewFileSet(), typ)
+							cfg.Fprint(&buf, token.NewFileSet(), typ) // ignore error
 							params = append(params, buf.String())
 						}
 
@@ -1487,7 +1515,6 @@ func (c *completer) selector(ctx context.Context, sel *ast.SelectorExpr) error {
 		}
 
 		for _, uri := range mp.CompiledGoFiles {
-			uri := uri
 			g.Go(func() error {
 				return quickParse(uri, mp, tooNew)
 			})
@@ -1592,7 +1619,7 @@ func (c *completer) methodsAndFields(typ types.Type, addressable bool, imp *impo
 		c.methodSetCache[methodSetKey{typ, addressable}] = mset
 	}
 
-	for i := 0; i < mset.Len(); i++ {
+	for i := range mset.Len() {
 		obj := mset.At(i).Obj()
 		// to the other side of the cb() queue?
 		if c.tooNew(obj) {
@@ -1790,7 +1817,7 @@ func (c *completer) injectType(ctx context.Context, t types.Type) {
 	// considered via a lexical search, so we need to directly inject
 	// them. Also allow generic types since lexical search does not
 	// infer instantiated versions of them.
-	if pnt, ok := t.(typesinternal.NamedOrAlias); !ok || typesinternal.TypeParams(pnt).Len() > 0 {
+	if pnt, ok := t.(typesinternal.NamedOrAlias); !ok || pnt.TypeParams().Len() > 0 {
 		// If our expected type is "[]int", this will add a literal
 		// candidate of "[]int{}".
 		c.literal(ctx, t, nil)
@@ -1979,7 +2006,7 @@ func (c *completer) structLiteralFieldName(ctx context.Context) error {
 	// Add struct fields.
 	if t, ok := types.Unalias(clInfo.clType).(*types.Struct); ok {
 		const deltaScore = 0.0001
-		for i := 0; i < t.NumFields(); i++ {
+		for i := range t.NumFields() {
 			field := t.Field(i)
 			if !addedFields[field] {
 				c.deepState.enqueue(candidate{
@@ -2148,7 +2175,7 @@ func expectedCompositeLiteralType(clInfo *compLitInfo, pos token.Pos) types.Type
 		// value side. The expected type of the value will be determined from the key.
 		if clInfo.kv != nil {
 			if key, ok := clInfo.kv.Key.(*ast.Ident); ok {
-				for i := 0; i < t.NumFields(); i++ {
+				for i := range t.NumFields() {
 					if field := t.Field(i); field.Name() == key.Name {
 						return field.Type()
 					}
@@ -2400,8 +2427,8 @@ Nodes:
 						if inst != nil {
 							// TODO(jacobz): If partial signature instantiation becomes possible,
 							// make needsExactType only true if necessary.
-							// Currently, ambigious cases always resolve to a conversion expression
-							// wrapping the completion, which is occassionally superfluous.
+							// Currently, ambiguous cases always resolve to a conversion expression
+							// wrapping the completion, which is occasionally superfluous.
 							inf.needsExactType = true
 							sig = inst
 						}
@@ -2733,7 +2760,7 @@ func reverseInferTypeArgs(sig *types.Signature, typeArgs []types.Type, expectedR
 	}
 
 	substs := make([]types.Type, sig.TypeParams().Len())
-	for i := 0; i < sig.TypeParams().Len(); i++ {
+	for i := range sig.TypeParams().Len() {
 		if sub := u.handles[sig.TypeParams().At(i)]; sub != nil && *sub != nil {
 			// Ensure the inferred subst is assignable to the type parameter's constraint.
 			if !assignableTo(*sub, sig.TypeParams().At(i).Constraint()) {
@@ -2813,7 +2840,7 @@ func (c *completer) expectedCallParamType(inf candidateInference, node *ast.Call
 	// call. Record the assignees so we can favor function
 	// calls that return matching values.
 	if len(node.Args) <= 1 && exprIdx == 0 {
-		for i := 0; i < sig.Params().Len(); i++ {
+		for i := range sig.Params().Len() {
 			inf.assignees = append(inf.assignees, sig.Params().At(i).Type())
 		}
 
@@ -2851,7 +2878,7 @@ func (c *completer) expectedCallParamType(inf candidateInference, node *ast.Call
 func expectedConstraint(t types.Type, idx int) types.Type {
 	var tp *types.TypeParamList
 	if pnt, ok := t.(typesinternal.NamedOrAlias); ok {
-		tp = typesinternal.TypeParams(pnt)
+		tp = pnt.TypeParams()
 	} else if sig, _ := t.Underlying().(*types.Signature); sig != nil {
 		tp = sig.TypeParams()
 	}
@@ -2894,9 +2921,7 @@ func objChain(info *types.Info, e ast.Expr) []types.Object {
 	}
 
 	// Reverse order so the layout matches the syntactic order.
-	for i := 0; i < len(objs)/2; i++ {
-		objs[i], objs[len(objs)-1-i] = objs[len(objs)-1-i], objs[i]
-	}
+	slices.Reverse(objs)
 
 	return objs
 }
@@ -3480,7 +3505,7 @@ func (ci *candidateInference) assigneesMatch(cand *candidate, sig *types.Signatu
 	// assignees match the corresponding sig result value, the signature
 	// is a match.
 	allMatch := false
-	for i := 0; i < sig.Results().Len(); i++ {
+	for i := range sig.Results().Len() {
 		var assignee types.Type
 
 		// If we are completing into variadic parameters, deslice the

@@ -5,6 +5,7 @@
 package integration
 
 import (
+	"maps"
 	"strings"
 	"testing"
 	"time"
@@ -115,9 +116,7 @@ func (s Settings) set(opts *runConfig) {
 	if opts.editor.Settings == nil {
 		opts.editor.Settings = make(map[string]any)
 	}
-	for k, v := range s {
-		opts.editor.Settings[k] = v
-	}
+	maps.Copy(opts.editor.Settings, s)
 }
 
 // WorkspaceFolders configures the workdir-relative workspace folders or uri
@@ -132,6 +131,22 @@ func WorkspaceFolders(relFolders ...string) RunOption {
 
 	return optionSetter(func(opts *runConfig) {
 		opts.editor.WorkspaceFolders = relFolders
+	})
+}
+
+// NoDefaultWorkspaceFiles is used to specify whether the fake editor
+// should give a default workspace folder to the LSP server.
+// When it's true, the editor will pass original WorkspaceFolders to the LSP server.
+func NoDefaultWorkspaceFiles() RunOption {
+	return optionSetter(func(opts *runConfig) {
+		opts.editor.NoDefaultWorkspaceFiles = true
+	})
+}
+
+// RootPath configures the roo path which will be converted to rootUri and sent to the LSP server.
+func RootPath(relpath string) RunOption {
+	return optionSetter(func(opts *runConfig) {
+		opts.editor.RelRootPath = relpath
 	})
 }
 
@@ -161,9 +176,7 @@ func (e EnvVars) set(opts *runConfig) {
 	if opts.editor.Env == nil {
 		opts.editor.Env = make(map[string]string)
 	}
-	for k, v := range e {
-		opts.editor.Env[k] = v
-	}
+	maps.Copy(opts.editor.Env, e)
 }
 
 // FakeGoPackagesDriver configures gopls to run with a fake GOPACKAGESDRIVER

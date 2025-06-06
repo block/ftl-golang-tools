@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -22,6 +23,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/fatih/gomodifytags/modifytags"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/telemetry/counter"
 	"github.com/block/ftl-golang-tools/go/ast/astutil"
@@ -47,7 +49,7 @@ import (
 )
 
 func (s *server) ExecuteCommand(ctx context.Context, params *protocol.ExecuteCommandParams) (any, error) {
-	ctx, done := event.Start(ctx, "lsp.Server.executeCommand")
+	ctx, done := event.Start(ctx, "server.ExecuteCommand")
 	defer done()
 
 	// For test synchronization, always create a progress notification.
@@ -59,14 +61,7 @@ func (s *server) ExecuteCommand(ctx context.Context, params *protocol.ExecuteCom
 		defer work.End(ctx, "Done.")
 	}
 
-	var found bool
-	for _, name := range s.Options().SupportedCommands {
-		if name == params.Command {
-			found = true
-			break
-		}
-	}
-	if !found {
+	if !slices.Contains(s.Options().SupportedCommands, params.Command) {
 		return nil, fmt.Errorf("%s is not a supported command", params.Command)
 	}
 
@@ -96,7 +91,7 @@ func (h *commandHandler) Modules(ctx context.Context, args command.ModulesArgs) 
 			return false // "can't happen" (see prior Encloses check)
 		}
 
-		assert(filepath.Base(goMod.Path()) == "go.mod", fmt.Sprintf("invalid go.mod path: want go.mod, got %q", goMod.Path()))
+		assert(goMod.Base() == "go.mod", fmt.Sprintf("invalid go.mod path: want go.mod, got %q", goMod.Path()))
 
 		// Invariant: rel is a relative path without "../" segments and the last
 		// segment is "go.mod"
@@ -360,7 +355,7 @@ func (c *commandHandler) run(ctx context.Context, cfg commandConfig, run command
 		return bug.Errorf("internal error: forURI=%q, forView=%q", cfg.forURI, cfg.forView)
 	}
 	if cfg.forURI != "" {
-		deps.fh, deps.snapshot, release, err = c.s.fileOf(ctx, cfg.forURI)
+		deps.fh, deps.snapshot, release, err = c.s.session.FileOf(ctx, cfg.forURI)
 		if err != nil {
 			return err
 		}
@@ -551,7 +546,7 @@ func (c *commandHandler) UpdateGoSum(ctx context.Context, args command.URIArgs) 
 		progress: "Updating go.sum",
 	}, func(ctx context.Context, _ commandDeps) error {
 		for _, uri := range args.URIs {
-			fh, snapshot, release, err := c.s.fileOf(ctx, uri)
+			fh, snapshot, release, err := c.s.session.FileOf(ctx, uri)
 			if err != nil {
 				return err
 			}
@@ -572,7 +567,7 @@ func (c *commandHandler) Tidy(ctx context.Context, args command.URIArgs) error {
 		progress: "Running go mod tidy",
 	}, func(ctx context.Context, _ commandDeps) error {
 		for _, uri := range args.URIs {
-			fh, snapshot, release, err := c.s.fileOf(ctx, uri)
+			fh, snapshot, release, err := c.s.session.FileOf(ctx, uri)
 			if err != nil {
 				return err
 			}
@@ -621,7 +616,7 @@ func (c *commandHandler) EditGoDirective(ctx context.Context, args command.EditG
 		requireSave: true, // if go.mod isn't saved it could cause a problem
 		forURI:      args.URI,
 	}, func(ctx context.Context, _ commandDeps) error {
-		fh, snapshot, release, err := c.s.fileOf(ctx, args.URI)
+		fh, snapshot, release, err := c.s.session.FileOf(ctx, args.URI)
 		if err != nil {
 			return err
 		}
@@ -741,7 +736,7 @@ func (c *commandHandler) RunTests(ctx context.Context, args command.RunTestsArgs
 
 func (c *commandHandler) runTests(ctx context.Context, snapshot *cache.Snapshot, work *progress.WorkDone, uri protocol.DocumentURI, tests, benchmarks []string) error {
 	// TODO: fix the error reporting when this runs async.
-	meta, err := golang.NarrowestMetadataForFile(ctx, snapshot, uri)
+	meta, err := snapshot.NarrowestMetadataForFile(ctx, uri)
 	if err != nil {
 		return err
 	}
@@ -1026,7 +1021,7 @@ func (c *commandHandler) GCDetails(ctx context.Context, uri protocol.DocumentURI
 	}, func(ctx context.Context, deps commandDeps) error {
 		return c.modifyState(ctx, FromToggleCompilerOptDetails, func() (*cache.Snapshot, func(), error) {
 			// Don't blindly use "dir := deps.fh.URI().Dir()"; validate.
-			meta, err := golang.NarrowestMetadataForFile(ctx, deps.snapshot, deps.fh.URI())
+			meta, err := deps.snapshot.NarrowestMetadataForFile(ctx, deps.fh.URI())
 			if err != nil {
 				return nil, nil, err
 			}
@@ -1087,7 +1082,7 @@ func (c *commandHandler) ListImports(ctx context.Context, args command.URIArg) (
 				})
 			}
 		}
-		meta, err := golang.NarrowestMetadataForFile(ctx, deps.snapshot, args.URI)
+		meta, err := deps.snapshot.NarrowestMetadataForFile(ctx, args.URI)
 		if err != nil {
 			return err // e.g. cancelled
 		}
@@ -1202,9 +1197,7 @@ func (c *commandHandler) FetchVulncheckResult(ctx context.Context, arg command.U
 			}
 		}
 		// Overwrite if there is any govulncheck-based result.
-		for modfile, result := range deps.snapshot.Vulnerabilities() {
-			ret[modfile] = result
-		}
+		maps.Copy(ret, deps.snapshot.Vulnerabilities())
 		return nil
 	})
 	return ret, err
@@ -1558,7 +1551,7 @@ func openClientBrowser(ctx context.Context, cli protocol.Client, title string, u
 			Message: fmt.Sprintf("%s: open your browser to %s", title, url),
 		}
 		if err := cli.ShowMessage(ctx, params); err != nil {
-			event.Error(ctx, "failed to show brower url", err)
+			event.Error(ctx, "failed to show browser url", err)
 		}
 	}
 }
@@ -1652,12 +1645,12 @@ func (c *commandHandler) DiagnoseFiles(ctx context.Context, args command.Diagnos
 		// Though note that implementing pull diagnostics may cause some servers to
 		// request diagnostics in an ad-hoc manner, and break our intentional pacing.
 
-		ctx, done := event.Start(ctx, "lsp.server.DiagnoseFiles")
+		ctx, done := event.Start(ctx, "commandHandler.DiagnoseFiles")
 		defer done()
 
 		snapshots := make(map[*cache.Snapshot]bool)
 		for _, uri := range args.Files {
-			fh, snapshot, release, err := c.s.fileOf(ctx, uri)
+			fh, snapshot, release, err := c.s.session.FileOf(ctx, uri)
 			if err != nil {
 				return err
 			}
@@ -1671,7 +1664,6 @@ func (c *commandHandler) DiagnoseFiles(ctx context.Context, args command.Diagnos
 
 		var wg sync.WaitGroup
 		for snapshot := range snapshots {
-			snapshot := snapshot
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
@@ -1763,4 +1755,89 @@ func (c *commandHandler) PackageSymbols(ctx context.Context, args command.Packag
 	})
 
 	return result, err
+}
+
+// optionsStringToMap transforms comma-separated options of the form
+// "foo=bar,baz=quux" to a go map. Returns nil if any options are malformed.
+func optionsStringToMap(options string) (map[string][]string, error) {
+	optionsMap := make(map[string][]string)
+	for item := range strings.SplitSeq(options, ",") {
+		key, option, found := strings.Cut(item, "=")
+		if !found {
+			return nil, fmt.Errorf("invalid option %q", item)
+		}
+		optionsMap[key] = append(optionsMap[key], option)
+	}
+	return optionsMap, nil
+}
+
+func (c *commandHandler) ModifyTags(ctx context.Context, args command.ModifyTagsArgs) error {
+	return c.run(ctx, commandConfig{
+		progress: "Modifying tags",
+		forURI:   args.URI,
+	}, func(ctx context.Context, deps commandDeps) error {
+		m := &modifytags.Modification{
+			Clear:        args.Clear,
+			ClearOptions: args.ClearOptions,
+			ValueFormat:  args.ValueFormat,
+			Overwrite:    args.Overwrite,
+		}
+
+		transform, err := parseTransform(args.Transform)
+		if err != nil {
+			return err
+		}
+		m.Transform = transform
+
+		if args.Add != "" {
+			m.Add = strings.Split(args.Add, ",")
+		}
+		if args.AddOptions != "" {
+			if options, err := optionsStringToMap(args.AddOptions); err != nil {
+				return err
+			} else {
+				m.AddOptions = options
+			}
+		}
+		if args.Remove != "" {
+			m.Remove = strings.Split(args.Remove, ",")
+		}
+		if args.RemoveOptions != "" {
+			if options, err := optionsStringToMap(args.RemoveOptions); err != nil {
+				return err
+			} else {
+				m.RemoveOptions = options
+			}
+		}
+		fh, err := deps.snapshot.ReadFile(ctx, args.URI)
+		if err != nil {
+			return err
+		}
+		changes, err := golang.ModifyTags(ctx, deps.snapshot, fh, args, m)
+		if err != nil {
+			return err
+		}
+		return applyChanges(ctx, c.s.client, changes)
+	})
+}
+
+func parseTransform(input string) (modifytags.Transform, error) {
+	switch input {
+	case "camelcase":
+		return modifytags.CamelCase, nil
+	case "lispcase":
+		return modifytags.LispCase, nil
+	case "pascalcase":
+		return modifytags.PascalCase, nil
+	case "titlecase":
+		return modifytags.TitleCase, nil
+	case "keep":
+		return modifytags.Keep, nil
+	case "":
+		fallthrough
+	case "snakecase":
+		return modifytags.SnakeCase, nil
+	default:
+		return modifytags.SnakeCase, fmt.Errorf("invalid Transform value")
+	}
 }

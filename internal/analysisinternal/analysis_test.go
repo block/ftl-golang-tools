@@ -12,7 +12,6 @@ import (
 	"testing"
 
 	"github.com/block/ftl-golang-tools/go/ast/inspector"
-	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
 )
 
 func TestCanImport(t *testing.T) {
@@ -215,8 +214,8 @@ func TestDeleteStmt(t *testing.T) {
 				t.Fatalf("%s: %v", tt.name, err)
 			}
 			insp := inspector.New([]*ast.File{f})
-			root := cursor.Root(insp)
-			var stmt cursor.Cursor
+			root := insp.Root()
+			var stmt inspector.Cursor
 			cnt := 0
 			for cn := range root.Preorder() { // Preorder(ast.Stmt(nil)) doesn't work
 				if _, ok := cn.Node().(ast.Stmt); !ok {

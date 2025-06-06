@@ -8,16 +8,18 @@ copylocks, printf, slog, tests, timeformat, nilness, and cgocall.
 
 -- go.mod --
 module example.com
-go 1.18
+go 1.23
 
 -- flags --
+-min_go_command=go1.23
 -cgo
 
--- bad_test.go --
-package analyzer
+-- bad/bad_test.go --
+package bad
 
 import (
 	"fmt"
+	"iter"
 	"log/slog"
 	"sync"
 	"testing"
@@ -32,7 +34,7 @@ func _() {
 
 // printf
 func _() {
-	printfWrapper("%s") //@diag(re`printfWrapper\(.*?\)`, re"example.com.printfWrapper format %s reads arg #1, but call has 0 args")
+	printfWrapper("%s") //@diag(re`%s`, re"example.com/bad.printfWrapper format %s reads arg #1, but call has 0 args")
 }
 
 func printfWrapper(format string, args ...any) {
@@ -76,11 +78,18 @@ func _() {
 
 // inline
 func _() {
-	f()  //@diag("f", re"Call of analyzer.f should be inlined")
+	f()  //@diag("f", re"Call of bad.f should be inlined")
 }
 
 //go:fix inline
 func f() { fmt.Println(1) }
+
+// recursiveiter
+func F() iter.Seq[int] {
+	return func(yield func(int) bool) {
+		for range F() {} //@ diag("range", re"inefficient recursion in iterator F")
+	}
+}
 
 -- cgocall/cgocall.go --
 package cgocall
@@ -95,4 +104,38 @@ import "C"
 // cgocall
 func _(c chan bool) {
 	C.f(unsafe.Pointer(&c)) //@ diag("unsafe", re"passing Go type with embedded pointer to C")
+}
+
+-- maprange/maprange.go --
+package maprange
+
+import "maps"
+
+func _(m map[int]int) {
+	for range maps.Keys(m) {} //@ diag("maps.Keys", re"unnecessary and inefficient call of maps.Keys")
+}
+
+-- unusedresult/unusedresult.go --
+package unusedresult
+
+import "fmt"
+
+func _() {
+	fmt.Appendf(nil, "%d", 1) //@ diag("fmt.Appendf", re"result.*not used")
+}
+
+-- staticcheck/staticcheck.go --
+package staticcheck
+
+// staticcheck includes hundreds of other analyzers.
+// Here we test only two: one enabled by default, one disabled.
+
+func S1000(ch chan int) {
+	select { case <-ch: } //@ diag("select", re"use .*receive instead of select")
+}
+
+func S1011(x, y []int) {
+	for _, e := range y {
+		x = append(x, e) // no "replace loop with append" diagnostic
+	}
 }

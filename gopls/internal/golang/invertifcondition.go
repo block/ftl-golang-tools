@@ -12,10 +12,10 @@ import (
 
 	"github.com/block/ftl-golang-tools/go/analysis"
 	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
-	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
 )
 
 // invertIfCondition is a singleFileFixFunc that inverts an if/else statement
@@ -42,10 +42,7 @@ func invertIfCondition(pkg *cache.Package, pgf *parsego.File, start, end token.P
 		// version of the original if body
 		sourcePos := safetoken.StartPosition(fset, ifStatement.Pos())
 
-		indent := sourcePos.Column - 1
-		if indent < 0 {
-			indent = 0
-		}
+		indent := max(sourcePos.Column-1, 0)
 
 		standaloneBodyText := ifBodyToStandaloneCode(fset, ifStatement.Body, src)
 		replaceElse = analysis.TextEdit{
@@ -248,7 +245,7 @@ func invertAndOr(fset *token.FileSet, expr *ast.BinaryExpr, src []byte) ([]byte,
 
 // canInvertIfCondition reports whether we can do invert-if-condition on the
 // code in the given range.
-func canInvertIfCondition(curFile cursor.Cursor, start, end token.Pos) (*ast.IfStmt, bool, error) {
+func canInvertIfCondition(curFile inspector.Cursor, start, end token.Pos) (*ast.IfStmt, bool, error) {
 	file := curFile.Node().(*ast.File)
 	// TODO(adonovan): simplify, using Cursor.
 	path, _ := astutil.PathEnclosingInterval(file, start, end)

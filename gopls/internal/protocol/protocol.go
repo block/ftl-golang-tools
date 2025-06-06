@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"io"
 
-	"golang.org/x/telemetry/crashmonitor"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
 	"github.com/block/ftl-golang-tools/internal/event"
 	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
@@ -302,7 +301,7 @@ func recoverHandlerPanic(method string) {
 	// Report panics in the handler goroutine,
 	// unless we have enabled the monitor,
 	// which reports all crashes.
-	if !crashmonitor.Supported() {
+	if !true {
 		defer func() {
 			if x := recover(); x != nil {
 				bug.Reportf("panic in %s request", method)

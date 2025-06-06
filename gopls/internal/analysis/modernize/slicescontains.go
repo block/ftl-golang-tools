@@ -16,7 +16,6 @@ import (
 	"github.com/block/ftl-golang-tools/go/types/typeutil"
 	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 	typeindexanalyzer "github.com/block/ftl-golang-tools/internal/analysisinternal/typeindex"
-	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
 	"github.com/block/ftl-golang-tools/internal/typeparams"
 	"github.com/block/ftl-golang-tools/internal/typesinternal/typeindex"
 )
@@ -66,7 +65,7 @@ func slicescontains(pass *analysis.Pass) {
 
 	// check is called for each RangeStmt of this form:
 	//   for i, elem := range s { if cond { ... } }
-	check := func(file *ast.File, curRange cursor.Cursor) {
+	check := func(file *ast.File, curRange inspector.Cursor) {
 		rng := curRange.Node().(*ast.RangeStmt)
 		ifStmt := rng.Body.List[0].(*ast.IfStmt)
 
@@ -128,6 +127,29 @@ func slicescontains(pass *analysis.Pass) {
 			if len(cond.Args) == 1 &&
 				isSliceElem(cond.Args[0]) &&
 				typeutil.Callee(info, cond) != nil { // not a conversion
+
+				// Attempt to get signature
+				sig, isSignature := info.TypeOf(cond.Fun).(*types.Signature)
+				if isSignature {
+					// skip variadic functions
+					if sig.Variadic() {
+						return
+					}
+
+					// Check for interface parameter with concrete argument,
+					// if the function has parameters.
+					if sig.Params().Len() > 0 {
+						paramType := sig.Params().At(0).Type()
+						elemType := info.TypeOf(cond.Args[0])
+
+						// If the function's first parameter is an interface
+						// and the argument passed is a concrete (non-interface) type,
+						// then we return and do not suggest this refactoring.
+						if types.IsInterface(paramType) && !types.IsInterface(elemType) {
+							return
+						}
+					}
+				}
 
 				funcName = "ContainsFunc"
 				arg2 = cond.Fun // "if predicate(elem)"

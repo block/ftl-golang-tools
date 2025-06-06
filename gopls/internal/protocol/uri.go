@@ -67,6 +67,11 @@ func (uri *DocumentURI) UnmarshalText(data []byte) (err error) {
 	return
 }
 
+// Clean returns the cleaned uri by triggering filepath.Clean underlying.
+func (uri DocumentURI) Clean() DocumentURI {
+	return URIFromPath(filepath.Clean(uri.Path()))
+}
+
 // Path returns the file path for the given URI.
 //
 // DocumentURI("").Path() returns the empty string.
@@ -86,6 +91,11 @@ func (uri DocumentURI) Path() string {
 	return filepath.FromSlash(filename)
 }
 
+// Base returns the base name of the file path of the given URI.
+func (uri DocumentURI) Base() string {
+	return filepath.Base(uri.Path())
+}
+
 // Dir returns the URI for the directory containing the receiver.
 func (uri DocumentURI) Dir() DocumentURI {
 	// This function could be more efficiently implemented by avoiding any call
@@ -103,6 +113,11 @@ func (uri DocumentURI) DirPath() string {
 // is a prefix of file's path.
 func (uri DocumentURI) Encloses(file DocumentURI) bool {
 	return pathutil.InDir(uri.Path(), file.Path())
+}
+
+// Location returns the Location for the specified range of this URI's file.
+func (uri DocumentURI) Location(rng Range) Location {
+	return Location{URI: uri, Range: rng}
 }
 
 func filename(uri DocumentURI) (string, error) {

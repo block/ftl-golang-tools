@@ -10,11 +10,12 @@ import (
 	"go/scanner"
 	"go/token"
 	"sync"
+	"unicode"
 
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
-	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
 )
 
 // A File contains the results of parsing a Go file.
@@ -33,7 +34,7 @@ type File struct {
 	// actual content of the file if we have fixed the AST.
 	Src []byte
 
-	Cursor cursor.Cursor // cursor of *ast.File, sans sibling files
+	Cursor inspector.Cursor // cursor of *ast.File, sans sibling files
 
 	// fixedSrc and fixedAST report on "fixing" that occurred during parsing of
 	// this file.
@@ -89,6 +90,11 @@ func (pgf *File) PosLocation(start, end token.Pos) (protocol.Location, error) {
 	return pgf.Mapper.PosLocation(pgf.Tok, start, end)
 }
 
+// PosText returns the source text for the token.Pos interval in this file.
+func (pgf *File) PosText(start, end token.Pos) ([]byte, error) {
+	return pgf.Mapper.PosText(pgf.Tok, start, end)
+}
+
 // NodeRange returns a protocol Range for the ast.Node interval in this file.
 func (pgf *File) NodeRange(node ast.Node) (protocol.Range, error) {
 	return pgf.Mapper.NodeRange(pgf.Tok, node)
@@ -102,6 +108,11 @@ func (pgf *File) NodeOffsets(node ast.Node) (start int, end int, _ error) {
 // NodeLocation returns a protocol Location for the ast.Node interval in this file.
 func (pgf *File) NodeLocation(node ast.Node) (protocol.Location, error) {
 	return pgf.Mapper.PosLocation(pgf.Tok, node.Pos(), node.End())
+}
+
+// NodeText returns the source text for the ast.Node interval in this file.
+func (pgf *File) NodeText(node ast.Node) ([]byte, error) {
+	return pgf.Mapper.NodeText(pgf.Tok, node)
 }
 
 // RangePos parses a protocol Range back into the go/token domain.
@@ -152,4 +163,24 @@ func (pgf *File) Resolve() {
 		declErr := func(token.Pos, string) {}
 		resolveFile(pgf.File, pgf.Tok, declErr)
 	})
+}
+
+// Indentation returns the string of spaces representing the indentation
+// of the line containing the specified position.
+// This can be used to ensure that inserted code maintains consistent indentation
+// and column alignment.
+func (pgf *File) Indentation(pos token.Pos) (string, error) {
+	line := safetoken.Line(pgf.Tok, pos)
+	start, end, err := safetoken.Offsets(pgf.Tok, pgf.Tok.LineStart(line), pos)
+	if err != nil {
+		return "", err
+	}
+
+	s := string(pgf.Src[start:end])
+	for i, r := range s {
+		if !unicode.IsSpace(r) {
+			return s[:i], nil // prefix of spaces
+		}
+	}
+	return s, nil
 }

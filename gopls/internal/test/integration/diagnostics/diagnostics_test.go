@@ -266,7 +266,7 @@ func TestDeleteTestVariant_DiskOnly(t *testing.T) {
 	Run(t, test38878, func(t *testing.T, env *Env) {
 		env.OpenFile("a_test.go")
 		env.AfterChange(Diagnostics(AtPosition("a_test.go", 5, 3)))
-		env.Sandbox.Workdir.RemoveFile(context.Background(), "a_test.go")
+		env.Sandbox.Workdir.RemoveFile(context.Background(), "a_test.go") // ignore error
 		env.AfterChange(Diagnostics(AtPosition("a_test.go", 5, 3)))
 	})
 }
@@ -456,7 +456,7 @@ func TestResolveDiagnosticWithDownload(t *testing.T) {
 		// diagnostic for the wrong formatting type.
 		env.AfterChange(
 			Diagnostics(
-				env.AtRegexp("print.go", "fmt.Printf"),
+				env.AtRegexp("print.go", "%s"),
 				WithMessage("wrong type int"),
 			),
 		)
@@ -1136,7 +1136,7 @@ package main
 func main() {}
 `
 	Run(t, basic, func(t *testing.T, env *Env) {
-		env.Editor.CreateBuffer(env.Ctx, "foo.go", `package main`)
+		env.CreateBuffer("foo.go", `package main`)
 		env.AfterChange()
 		env.CloseBuffer("foo.go")
 		env.AfterChange(NoLogMatching(protocol.Info, "packages=0"))
@@ -1790,7 +1790,7 @@ func helloHelper() {}
 		env.AfterChange(
 			NoDiagnostics(ForFile("nested/hello/hello.go")),
 		)
-		loc := env.GoToDefinition(env.RegexpSearch("nested/hello/hello.go", "helloHelper"))
+		loc := env.FirstDefinition(env.RegexpSearch("nested/hello/hello.go", "helloHelper"))
 		want := "nested/hello/hello_helper.go"
 		if got := env.Sandbox.Workdir.URIToPath(loc.URI); got != want {
 			t.Errorf("Definition() returned %q, want %q", got, want)
@@ -2071,7 +2071,7 @@ func MyPrintf(format string, args ...interface{}) {
 		env.OpenFile("a/a.go")
 		env.AfterChange(
 			Diagnostics(
-				env.AtRegexp("a/a.go", "new.*Printf"),
+				env.AtRegexp("a/a.go", "%d"),
 				WithMessage("format %d has arg \"s\" of wrong type string"),
 			),
 		)

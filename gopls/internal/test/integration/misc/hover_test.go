@@ -66,8 +66,9 @@ func main() {
 			t.Errorf("Workspace hover: missing expected field 'unexported'. Got:\n%q", got.Value)
 		}
 
-		cacheLoc := env.GoToDefinition(mixedLoc)
+		cacheLoc := env.FirstDefinition(mixedLoc)
 		cacheFile := env.Sandbox.Workdir.URIToPath(cacheLoc.URI)
+		env.OpenFile(cacheFile)
 		argLoc := env.RegexpSearch(cacheFile, "printMixed.*(Mixed)")
 		got, _ = env.Hover(argLoc)
 		if !strings.Contains(got.Value, "unexported") {
@@ -331,7 +332,7 @@ func Hello() string {
 			t.Errorf("item:%q not sig:%q", itemContent, sigContent)
 		}
 		if !strings.Contains(hoverContent, itemContent) {
-			t.Errorf("hover:%q does not containt sig;%q", hoverContent, sigContent)
+			t.Errorf("hover:%q does not contain sig;%q", hoverContent, sigContent)
 		}
 	})
 }
@@ -644,7 +645,8 @@ func (e) Error() string
 		for _, builtin := range tests {
 			useLocation := env.RegexpSearch("p.go", builtin)
 			calleeHover, _ := env.Hover(useLocation)
-			declLocation := env.GoToDefinition(useLocation)
+			declLocation := env.FirstDefinition(useLocation)
+			env.OpenFile(env.Sandbox.Workdir.URIToPath(declLocation.URI))
 			declHover, _ := env.Hover(declLocation)
 			if diff := cmp.Diff(calleeHover, declHover); diff != "" {
 				t.Errorf("Hover mismatch (-callee hover +decl hover):\n%s", diff)

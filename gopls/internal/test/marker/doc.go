@@ -176,8 +176,8 @@ Here is the list of supported action markers:
     additional fields (source="compiler", kind="error"). Restore them using
     optional named arguments.
 
-  - def(src, dst location): performs a textDocument/definition request at
-    the src location, and check the result points to the dst location.
+  - def(src, want ...location): performs a textDocument/definition request at
+    the src location, and checks that the results equals want.
 
   - documentLink(golden): asserts that textDocument/documentLink returns
     links as described by the golden file.
@@ -276,6 +276,13 @@ Here is the list of supported action markers:
     case the item's label is used). It checks that the resulting snippet
     matches the provided snippet.
 
+  - subtypes  (src location, want ...location),
+    supertypes(src location, want ...location):
+    execute a textDocument/prepareTypeHierarchy request at the src
+    location, followed by a typeHierarchy/{sub,super}types request on
+    the first response, and check that the result contains the list
+    of wanted locations in order.
+
   - symbol(golden): makes a textDocument/documentSymbol request
     for the enclosing file, formats the response with one symbol
     per line, sorts it, and compares against the named golden file.
@@ -299,6 +306,14 @@ Here is the list of supported action markers:
     not matter. Each line is of the form:
 
     location name kind
+
+  - mcptool(name string, arg string, src location, output=golden): Executes an
+    MCP tool call using the provided tool name and args (a JSON-encoded value)
+    with the source location. It then asserts that the MCP server's response
+    matches the content of the golden file identified by output. Unlike golden
+    references for file edits or file results, which may contain multiple files
+    (each with a path), the output golden content here is a single entity,
+    effectively having an empty path("").
 
 # Argument conversion
 
@@ -398,5 +413,6 @@ Note that -update does not cause missing @diag or @loc markers to be added.
 
   - Rename the files .txtar.
   - Eliminate all *err markers, preferring named arguments.
+  - In failed assertions, display locations using symbolic @loc names where available.
 */
 package marker

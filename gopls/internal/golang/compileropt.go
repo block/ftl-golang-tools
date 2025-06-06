@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
@@ -44,11 +43,12 @@ func CompilerOptDetails(ctx context.Context, snapshot *cache.Snapshot, pkgDir pr
 
 	// We use "go test -c" not "go build" as it covers all three packages
 	// (p, "p [p.test]", "p_test [p.test]") in the directory, if they exist.
+	// (See also assembly.go.)
 	inv, cleanupInvocation, err := snapshot.GoCommandInvocation(cache.NoNetwork, pkgDir.Path(), "test", []string{
 		"-c",
 		"-vet=off", // weirdly -c doesn't disable vet
 		fmt.Sprintf("-gcflags=-json=0,%s", outDirURI), // JSON schema version 0
-		fmt.Sprintf("-o=%s", cond(runtime.GOOS == "windows", "NUL", "/dev/null")),
+		fmt.Sprintf("-o=%s", os.DevNull),
 		".",
 	})
 	if err != nil {
@@ -149,11 +149,8 @@ func parseDetailsFile(filename string, options *settings.Options) (protocol.Docu
 		var related []protocol.DiagnosticRelatedInformation
 		for _, ri := range d.RelatedInformation {
 			related = append(related, protocol.DiagnosticRelatedInformation{
-				Location: protocol.Location{
-					URI:   ri.Location.URI,
-					Range: zeroIndexedRange(ri.Location.Range),
-				},
-				Message: ri.Message,
+				Location: ri.Location.URI.Location(zeroIndexedRange(ri.Location.Range)),
+				Message:  ri.Message,
 			})
 		}
 		diagnostic := &cache.Diagnostic{

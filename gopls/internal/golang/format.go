@@ -40,11 +40,6 @@ func Format(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle) ([]pr
 		return nil, err
 	}
 
-	// Generated files shouldn't be edited. So, don't format them.
-	if ast.IsGenerated(pgf.File) {
-		return nil, fmt.Errorf("can't format %q: file is generated", fh.URI().Path())
-	}
-
 	// Even if this file has parse errors, it might still be possible to format it.
 	// Using format.Node on an AST with errors may result in code being modified.
 	// Attempt to format the source of this file instead.
@@ -79,7 +74,7 @@ func Format(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle) ([]pr
 		// Can this, for example, result in inconsistent formatting across saves,
 		// due to pending calls to packages.Load?
 		var opts gofumptFormat.Options
-		meta, err := NarrowestMetadataForFile(ctx, snapshot, fh.URI())
+		meta, err := snapshot.NarrowestMetadataForFile(ctx, fh.URI())
 		if err == nil {
 			if mi := meta.Module; mi != nil {
 				if v := mi.GoVersion; v != "" {

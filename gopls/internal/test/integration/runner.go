@@ -142,7 +142,6 @@ func (r *Runner) Run(t *testing.T, files string, test TestFunc, opts ...RunOptio
 	}
 
 	for _, tc := range tests {
-		tc := tc
 		config := defaultConfig()
 		for _, opt := range opts {
 			opt.set(&config)
@@ -195,7 +194,7 @@ func (r *Runner) Run(t *testing.T, files string, test TestFunc, opts ...RunOptio
 			defer func() {
 				if !r.SkipCleanup {
 					if err := sandbox.Close(); err != nil {
-						pprof.Lookup("goroutine").WriteTo(os.Stderr, 1)
+						pprof.Lookup("goroutine").WriteTo(os.Stderr, 1) // ignore error
 						t.Errorf("closing the sandbox: %v", err)
 					}
 				}
@@ -218,7 +217,7 @@ func (r *Runner) Run(t *testing.T, files string, test TestFunc, opts ...RunOptio
 			env := ConnectGoplsEnv(t, ctx, sandbox, config.editor, ts)
 			defer func() {
 				if t.Failed() && r.PrintGoroutinesOnFailure {
-					pprof.Lookup("goroutine").WriteTo(os.Stderr, 1)
+					pprof.Lookup("goroutine").WriteTo(os.Stderr, 1) // ignore error
 				}
 				if (t.Failed() && !config.noLogsOnError) || *printLogs {
 					ls.printBuffers(t.Name(), os.Stderr)
@@ -342,7 +341,7 @@ func (s *loggingFramer) printBuffers(testname string, w io.Writer) {
 
 // defaultServer handles the Default execution mode.
 func (r *Runner) defaultServer() jsonrpc2.StreamServer {
-	return lsprpc.NewStreamServer(cache.New(r.store), false, nil)
+	return lsprpc.NewStreamServer(cache.New(r.store), false, nil, nil)
 }
 
 // forwardedServer handles the Forwarded execution mode.
@@ -350,7 +349,7 @@ func (r *Runner) forwardedServer() jsonrpc2.StreamServer {
 	r.tsOnce.Do(func() {
 		ctx := context.Background()
 		ctx = debug.WithInstance(ctx)
-		ss := lsprpc.NewStreamServer(cache.New(nil), false, nil)
+		ss := lsprpc.NewStreamServer(cache.New(nil), false, nil, nil)
 		r.ts = servertest.NewTCPServer(ctx, ss, nil)
 	})
 	return newForwarder("tcp", r.ts.Addr)

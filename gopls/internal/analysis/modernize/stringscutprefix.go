@@ -59,7 +59,8 @@ func stringscutprefix(pass *analysis.Pass) {
 			ifStmt := curIfStmt.Node().(*ast.IfStmt)
 
 			// pattern1
-			if call, ok := ifStmt.Cond.(*ast.CallExpr); ok && len(ifStmt.Body.List) > 0 {
+			if call, ok := ifStmt.Cond.(*ast.CallExpr); ok && ifStmt.Init == nil && len(ifStmt.Body.List) > 0 {
+
 				obj := typeutil.Callee(info, call)
 				if !analysisinternal.IsFunctionNamed(obj, "strings", "HasPrefix") &&
 					!analysisinternal.IsFunctionNamed(obj, "bytes", "HasPrefix") {
@@ -114,7 +115,7 @@ func stringscutprefix(pass *analysis.Pass) {
 									{
 										Pos:     call.Fun.Pos(),
 										End:     call.Fun.Pos(),
-										NewText: []byte(fmt.Sprintf("%s, %s :=", after, okVarName)),
+										NewText: fmt.Appendf(nil, "%s, %s :=", after, okVarName),
 									},
 									{
 										Pos:     call.Fun.Pos(),
@@ -124,7 +125,7 @@ func stringscutprefix(pass *analysis.Pass) {
 									{
 										Pos:     call.End(),
 										End:     call.End(),
-										NewText: []byte(fmt.Sprintf("; %s ", okVarName)),
+										NewText: fmt.Appendf(nil, "; %s ", okVarName),
 									},
 									{
 										Pos:     call1.Pos(),

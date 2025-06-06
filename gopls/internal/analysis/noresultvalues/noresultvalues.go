@@ -16,7 +16,6 @@ import (
 	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/moreiters"
 	"github.com/block/ftl-golang-tools/internal/analysisinternal"
-	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
 	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
@@ -43,7 +42,7 @@ func run(pass *analysis.Pass) (any, error) {
 		if !ok {
 			continue // can't get position info
 		}
-		curErr, ok := cursor.Root(inspect).FindPos(start, end)
+		curErr, ok := inspect.Root().FindByPos(start, end)
 		if !ok {
 			continue // can't find errant node
 		}

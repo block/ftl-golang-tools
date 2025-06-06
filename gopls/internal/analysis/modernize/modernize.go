@@ -23,7 +23,6 @@ import (
 	"github.com/block/ftl-golang-tools/gopls/internal/util/moreiters"
 	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 	typeindexanalyzer "github.com/block/ftl-golang-tools/internal/analysisinternal/typeindex"
-	"github.com/block/ftl-golang-tools/internal/astutil/cursor"
 	"github.com/block/ftl-golang-tools/internal/stdlib"
 	"github.com/block/ftl-golang-tools/internal/versions"
 )
@@ -135,9 +134,10 @@ func isIntLiteral(info *types.Info, e ast.Expr, n int64) bool {
 //
 // TODO(adonovan): opt: eliminate this function, instead following the
 // approach of [fmtappendf], which uses typeindex and [fileUses].
-func filesUsing(inspect *inspector.Inspector, info *types.Info, version string) iter.Seq[cursor.Cursor] {
-	return func(yield func(cursor.Cursor) bool) {
-		for curFile := range cursor.Root(inspect).Children() {
+// See "Tip" at [fileUses] for motivation.
+func filesUsing(inspect *inspector.Inspector, info *types.Info, version string) iter.Seq[inspector.Cursor] {
+	return func(yield func(inspector.Cursor) bool) {
+		for curFile := range inspect.Root().Children() {
 			file := curFile.Node().(*ast.File)
 			if !versions.Before(info.FileVersions[file], version) && !yield(curFile) {
 				break
@@ -148,12 +148,19 @@ func filesUsing(inspect *inspector.Inspector, info *types.Info, version string) 
 
 // fileUses reports whether the specified file uses at least the
 // specified version of Go (e.g. "go1.24").
+//
+// Tip: we recommend using this check "late", just before calling
+// pass.Report, rather than "early" (when entering each ast.File, or
+// each candidate node of interest, during the traversal), because the
+// operation is not free, yet is not a highly selective filter: the
+// fraction of files that pass most version checks is high and
+// increases over time.
 func fileUses(info *types.Info, file *ast.File, version string) bool {
 	return !versions.Before(info.FileVersions[file], version)
 }
 
 // enclosingFile returns the syntax tree for the file enclosing c.
-func enclosingFile(c cursor.Cursor) *ast.File {
+func enclosingFile(c inspector.Cursor) *ast.File {
 	c, _ = moreiters.First(c.Enclosing((*ast.File)(nil)))
 	return c.Node().(*ast.File)
 }
@@ -162,26 +169,15 @@ func enclosingFile(c cursor.Cursor) *ast.File {
 // specified standard packages or their dependencies.
 func within(pass *analysis.Pass, pkgs ...string) bool {
 	path := pass.Pkg.Path()
-	return standard(path) &&
+	return analysisinternal.IsStdPackage(path) &&
 		moreiters.Contains(stdlib.Dependencies(pkgs...), path)
-}
-
-// standard reports whether the specified package path belongs to a
-// package in the standard library (including internal dependencies).
-func standard(path string) bool {
-	// A standard package has no dot in its first segment.
-	// (It may yet have a dot, e.g. "vendor/golang.org/x/foo".)
-	slash := strings.IndexByte(path, '/')
-	if slash < 0 {
-		slash = len(path)
-	}
-	return !strings.Contains(path[:slash], ".") && path != "testdata"
 }
 
 var (
 	builtinAny     = types.Universe.Lookup("any")
 	builtinAppend  = types.Universe.Lookup("append")
 	builtinBool    = types.Universe.Lookup("bool")
+	builtinInt     = types.Universe.Lookup("int")
 	builtinFalse   = types.Universe.Lookup("false")
 	builtinLen     = types.Universe.Lookup("len")
 	builtinMake    = types.Universe.Lookup("make")

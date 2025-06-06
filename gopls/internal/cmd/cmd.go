@@ -215,7 +215,7 @@ func isZeroValue(f *flag.Flag, value string) bool {
 	// This works unless the Value type is itself an interface type.
 	typ := reflect.TypeOf(f.Value)
 	var z reflect.Value
-	if typ.Kind() == reflect.Ptr {
+	if typ.Kind() == reflect.Pointer {
 		z = reflect.New(typ.Elem())
 	} else {
 		z = reflect.Zero(typ)
@@ -641,6 +641,10 @@ func updateFile(filename string, old, new []byte, edits []diff.Edit, flags *Edit
 
 func (c *cmdClient) PublishDiagnostics(ctx context.Context, p *protocol.PublishDiagnosticsParams) error {
 	// Don't worry about diagnostics without versions.
+	//
+	// (Note: the representation of PublishDiagnosticsParams
+	// cannot distinguish a missing Version from v0, but the
+	// server never sends back an explicit zero.)
 	if p.Version == 0 {
 		return nil
 	}
@@ -822,7 +826,7 @@ func (c *connection) diagnoseFiles(ctx context.Context, files []protocol.Documen
 
 func (c *connection) terminate(ctx context.Context) {
 	// TODO: do we need to handle errors on these calls?
-	c.Shutdown(ctx)
+	c.Shutdown(ctx) // ignore error
 	// TODO: right now calling exit terminates the process, we should rethink that
 	// server.Exit(ctx)
 }
@@ -887,7 +891,7 @@ func (f *cmdFile) spanLocation(s span) (protocol.Location, error) {
 	if err != nil {
 		return protocol.Location{}, err
 	}
-	return f.mapper.RangeLocation(rng), nil
+	return f.mapper.URI.Location(rng), nil
 }
 
 // spanRange converts a (UTF-8) span to a protocol (UTF-16) range.
@@ -899,7 +903,7 @@ func (f *cmdFile) spanRange(s span) (protocol.Range, error) {
 	// case-sensitive directories. The authoritative answer
 	// requires querying the file system, and we don't want
 	// to do that.
-	if !strings.EqualFold(filepath.Base(string(f.mapper.URI)), filepath.Base(string(s.URI()))) {
+	if !strings.EqualFold(f.mapper.URI.Base(), s.URI().Base()) {
 		return protocol.Range{}, bugpkg.Errorf("mapper is for file %q instead of %q", f.mapper.URI, s.URI())
 	}
 	start, err := pointPosition(f.mapper, s.Start())

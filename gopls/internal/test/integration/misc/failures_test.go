@@ -7,8 +7,8 @@ package misc
 import (
 	"testing"
 
-	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 	"github.com/block/ftl-golang-tools/gopls/internal/test/compare"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 )
 
 // This is a slight variant of TestHoverOnError in definition_test.go

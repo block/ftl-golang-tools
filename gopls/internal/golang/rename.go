@@ -51,15 +51,18 @@ import (
 	"go/printer"
 	"go/token"
 	"go/types"
+	"maps"
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
 
 	"golang.org/x/mod/modfile"
 	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
 	"github.com/block/ftl-golang-tools/go/types/objectpath"
 	"github.com/block/ftl-golang-tools/go/types/typeutil"
 	"github.com/block/ftl-golang-tools/gopls/internal/cache"
@@ -69,6 +72,7 @@ import (
 	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 	goplsastutil "github.com/block/ftl-golang-tools/gopls/internal/util/astutil"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/moreiters"
 	"github.com/block/ftl-golang-tools/gopls/internal/util/safetoken"
 	internalastutil "github.com/block/ftl-golang-tools/internal/astutil"
 	"github.com/block/ftl-golang-tools/internal/diff"
@@ -167,19 +171,12 @@ func PrepareRename(ctx context.Context, snapshot *cache.Snapshot, f file.Handle,
 
 func prepareRenamePackageName(ctx context.Context, snapshot *cache.Snapshot, pgf *parsego.File) (*PrepareItem, error) {
 	// Does the client support file renaming?
-	fileRenameSupported := false
-	for _, op := range snapshot.Options().SupportedResourceOperations {
-		if op == protocol.Rename {
-			fileRenameSupported = true
-			break
-		}
-	}
-	if !fileRenameSupported {
+	if !slices.Contains(snapshot.Options().SupportedResourceOperations, protocol.Rename) {
 		return nil, errors.New("can't rename package: LSP client does not support file renaming")
 	}
 
 	// Check validity of the metadata for the file's containing package.
-	meta, err := NarrowestMetadataForFile(ctx, snapshot, pgf.URI)
+	meta, err := snapshot.NarrowestMetadataForFile(ctx, pgf.URI)
 	if err != nil {
 		return nil, err
 	}
@@ -436,13 +433,7 @@ func Rename(ctx context.Context, snapshot *cache.Snapshot, f file.Handle, pp pro
 		// become reordered) and that are either identical or
 		// non-overlapping.
 		diff.SortEdits(edits)
-		filtered := edits[:0]
-		for i, edit := range edits {
-			if i == 0 || edit != filtered[len(filtered)-1] {
-				filtered = append(filtered, edit)
-			}
-		}
-		edits = filtered
+		edits = slices.Compact(edits)
 
 		// TODO(adonovan): the logic above handles repeat edits to the
 		// same file URI (e.g. as a member of package p and p_test) but
@@ -482,6 +473,7 @@ func renameOrdinary(ctx context.Context, snapshot *cache.Snapshot, f file.Handle
 	// computes the union across all variants.)
 	var targets map[types.Object]ast.Node
 	var pkg *cache.Package
+	var cur inspector.Cursor // of selected Ident or ImportSpec
 	{
 		mps, err := snapshot.MetadataForFile(ctx, f.URI())
 		if err != nil {
@@ -504,6 +496,11 @@ func renameOrdinary(ctx context.Context, snapshot *cache.Snapshot, f file.Handle
 		pos, err := pgf.PositionPos(pp)
 		if err != nil {
 			return nil, err
+		}
+		var ok bool
+		cur, ok = pgf.Cursor.FindByPos(pos, pos)
+		if !ok {
+			return nil, fmt.Errorf("can't find cursor for selection")
 		}
 		objects, _, err := objectsAt(pkg.TypesInfo(), pgf.File, pos)
 		if err != nil {
@@ -533,7 +530,7 @@ func renameOrdinary(ctx context.Context, snapshot *cache.Snapshot, f file.Handle
 		//
 		// Note that unlike Funcs, TypeNames are always canonical (they are "left"
 		// of the type parameters, unlike methods).
-		switch obj.(type) { // avoid "obj :=" since cases reassign the var
+		switch obj0 := obj.(type) { // avoid "obj :=" since cases reassign the var
 		case *types.TypeName:
 			if _, ok := types.Unalias(obj.Type()).(*types.TypeParam); ok {
 				// As with capitalized function parameters below, type parameters are
@@ -541,7 +538,7 @@ func renameOrdinary(ctx context.Context, snapshot *cache.Snapshot, f file.Handle
 				goto skipObjectPath
 			}
 		case *types.Func:
-			obj = obj.(*types.Func).Origin()
+			obj = obj0.Origin()
 		case *types.Var:
 			// TODO(adonovan): do vars need the origin treatment too? (issue #58462)
 
@@ -555,7 +552,7 @@ func renameOrdinary(ctx context.Context, snapshot *cache.Snapshot, f file.Handle
 			// objectpath, the classifies them as local vars, but as
 			// they came from export data they lack syntax and the
 			// correct scope tree (issue #61294).
-			if !obj.(*types.Var).IsField() && !typesinternal.IsPackageLevel(obj) {
+			if !obj0.IsField() && !typesinternal.IsPackageLevel(obj) {
 				goto skipObjectPath
 			}
 		}
@@ -571,8 +568,36 @@ func renameOrdinary(ctx context.Context, snapshot *cache.Snapshot, f file.Handle
 		for obj := range targets {
 			objects = append(objects, obj)
 		}
+
 		editMap, _, err := renameObjects(newName, pkg, objects...)
-		return editMap, err
+		if err != nil {
+			return nil, err
+		}
+
+		// If the selected identifier is a receiver declaration,
+		// also rename receivers of other methods of the same type
+		// that don't already have the desired name.
+		// Quietly discard edits from any that can't be renamed.
+		//
+		// We interpret renaming the receiver declaration as
+		// intent for the broader renaming; renaming a use of
+		// the receiver effects only the local renaming.
+		if id, ok := cur.Node().(*ast.Ident); ok && id.Pos() == obj.Pos() {
+			if curDecl, ok := moreiters.First(cur.Enclosing((*ast.FuncDecl)(nil))); ok {
+				decl := curDecl.Node().(*ast.FuncDecl) // enclosing func
+				if decl.Recv != nil &&
+					len(decl.Recv.List) > 0 &&
+					len(decl.Recv.List[0].Names) > 0 {
+					recv := pkg.TypesInfo().Defs[decl.Recv.List[0].Names[0]]
+					if recv == obj {
+						// TODO(adonovan): simplify the above 7 lines to
+						// to "if obj.(*Var).Kind==Recv" in go1.25.
+						renameReceivers(pkg, recv.(*types.Var), newName, editMap)
+					}
+				}
+			}
+		}
+		return editMap, nil
 	}
 
 	// Exported: search globally.
@@ -632,6 +657,39 @@ func renameOrdinary(ctx context.Context, snapshot *cache.Snapshot, f file.Handle
 	return renameExported(pkgs, declPkgPath, declObjPath, newName)
 }
 
+// renameReceivers renames all receivers of methods of the same named
+// type as recv. The edits of each successful renaming are added to
+// editMap; the failed ones are quietly discarded.
+func renameReceivers(pkg *cache.Package, recv *types.Var, newName string, editMap map[protocol.DocumentURI][]diff.Edit) {
+	_, named := typesinternal.ReceiverNamed(recv)
+	if named == nil {
+		return
+	}
+
+	// Find receivers of other methods of the same named type.
+	for m := range named.Origin().Methods() {
+		recv2 := m.Signature().Recv()
+		if recv2 == recv {
+			continue // don't re-rename original receiver
+		}
+		if recv2.Name() == newName {
+			continue // no renaming needed
+		}
+		editMap2, _, err := renameObjects(newName, pkg, recv2)
+		if err != nil {
+			continue // ignore secondary failures
+		}
+
+		// Since all methods (and their comments)
+		// are disjoint, and don't affect imports,
+		// we can safely assume that all edits are
+		// nonconflicting and disjoint.
+		for uri, edits := range editMap2 {
+			editMap[uri] = append(editMap[uri], edits...)
+		}
+	}
+}
+
 // typeCheckReverseDependencies returns the type-checked packages for
 // the reverse dependencies of all packages variants containing
 // file declURI. The packages are in some topological order.
@@ -657,9 +715,7 @@ func typeCheckReverseDependencies(ctx context.Context, snapshot *cache.Snapshot,
 			return nil, err
 		}
 		allRdeps[variant.ID] = variant // include self
-		for id, meta := range rdeps {
-			allRdeps[id] = meta
-		}
+		maps.Copy(allRdeps, rdeps)
 	}
 	var ids []PackageID
 	for id, meta := range allRdeps {
@@ -890,7 +946,7 @@ func renamePackage(ctx context.Context, s *cache.Snapshot, f file.Handle, newNam
 
 	// We need metadata for the relevant package and module paths.
 	// These should be the same for all packages containing the file.
-	meta, err := NarrowestMetadataForFile(ctx, s, f.URI())
+	meta, err := s.NarrowestMetadataForFile(ctx, f.URI())
 	if err != nil {
 		return nil, err
 	}
@@ -1083,7 +1139,12 @@ func renameImports(ctx context.Context, snapshot *cache.Snapshot, mp *metadata.P
 					continue // not the import we're looking for
 				}
 
-				pkgname := pkg.TypesInfo().Implicits[imp].(*types.PkgName)
+				pkgname, ok := pkg.TypesInfo().Implicits[imp].(*types.PkgName)
+				if !ok {
+					// "can't happen", but be defensive (#71656)
+					return fmt.Errorf("internal error: missing type information for %s import at %s",
+						imp.Path.Value, safetoken.StartPosition(pkg.FileSet(), imp.Pos()))
+				}
 
 				pkgScope := pkg.Types().Scope()
 				fileScope := pkg.TypesInfo().Scopes[f.File]
@@ -1597,7 +1658,7 @@ func parsePackageNameDecl(ctx context.Context, snapshot *cache.Snapshot, fh file
 	// Careful: because we used parsego.Header,
 	// pgf.Pos(ppos) may be beyond EOF => (0, err).
 	pos, _ := pgf.PositionPos(ppos)
-	return pgf, pgf.File.Name.Pos() <= pos && pos <= pgf.File.Name.End(), nil
+	return pgf, goplsastutil.NodeContains(pgf.File.Name, pos), nil
 }
 
 // enclosingFile returns the CompiledGoFile of pkg that contains the specified position.

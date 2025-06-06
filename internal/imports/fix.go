@@ -27,6 +27,8 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"maps"
+
 	"github.com/block/ftl-golang-tools/go/ast/astutil"
 	"github.com/block/ftl-golang-tools/internal/event"
 	"github.com/block/ftl-golang-tools/internal/gocommand"
@@ -289,8 +291,8 @@ func (p *pass) loadPackageNames(ctx context.Context, imports []*ImportInfo) erro
 	return nil
 }
 
-// if there is a trailing major version, remove it
-func withoutVersion(nm string) string {
+// WithoutVersion removes a trailing major version, if there is one.
+func WithoutVersion(nm string) string {
 	if v := path.Base(nm); len(v) > 0 && v[0] == 'v' {
 		if _, err := strconv.Atoi(v[1:]); err == nil {
 			// this is, for instance, called with rand/v2 and returns rand
@@ -312,7 +314,7 @@ func (p *pass) importIdentifier(imp *ImportInfo) string {
 	}
 	known := p.knownPackages[imp.ImportPath]
 	if known != nil && known.Name != "" {
-		return withoutVersion(known.Name)
+		return WithoutVersion(known.Name)
 	}
 	return ImportPathToAssumedName(imp.ImportPath)
 }
@@ -968,9 +970,7 @@ func (e *ProcessEnv) CopyConfig() *ProcessEnv {
 		resolver:    nil,
 		Env:         map[string]string{},
 	}
-	for k, v := range e.Env {
-		copy.Env[k] = v
-	}
+	maps.Copy(copy.Env, e.Env)
 	return copy
 }
 
@@ -1003,9 +1003,7 @@ func (e *ProcessEnv) init() error {
 	if err := json.Unmarshal(stdout.Bytes(), &goEnv); err != nil {
 		return err
 	}
-	for k, v := range goEnv {
-		e.Env[k] = v
-	}
+	maps.Copy(e.Env, goEnv)
 	e.initialized = true
 	return nil
 }
