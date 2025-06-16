@@ -17,9 +17,9 @@ import (
 	"slices"
 	"sync"
 
-	jsonrpc2 "golang.org/x/tools/internal/jsonrpc2_v2"
-	"golang.org/x/tools/internal/mcp/internal/util"
-	"golang.org/x/tools/internal/mcp/jsonschema"
+	jsonrpc2 "github.com/block/ftl-golang-tools/internal/jsonrpc2_v2"
+	"github.com/block/ftl-golang-tools/internal/mcp/internal/util"
+	"github.com/block/ftl-golang-tools/internal/mcp/jsonschema"
 )
 
 const DefaultPageSize = 1000

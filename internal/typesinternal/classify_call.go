@@ -130,8 +130,8 @@ func UsedIdent(info *types.Info, e ast.Expr) *ast.Ident {
 	return usedIdent(info, e)
 }
 
-//go:linkname usedIdent golang.org/x/tools/go/types/typeutil.usedIdent
+//go:linkname usedIdent github.com/block/ftl-golang-tools/go/types/typeutil.usedIdent
 func usedIdent(info *types.Info, e ast.Expr) *ast.Ident
 
-//go:linkname interfaceMethod golang.org/x/tools/go/types/typeutil.interfaceMethod
+//go:linkname interfaceMethod github.com/block/ftl-golang-tools/go/types/typeutil.interfaceMethod
 func interfaceMethod(f *types.Func) bool

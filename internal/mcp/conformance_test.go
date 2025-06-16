@@ -22,8 +22,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	jsonrpc2 "golang.org/x/tools/internal/jsonrpc2_v2"
-	"golang.org/x/tools/txtar"
+	jsonrpc2 "github.com/block/ftl-golang-tools/internal/jsonrpc2_v2"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 var update = flag.Bool("update", false, "if set, update conformance test data")

@@ -1,4 +1,4 @@
-module golang.org/x/tools
+module github.com/block/ftl-golang-tools
 
 go 1.23.0
 

@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	jsonrpc2 "golang.org/x/tools/internal/jsonrpc2_v2"
+	jsonrpc2 "github.com/block/ftl-golang-tools/internal/jsonrpc2_v2"
 )
 
 // A MethodHandler handles MCP messages.

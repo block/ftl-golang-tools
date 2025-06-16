@@ -12,15 +12,15 @@ import (
 	"go/format"
 
 	"github.com/fatih/gomodifytags/modifytags"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/cache/parsego"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/util/moreiters"
-	internalastutil "golang.org/x/tools/internal/astutil"
-	"golang.org/x/tools/internal/diff"
-	"golang.org/x/tools/internal/tokeninternal"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/parsego"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/moreiters"
+	internalastutil "github.com/block/ftl-golang-tools/internal/astutil"
+	"github.com/block/ftl-golang-tools/internal/diff"
+	"github.com/block/ftl-golang-tools/internal/tokeninternal"
 )
 
 // ModifyTags applies the given struct tag modifications to the specified struct.

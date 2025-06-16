@@ -1,6 +1,6 @@
 # Go SDK Design
 
-This document discusses the design of a Go SDK for the [model context protocol](https://modelcontextprotocol.io/specification/2025-03-26). The [golang.org/x/tools/internal/mcp](https://pkg.go.dev/golang.org/x/tools/internal/mcp@master) package contains a prototype that we built to explore the MCP design space. Many of the ideas there are present in this document. However, we have diverged from and expanded on the APIs of that prototype, and this document should be considered canonical.
+This document discusses the design of a Go SDK for the [model context protocol](https://modelcontextprotocol.io/specification/2025-03-26). The [github.com/block/ftl-golang-tools/internal/mcp](https://pkg.go.dev/github.com/block/ftl-golang-tools/internal/mcp@master) package contains a prototype that we built to explore the MCP design space. Many of the ideas there are present in this document. However, we have diverged from and expanded on the APIs of that prototype, and this document should be considered canonical.
 
 ## Similarities and differences with mark3labs/mcp-go (and others)
 

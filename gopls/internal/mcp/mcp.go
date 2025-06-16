@@ -13,10 +13,10 @@ import (
 	"os"
 	"sync"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/lsprpc"
-	"golang.org/x/tools/gopls/internal/util/moremaps"
-	"golang.org/x/tools/internal/mcp"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/lsprpc"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/moremaps"
+	"github.com/block/ftl-golang-tools/internal/mcp"
 )
 
 // Serve starts an MCP server serving at the input address.

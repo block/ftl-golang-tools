@@ -10,7 +10,7 @@ import (
 	"log"
 	"net/http"
 
-	"golang.org/x/tools/internal/mcp"
+	"github.com/block/ftl-golang-tools/internal/mcp"
 )
 
 var httpAddr = flag.String("http", "", "use SSE HTTP at this address")
