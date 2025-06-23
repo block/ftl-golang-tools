@@ -39,7 +39,7 @@
 // ERRORS: for each locus of a frontend (scanner/parser/type) error, the
 // location is highlighted in red and hover text provides the compiler
 // error message.
-package analysis // import "golang.org/x/tools/godoc/analysis"
+package analysis // import "github.com/block/ftl-golang-tools/godoc/analysis"
 
 import (
 	"io"

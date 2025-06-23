@@ -1,3 +1,3 @@
-module golang.org/x/tools/cmd/auth
+module github.com/block/ftl-golang-tools/cmd/auth
 
 go 1.23.0

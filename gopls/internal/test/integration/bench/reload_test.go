@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"testing"
 
-	. "golang.org/x/tools/gopls/internal/test/integration"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 )
 
 // BenchmarkReload benchmarks reloading a file metadata after a change to an import.

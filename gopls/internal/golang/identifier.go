@@ -9,7 +9,7 @@ import (
 	"go/ast"
 	"go/types"
 
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 // ErrNoIdentFound is error returned when no identifier is found at a particular position

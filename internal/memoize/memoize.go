@@ -26,7 +26,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"golang.org/x/tools/internal/xcontext"
+	"github.com/block/ftl-golang-tools/internal/xcontext"
 )
 
 // Function is the type of a function that can be memoized.

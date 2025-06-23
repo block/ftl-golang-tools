@@ -27,7 +27,7 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/tools/internal/mcp/internal/util"
+	"github.com/block/ftl-golang-tools/internal/mcp/internal/util"
 )
 
 var (

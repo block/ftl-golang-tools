@@ -8,7 +8,7 @@ import (
 	"context"
 	"sync/atomic"
 
-	"golang.org/x/tools/internal/mcp"
+	"github.com/block/ftl-golang-tools/internal/mcp"
 )
 
 var nextProgressToken atomic.Int64

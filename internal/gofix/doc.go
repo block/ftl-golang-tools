@@ -98,7 +98,7 @@ The proposal https://go.dev/issue/32816 introduces the "//go:fix" directives.
 
 You can use this (officially unsupported) command to apply gofix fixes en masse:
 
-	$ go run golang.org/x/tools/internal/gofix/cmd/gofix@latest -test ./...
+	$ go run github.com/block/ftl-golang-tools/internal/gofix/cmd/gofix@latest -test ./...
 
 (Do not use "go get -tool" to add gopls as a dependency of your
 module; gopls commands must be built from their release branch.)
