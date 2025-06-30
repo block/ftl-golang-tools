@@ -11,10 +11,10 @@ import (
 	"text/template/parse"
 	"unicode/utf8"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/event"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/internal/event"
 )
 
 // in local coordinates, to be translated to protocol.DocumentSymbol

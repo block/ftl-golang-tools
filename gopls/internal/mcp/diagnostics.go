@@ -15,11 +15,11 @@ import (
 	"slices"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/golang"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/diff"
-	"golang.org/x/tools/internal/mcp"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/golang"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/internal/diff"
+	"github.com/block/ftl-golang-tools/internal/mcp"
 )
 
 type DiagnosticsParams struct {

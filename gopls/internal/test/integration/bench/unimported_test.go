@@ -14,9 +14,9 @@ import (
 	"strings"
 	"testing"
 
-	. "golang.org/x/tools/gopls/internal/test/integration"
-	"golang.org/x/tools/gopls/internal/test/integration/fake"
-	"golang.org/x/tools/internal/modindex"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/gopls/internal/test/integration/fake"
+	"github.com/block/ftl-golang-tools/internal/modindex"
 )
 
 // experiments show the new code about 15 times faster than the old,

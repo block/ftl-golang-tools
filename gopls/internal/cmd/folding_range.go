@@ -9,8 +9,8 @@ import (
 	"flag"
 	"fmt"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/internal/tool"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/internal/tool"
 )
 
 // foldingRanges implements the folding_ranges verb for gopls

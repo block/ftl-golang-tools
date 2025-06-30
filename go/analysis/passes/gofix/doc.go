@@ -4,7 +4,7 @@
 
 /*
 Package gofix defines an Analyzer that checks "//go:fix inline" directives.
-See golang.org/x/tools/internal/gofix/doc.go for details.
+See github.com/block/ftl-golang-tools/internal/gofix/doc.go for details.
 
 # Analyzer gofixdirective
 

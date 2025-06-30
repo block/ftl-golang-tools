@@ -10,10 +10,10 @@ import (
 	"go/types"
 	"strings"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/ast/edge"
-	typeindexanalyzer "golang.org/x/tools/internal/analysisinternal/typeindex"
-	"golang.org/x/tools/internal/typesinternal/typeindex"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/ast/edge"
+	typeindexanalyzer "github.com/block/ftl-golang-tools/internal/analysisinternal/typeindex"
+	"github.com/block/ftl-golang-tools/internal/typesinternal/typeindex"
 )
 
 // The fmtappend function replaces []byte(fmt.Sprintf(...)) by

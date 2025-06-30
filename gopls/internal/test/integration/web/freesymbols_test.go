@@ -7,10 +7,10 @@ package web_test
 import (
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/protocol/command"
-	"golang.org/x/tools/gopls/internal/settings"
-	. "golang.org/x/tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol/command"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 )
 
 // TestFreeSymbols is a basic test of interaction with the "free symbols" web report.

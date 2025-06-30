@@ -11,8 +11,8 @@ import (
 	"go/types"
 	"strings"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/internal/analysisinternal"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
 )
 
 //go:embed doc.go
@@ -23,7 +23,7 @@ var Analyzer = &analysis.Analyzer{
 	Doc:              analysisinternal.MustExtractDoc(doc, "embed"),
 	Run:              run,
 	RunDespiteErrors: true,
-	URL:              "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/embeddirective",
+	URL:              "https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/embeddirective",
 }
 
 const FixCategory = "addembedimport" // recognized by gopls ApplyFix
