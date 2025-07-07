@@ -27,8 +27,8 @@ import (
 	"slices"
 	"strings"
 
-	"golang.org/x/tools/internal/mcp/internal/util"
-	"golang.org/x/tools/internal/mcp/jsonschema"
+	"github.com/block/ftl-golang-tools/internal/mcp/internal/util"
+	"github.com/block/ftl-golang-tools/internal/mcp/jsonschema"
 )
 
 var schemaFile = flag.String("schema_file", "", "if set, use this file as the persistent schema file")
@@ -239,7 +239,7 @@ func main() {
 package mcp
 
 import (
-	"golang.org/x/tools/internal/mcp/jsonschema"
+	"github.com/block/ftl-golang-tools/internal/mcp/jsonschema"
 )
 `)
 

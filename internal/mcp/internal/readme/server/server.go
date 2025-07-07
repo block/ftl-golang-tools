@@ -9,7 +9,7 @@ import (
 	"context"
 	"log"
 
-	"golang.org/x/tools/internal/mcp"
+	"github.com/block/ftl-golang-tools/internal/mcp"
 )
 
 type HiParams struct {

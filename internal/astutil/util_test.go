@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/internal/astutil"
+	"github.com/block/ftl-golang-tools/internal/astutil"
 )
 
 func TestPreorderStack(t *testing.T) {

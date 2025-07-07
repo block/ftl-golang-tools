@@ -10,13 +10,13 @@ import (
 	"go/ast"
 	"go/types"
 
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
-	"golang.org/x/tools/go/types/typeutil"
-	"golang.org/x/tools/internal/analysisinternal"
-	typeindexanalyzer "golang.org/x/tools/internal/analysisinternal/typeindex"
-	"golang.org/x/tools/internal/typesinternal/typeindex"
+	"github.com/block/ftl-golang-tools/go/analysis"
+	"github.com/block/ftl-golang-tools/go/analysis/passes/inspect"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/go/types/typeutil"
+	"github.com/block/ftl-golang-tools/internal/analysisinternal"
+	typeindexanalyzer "github.com/block/ftl-golang-tools/internal/analysisinternal/typeindex"
+	"github.com/block/ftl-golang-tools/internal/typesinternal/typeindex"
 )
 
 //go:embed doc.go
@@ -27,7 +27,7 @@ var Analyzer = &analysis.Analyzer{
 	Doc:      analysisinternal.MustExtractDoc(doc, "recursiveiter"),
 	Requires: []*analysis.Analyzer{inspect.Analyzer, typeindexanalyzer.Analyzer},
 	Run:      run,
-	URL:      "https://pkg.go.dev/golang.org/x/tools/gopls/internal/analysis/recursiveiter",
+	URL:      "https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls/internal/analysis/recursiveiter",
 }
 
 func run(pass *analysis.Pass) (any, error) {

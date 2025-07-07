@@ -13,7 +13,7 @@ import (
 	"hash/maphash"
 	"unsafe"
 
-	"golang.org/x/tools/internal/typeparams"
+	"github.com/block/ftl-golang-tools/internal/typeparams"
 )
 
 // Map is a hash-table-based mapping from types (types.Type) to
