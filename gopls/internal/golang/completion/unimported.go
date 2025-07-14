@@ -31,14 +31,14 @@ import (
 	"slices"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/gopls/internal/golang/completion/snippet"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/bug"
-	"golang.org/x/tools/internal/imports"
-	"golang.org/x/tools/internal/modindex"
-	"golang.org/x/tools/internal/stdlib"
-	"golang.org/x/tools/internal/versions"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
+	"github.com/block/ftl-golang-tools/gopls/internal/golang/completion/snippet"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/internal/imports"
+	"github.com/block/ftl-golang-tools/internal/modindex"
+	"github.com/block/ftl-golang-tools/internal/stdlib"
+	"github.com/block/ftl-golang-tools/internal/versions"
 )
 
 func (c *completer) unimported(ctx context.Context, pkgname metadata.PackageName, prefix string) {

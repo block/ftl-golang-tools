@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"golang.org/x/tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 )
 
 // Watcher collects events from a [fsnotify.Watcher] and converts them into

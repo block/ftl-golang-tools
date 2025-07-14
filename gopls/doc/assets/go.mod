@@ -1,7 +1,7 @@
 // This module contains no Go code, but serves to carve out a hole in
 // its parent module to avoid bloating it with large image files that
-// would otherwise be downloaded by "go install golang.org/x/tools/gopls@latest".
+// would otherwise be downloaded by "go install github.com/block/ftl-golang-tools/gopls@latest".
 
-module golang.org/x/tools/gopls/doc/assets
+module github.com/block/ftl-golang-tools/gopls/doc/assets
 
 go 1.23.0

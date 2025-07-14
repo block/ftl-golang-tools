@@ -9,7 +9,7 @@ title: "Gopls: The language server for Go"
     $ open http://localhost:6060/go.dev/gopls
 -->
 
-[![PkgGoDev](https://pkg.go.dev/badge/golang.org/x/tools/gopls)](https://pkg.go.dev/golang.org/x/tools/gopls)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/block/ftl-golang-tools/gopls)](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls)
 
 `gopls` (pronounced "Go please") is the official [language
 server](https://langserver.org) for Go, developed by the Go team. It
@@ -59,7 +59,7 @@ If you use `gopls` with an editor that is not on this list, please send us a CL
 To install the latest stable release of `gopls`, run the following command:
 
 ```sh
-go install golang.org/x/tools/gopls@latest
+go install github.com/block/ftl-golang-tools/gopls@latest
 ```
 
 Some editors, such as VS Code, will handle this step for you, and
@@ -176,7 +176,7 @@ gopls.
 `gopls` currently only supports the `go` command, so if you are using
 a different build system, `gopls` will not work well. Bazel is not officially
 supported, but may be made to work with an appropriately configured
-[go/packages driver](https://pkg.go.dev/golang.org/x/tools/go/packages#hdr-The_driver_protocol).
+[go/packages driver](https://pkg.go.dev/github.com/block/ftl-golang-tools/go/packages#hdr-The_driver_protocol).
 See [bazelbuild/rules_go#512](https://github.com/bazelbuild/rules_go/issues/512)
 for more information.
 You can follow [these instructions](https://github.com/bazelbuild/rules_go/wiki/Editor-setup)

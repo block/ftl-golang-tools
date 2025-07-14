@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/filewatcher"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/txtar"
+	"github.com/block/ftl-golang-tools/gopls/internal/filewatcher"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 func TestFileWatcher(t *testing.T) {

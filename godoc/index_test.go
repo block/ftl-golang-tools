@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/godoc/vfs/mapfs"
+	"github.com/block/ftl-golang-tools/godoc/vfs/mapfs"
 )
 
 func newCorpus(t *testing.T) *Corpus {
