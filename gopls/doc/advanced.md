@@ -11,7 +11,7 @@ To get a specific version of `gopls` (for example, to test a prerelease
 version), run:
 
 ```sh
-$ go install golang.org/x/tools/gopls@vX.Y.Z
+$ go install github.com/block/ftl-golang-tools/gopls@vX.Y.Z
 ```
 
 Where `vX.Y.Z` is the desired version.
@@ -27,9 +27,9 @@ cd $(mktemp -d)
 go mod init gopls-unstable
 
 # Use 'go get' to add requirements and to ensure they work together.
-go get -d golang.org/x/tools/gopls@master golang.org/x/tools@master
+go get -d github.com/block/ftl-golang-tools/gopls@master github.com/block/ftl-golang-tools@master
 
-go install golang.org/x/tools/gopls
+go install github.com/block/ftl-golang-tools/gopls
 ```
 
 ## Working on the Go source distribution

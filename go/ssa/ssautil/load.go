@@ -11,8 +11,8 @@ import (
 	"go/token"
 	"go/types"
 
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/go/ssa"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/go/ssa"
 )
 
 // Packages creates an SSA program for a set of packages.

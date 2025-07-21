@@ -16,9 +16,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"golang.org/x/tools/gopls/internal/golang/splitpkg"
-	"golang.org/x/tools/gopls/internal/settings"
-	. "golang.org/x/tools/gopls/internal/test/integration"
+	"github.com/block/ftl-golang-tools/gopls/internal/golang/splitpkg"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
+	. "github.com/block/ftl-golang-tools/gopls/internal/test/integration"
 )
 
 // TestSplitPackage is a basic test of the web-based split package tool.

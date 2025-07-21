@@ -15,7 +15,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	jsonrpc2 "golang.org/x/tools/internal/jsonrpc2_v2"
+	jsonrpc2 "github.com/block/ftl-golang-tools/internal/jsonrpc2_v2"
 )
 
 // A StreamableHTTPHandler is an http.Handler that serves streamable MCP

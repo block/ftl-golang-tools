@@ -11,7 +11,7 @@ import (
 	"iter"
 	"reflect"
 
-	"golang.org/x/tools/go/ast/edge"
+	"github.com/block/ftl-golang-tools/go/ast/edge"
 )
 
 // A Cursor represents an [ast.Node]. It is immutable.

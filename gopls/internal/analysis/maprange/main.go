@@ -8,8 +8,8 @@
 package main
 
 import (
-	"golang.org/x/tools/go/analysis/singlechecker"
-	"golang.org/x/tools/gopls/internal/analysis/maprange"
+	"github.com/block/ftl-golang-tools/go/analysis/singlechecker"
+	"github.com/block/ftl-golang-tools/gopls/internal/analysis/maprange"
 )
 
 func main() { singlechecker.Main(maprange.Analyzer) }

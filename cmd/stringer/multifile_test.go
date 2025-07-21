@@ -16,9 +16,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"golang.org/x/tools/internal/diffp"
-	"golang.org/x/tools/internal/testenv"
-	"golang.org/x/tools/txtar"
+	"github.com/block/ftl-golang-tools/internal/diffp"
+	"github.com/block/ftl-golang-tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 // This file contains a test that checks the output files existence

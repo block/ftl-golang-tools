@@ -9,10 +9,10 @@ import (
 	"encoding/json"
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/protocol"
-	jsonrpc2_v2 "golang.org/x/tools/internal/jsonrpc2_v2"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	jsonrpc2_v2 "github.com/block/ftl-golang-tools/internal/jsonrpc2_v2"
 
-	. "golang.org/x/tools/gopls/internal/lsprpc"
+	. "github.com/block/ftl-golang-tools/gopls/internal/lsprpc"
 )
 
 func CommandInterceptor(command string, run func(*protocol.ExecuteCommandParams) (any, error)) Middleware {
