@@ -60,7 +60,7 @@ claiming it.
 
 ## Getting started
 
-Most of the `gopls` logic is in the `golang.org/x/tools/gopls/internal`
+Most of the `gopls` logic is in the `github.com/block/ftl-golang-tools/gopls/internal`
 directory. See [design/implementation.md](./design/implementation.md) for an overview of the code organization.
 
 ## Build
@@ -77,8 +77,8 @@ your `gopls` version looks like this:
 
 ```bash
 $ gopls version
-golang.org/x/tools/gopls master
-    golang.org/x/tools/gopls@(devel)
+github.com/block/ftl-golang-tools/gopls master
+    github.com/block/ftl-golang-tools/gopls@(devel)
 ```
 
 ## Getting help
@@ -147,13 +147,13 @@ run the complete set, on a wide range of platforms.)
 
 Gopls tests are a mix of two kinds.
 
-- [Marker tests](https://golang.org/x/tools/gopls/internal/test/marker) express each test scenario
+- [Marker tests](https://github.com/block/ftl-golang-tools/gopls/internal/test/marker) express each test scenario
   in a standalone text file that contains the target .go, go.mod, and
   go.work files, in which special annotations embedded in comments
   drive the test. These tests are generally easy to write and fast
   to iterate, but have limitations on what they can express.
 
-- [Integration tests](https://golang.org/x/tools/gopls/internal/test/integration) are regular Go
+- [Integration tests](https://github.com/block/ftl-golang-tools/gopls/internal/test/integration) are regular Go
   `func Test(*testing.T)` functions that make a series of calls to an
   API for a fake LSP-enabled client editor. The API allows you to open
   and edit a file, navigate to a definition, invoke other LSP
@@ -179,7 +179,7 @@ need help.
 When you mail your CL and you or a fellow contributor assigns the
 `Run-TryBot=1` label in Gerrit, the
 [TryBots](https://golang.org/doc/contribute.html#trybots) will run tests in
-both the `golang.org/x/tools` and `golang.org/x/tools/gopls` modules, as
+both the `github.com/block/ftl-golang-tools` and `github.com/block/ftl-golang-tools/gopls` modules, as
 described above.
 
 Furthermore, an additional "gopls-CI" pass will be run by _Kokoro_, which is a

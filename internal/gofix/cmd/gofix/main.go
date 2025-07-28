@@ -21,8 +21,8 @@
 package main
 
 import (
-	"golang.org/x/tools/go/analysis/singlechecker"
-	"golang.org/x/tools/internal/gofix"
+	"github.com/block/ftl-golang-tools/go/analysis/singlechecker"
+	"github.com/block/ftl-golang-tools/internal/gofix"
 )
 
 func main() { singlechecker.Main(gofix.Analyzer) }

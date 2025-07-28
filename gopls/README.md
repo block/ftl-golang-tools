@@ -1,6 +1,6 @@
 # `gopls`, the language server for Go
 
-[![PkgGoDev](https://pkg.go.dev/badge/golang.org/x/tools/gopls)](https://pkg.go.dev/golang.org/x/tools/gopls)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/block/ftl-golang-tools/gopls)](https://pkg.go.dev/github.com/block/ftl-golang-tools/gopls)
 
 `gopls` (pronounced "Go please") is the official [language
 server](https://langserver.org) for Go, developed and maintained by

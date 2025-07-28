@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 )
 
 // An Identity identifies the name and contents of a file.

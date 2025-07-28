@@ -13,10 +13,10 @@ import (
 
 	"slices"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/immutable"
-	"golang.org/x/tools/internal/mcp"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/immutable"
+	"github.com/block/ftl-golang-tools/internal/mcp"
 )
 
 // The workspaceTool provides a summary of the current Go builds for the
@@ -54,7 +54,7 @@ func (h *handler) workspaceHandler(ctx context.Context, _ *mcp.ServerSession, _ 
 		dir := v.Root().Path()
 		switch v.Type() {
 		case cache.GoPackagesDriverView:
-			fmt.Fprintf(&summary, "The `%s` directory is loaded using a custom golang.org/x/tools/go/packages driver.\n", dir)
+			fmt.Fprintf(&summary, "The `%s` directory is loaded using a custom github.com/block/ftl-golang-tools/go/packages driver.\n", dir)
 			fmt.Fprintf(&summary, "This indicates a non-standard build system.\n")
 
 		case cache.GOPATHView:

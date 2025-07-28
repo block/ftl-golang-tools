@@ -15,10 +15,10 @@ import (
 	"time"
 
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/tools/gopls/internal/filewatcher"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/moremaps"
-	"golang.org/x/tools/txtar"
+	"github.com/block/ftl-golang-tools/gopls/internal/filewatcher"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/moremaps"
+	"github.com/block/ftl-golang-tools/txtar"
 )
 
 func TestFileWatcher(t *testing.T) {

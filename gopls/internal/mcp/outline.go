@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"golang.org/x/tools/gopls/internal/cache/metadata"
-	"golang.org/x/tools/internal/mcp"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache/metadata"
+	"github.com/block/ftl-golang-tools/internal/mcp"
 )
 
 type outlineParams struct {
