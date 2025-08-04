@@ -96,7 +96,7 @@ func writeclient() {
 		`import (
 	"context"
 
-	"golang.org/x/tools/internal/jsonrpc2"
+	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
 )
 `)
 	out.WriteString("type Client interface {\n")
@@ -124,7 +124,7 @@ func writeserver() {
 		`import (
 	"context"
 
-	"golang.org/x/tools/internal/jsonrpc2"
+	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
 )
 `)
 	out.WriteString("type Server interface {\n")

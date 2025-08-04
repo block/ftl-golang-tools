@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"golang.org/x/tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 )
 
 // ErrClosed is used when trying to operate on a closed Watcher.

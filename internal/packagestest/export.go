@@ -76,9 +76,9 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/go/packages"
-	"golang.org/x/tools/internal/expect"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/go/packages"
+	"github.com/block/ftl-golang-tools/internal/expect"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 var (

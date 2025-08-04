@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"golang.org/x/tools/internal/proxydir"
+	"github.com/block/ftl-golang-tools/internal/proxydir"
 )
 
 // WriteProxy creates a new proxy file tree using the txtar-encoded content,

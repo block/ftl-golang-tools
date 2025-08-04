@@ -11,7 +11,7 @@ import (
 	"slices"
 	"testing"
 
-	"golang.org/x/tools/go/ast/inspector"
+	"github.com/block/ftl-golang-tools/go/ast/inspector"
 )
 
 func TestCanImport(t *testing.T) {

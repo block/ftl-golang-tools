@@ -4,7 +4,7 @@
 <!-- TODO: update pkgsite links here to point to the modelcontextprotocol
 module, once it exists. -->
 
-[![PkgGoDev](https://pkg.go.dev/badge/golang.org/x/tools)](https://pkg.go.dev/github.com/modelcontextprotocol/go-sdk)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/block/ftl-golang-tools)](https://pkg.go.dev/github.com/modelcontextprotocol/go-sdk)
 
 This repository contains an implementation of the official Go software
 development kit (SDK) for the Model Context Protocol (MCP).
@@ -26,11 +26,11 @@ version of the SDK in mid July, 2025.
 The SDK consists of two importable packages:
 
 - The
-  [`github.com/modelcontextprotocol/go-sdk/mcp`](https://pkg.go.dev/golang.org/x/tools/internal/mcp)
+  [`github.com/modelcontextprotocol/go-sdk/mcp`](https://pkg.go.dev/github.com/block/ftl-golang-tools/internal/mcp)
   package defines the primary APIs for constructing and using MCP clients and
   servers.
 - The
-  [`github.com/modelcontextprotocol/go-sdk/jsonschema`](https://pkg.go.dev/golang.org/x/tools/internal/mcp/jsonschema)
+  [`github.com/modelcontextprotocol/go-sdk/jsonschema`](https://pkg.go.dev/github.com/block/ftl-golang-tools/internal/mcp/jsonschema)
   package provides an implementation of [JSON
   Schema](https://json-schema.org/), used for MCP tool input and output schema.
 
@@ -47,7 +47,7 @@ import (
 	"log"
 	"os/exec"
 
-	"golang.org/x/tools/internal/mcp"
+	"github.com/block/ftl-golang-tools/internal/mcp"
 )
 
 func main() {
@@ -92,7 +92,7 @@ import (
 	"context"
 	"log"
 
-	"golang.org/x/tools/internal/mcp"
+	"github.com/block/ftl-golang-tools/internal/mcp"
 )
 
 type HiParams struct {

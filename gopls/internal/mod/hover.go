@@ -15,14 +15,14 @@ import (
 	"golang.org/x/mod/modfile"
 	"golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/file"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/settings"
-	"golang.org/x/tools/gopls/internal/vulncheck"
-	"golang.org/x/tools/gopls/internal/vulncheck/govulncheck"
-	"golang.org/x/tools/gopls/internal/vulncheck/osv"
-	"golang.org/x/tools/internal/event"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/file"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/settings"
+	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck"
+	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/govulncheck"
+	"github.com/block/ftl-golang-tools/gopls/internal/vulncheck/osv"
+	"github.com/block/ftl-golang-tools/internal/event"
 )
 
 func Hover(ctx context.Context, snapshot *cache.Snapshot, fh file.Handle, position protocol.Position) (*protocol.Hover, error) {
@@ -359,9 +359,9 @@ func formatExplanation(text string, replaceMap map[module.Version]module.Version
 	b.WriteString("This module is necessary because " + reference + " is imported in")
 
 	// If the explanation is 3 lines, then it is of the form:
-	// # golang.org/x/tools
+	// # github.com/block/ftl-golang-tools
 	// modtest
-	// golang.org/x/tools/go/packages
+	// github.com/block/ftl-golang-tools/go/packages
 	if length == 3 {
 		msg := fmt.Sprintf(" `%s`.", splt[1])
 		b.WriteString(msg)

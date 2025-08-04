@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"golang.org/x/tools/gopls/internal/util/bug"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/bug"
 )
 
 type port struct{ GOOS, GOARCH string }

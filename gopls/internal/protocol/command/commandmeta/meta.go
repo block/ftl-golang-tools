@@ -18,8 +18,8 @@ import (
 	"strings"
 	"unicode"
 
-	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/go/packages"
+	"github.com/block/ftl-golang-tools/go/ast/astutil"
+	"github.com/block/ftl-golang-tools/go/packages"
 	// (does not depend on gopls itself)
 )
 
@@ -52,7 +52,7 @@ func Load() ([]*Command, error) {
 			Mode:       packages.NeedTypes | packages.NeedTypesInfo | packages.NeedSyntax | packages.NeedImports | packages.NeedDeps,
 			BuildFlags: []string{"-tags=generate"},
 		},
-		"golang.org/x/tools/gopls/internal/protocol/command",
+		"github.com/block/ftl-golang-tools/gopls/internal/protocol/command",
 	)
 	if err != nil {
 		return nil, fmt.Errorf("packages.Load: %v", err)

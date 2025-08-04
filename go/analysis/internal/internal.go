@@ -4,7 +4,7 @@
 
 package internal
 
-import "golang.org/x/tools/go/analysis"
+import "github.com/block/ftl-golang-tools/go/analysis"
 
 // This function is set by the checker package to provide
 // backdoor access to the private Pass field

@@ -15,14 +15,14 @@ import (
 	"time"
 
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/debug"
-	"golang.org/x/tools/gopls/internal/lsprpc"
-	"golang.org/x/tools/gopls/internal/mcp"
-	"golang.org/x/tools/gopls/internal/protocol"
-	"golang.org/x/tools/gopls/internal/util/fakenet"
-	"golang.org/x/tools/internal/jsonrpc2"
-	"golang.org/x/tools/internal/tool"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/debug"
+	"github.com/block/ftl-golang-tools/gopls/internal/lsprpc"
+	"github.com/block/ftl-golang-tools/gopls/internal/mcp"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/fakenet"
+	"github.com/block/ftl-golang-tools/internal/jsonrpc2"
+	"github.com/block/ftl-golang-tools/internal/tool"
 )
 
 // Serve is a struct that exposes the configurable parts of the LSP and MCP

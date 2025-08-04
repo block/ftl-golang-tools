@@ -12,9 +12,9 @@
 //
 //	$ linecount -mode=total ./gopls
 //	752124
-//	$ linecount -mode=total -module=golang.org/x/tools/gopls ./gopls
+//	$ linecount -mode=total -module=github.com/block/ftl-golang-tools/gopls ./gopls
 //	103519
-//	$ linecount -mode=total -module=golang.org/x/tools ./gopls
+//	$ linecount -mode=total -module=github.com/block/ftl-golang-tools ./gopls
 //	99504
 //	$ linecount -mode=total -prefix=go -module=std ./gopls
 //	47502
@@ -23,14 +23,14 @@
 //
 //	$ linecount -mode=module ./gopls | head -n 5
 //	440274	std
-//	103519	golang.org/x/tools/gopls
-//	99504	golang.org/x/tools
+//	103519	github.com/block/ftl-golang-tools/gopls
+//	99504	github.com/block/ftl-golang-tools
 //	40220	honnef.co/go/tools
 //	17707	golang.org/x/text
 //
 // Example: show the top 3 largest files in the gopls module:
 //
-//	$ linecount -mode=file -module=golang.org/x/tools/gopls ./gopls | head -n 3
+//	$ linecount -mode=file -module=github.com/block/ftl-golang-tools/gopls ./gopls | head -n 3
 //	6841	gopls/internal/protocol/tsprotocol.go
 //	3769	gopls/internal/golang/completion/completion.go
 //	2202	gopls/internal/cache/snapshot.go
@@ -49,7 +49,7 @@ import (
 	"sync"
 
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/tools/go/packages"
+	"github.com/block/ftl-golang-tools/go/packages"
 )
 
 // TODO(adonovan): filters:
@@ -64,8 +64,8 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: linecount [flags] packages...\n")
 	flag.PrintDefaults()
 	fmt.Fprintf(os.Stderr, `
-Docs: go doc golang.org/x/tools/go/packages/internal/linecount
-https://pkg.go.dev/golang.org/x/tools/go/packages/internal/linecount
+Docs: go doc github.com/block/ftl-golang-tools/go/packages/internal/linecount
+https://pkg.go.dev/github.com/block/ftl-golang-tools/go/packages/internal/linecount
 `)
 }
 

@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/tools/internal/jsonrpc2/stack/stacktest"
-	"golang.org/x/tools/internal/testenv"
+	"github.com/block/ftl-golang-tools/internal/jsonrpc2/stack/stacktest"
+	"github.com/block/ftl-golang-tools/internal/testenv"
 )
 
 func TestIdleTimeout(t *testing.T) {

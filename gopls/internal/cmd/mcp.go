@@ -14,10 +14,10 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/cache"
-	"golang.org/x/tools/gopls/internal/filewatcher"
-	"golang.org/x/tools/gopls/internal/mcp"
-	"golang.org/x/tools/gopls/internal/protocol"
+	"github.com/block/ftl-golang-tools/gopls/internal/cache"
+	"github.com/block/ftl-golang-tools/gopls/internal/filewatcher"
+	"github.com/block/ftl-golang-tools/gopls/internal/mcp"
+	"github.com/block/ftl-golang-tools/gopls/internal/protocol"
 )
 
 type headlessMCP struct {
