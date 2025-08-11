@@ -7,7 +7,7 @@ package compare
 import (
 	"bytes"
 
-	"golang.org/x/tools/internal/diff"
+	"github.com/block/ftl-golang-tools/internal/diff"
 )
 
 // Text returns a formatted unified diff of the edits to go from want to

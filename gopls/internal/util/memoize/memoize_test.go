@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"golang.org/x/tools/gopls/internal/util/memoize"
+	"github.com/block/ftl-golang-tools/gopls/internal/util/memoize"
 )
 
 func TestGet(t *testing.T) {

@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	. "golang.org/x/tools/internal/modindex"
+	. "github.com/block/ftl-golang-tools/internal/modindex"
 )
 
 type id struct {

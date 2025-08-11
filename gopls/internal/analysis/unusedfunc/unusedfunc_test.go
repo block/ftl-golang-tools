@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"golang.org/x/tools/go/analysis/analysistest"
-	"golang.org/x/tools/gopls/internal/analysis/unusedfunc"
-	"golang.org/x/tools/internal/testfiles"
+	"github.com/block/ftl-golang-tools/go/analysis/analysistest"
+	"github.com/block/ftl-golang-tools/gopls/internal/analysis/unusedfunc"
+	"github.com/block/ftl-golang-tools/internal/testfiles"
 )
 
 func Test(t *testing.T) {

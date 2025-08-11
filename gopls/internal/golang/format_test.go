@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/tools/gopls/internal/test/compare"
+	"github.com/block/ftl-golang-tools/gopls/internal/test/compare"
 )
 
 func TestImportPrefix(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"golang.org/x/tools/internal/mcp"
+	"github.com/block/ftl-golang-tools/internal/mcp"
 )
 
 type fileMetadataParams struct {

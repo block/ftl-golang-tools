@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	. "golang.org/x/tools/internal/modindex"
+	. "github.com/block/ftl-golang-tools/internal/modindex"
 )
 
 type tdata struct {

@@ -7,8 +7,8 @@ package facts
 import (
 	"go/types"
 
-	"golang.org/x/tools/internal/aliases"
-	"golang.org/x/tools/internal/typesinternal"
+	"github.com/block/ftl-golang-tools/internal/aliases"
+	"github.com/block/ftl-golang-tools/internal/typesinternal"
 )
 
 // importMap computes the import map for a package by traversing the

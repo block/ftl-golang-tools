@@ -16,8 +16,8 @@ import (
 	"regexp"
 	"strings"
 
-	jsonrpc2 "golang.org/x/tools/internal/jsonrpc2_v2"
-	"golang.org/x/tools/internal/mcp/internal/util"
+	jsonrpc2 "github.com/block/ftl-golang-tools/internal/jsonrpc2_v2"
+	"github.com/block/ftl-golang-tools/internal/mcp/internal/util"
 )
 
 // A ServerResource associates a Resource with its handler.
